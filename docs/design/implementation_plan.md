@@ -140,3 +140,17 @@ flowchart TD
 | **B1-5** | `in work` | Keyboard Triage | Fast keyboard triage surface: inbox item → typed node with tags, domain, links, and stamped author attribution. |
 | **B1-6** | `in work` | Explore & Node Views | Filtering by domain/tag/state/origin; full-text search; derived frontmatter display; all node properties legible in plain markdown editor. |
 | **B1-7** | `in work` | Intake & File Drop | Manual intake flow for notebook backlog; drop folder ingestion for sketches/drawings exported from tablet. |
+
+---
+
+### Wave 5 — Phase 2 Design Artifacts
+
+| Task ID | Status | Owner | Output File(s) | Description / Definition of Done |
+|---|:--:|:--:|---|---|
+| **DA-09** | `done` | AI | `docs/design/DA-09-uow-lifecycle.md` | **Unit-of-Work Lifecycle Spec**: State machine (`stateDiagram-v2`), ready-set computation, dispatch rules, folder ownership (`work/UOW-xxx/`), collection flowchart, data loss prevention, attribution stamping, frontmatter materialization. |
+| **DA-10** | `done` | AI | `docs/design/DA-10-mcp-contract.md` | **MCP Surface Contract**: Five tool schemas (`get_step`, `submit_result`, `list_ready`, `fetch_context`, `capture`), negative wall tests, error leakage prevention. |
+| **DA-11** | `not started` | AI | `docs/design/DA-11-activity-templates.md` | **Activity Template Format & Worked Templates**: Template schema + worked `prior-art-survey` and `screening-assessment` templates. |
+| **DA-12** | `not started` | AI | `docs/design/DA-12-deliverable-header.md` | **Deliverable Header Spec**: Required fields, markdown parsing rules, graceful degradation on parse failure. |
+| **DA-13** | `not started` | AI / Jared | `docs/design/DA-13-phase-2-slices.md` | **Phase 2 Slice Plan**: Runnable slice definitions for B2-1 through B2-13. |
+| **DA-14** | `not started` | Jared | `docs/design/DA-14-forward-compatibility.md` | **Forward-Compatibility Checklist**: Review against Phases 3–5 requirements and vendor-independence test. |
+

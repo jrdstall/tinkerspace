@@ -553,12 +553,12 @@ The only place status lives. Each task: status · inputs · activities · done w
 
 ### Design artifacts — written during Phase 1 build
 
-**DA-09 · Unit-of-work lifecycle spec** — `not started` · 1.5 blocks · *blocked by:* DA-03
+**DA-09 · Unit-of-work lifecycle spec** — `done` · 1.5 blocks · *blocked by:* DA-03
 *Inputs:* V§05 in full · DA-03
 *Activities:* the `stateDiagram-v2` — six states, every transition, who or what causes each; how *ready* is computed; what dispatch does and does not do; **folder ownership** — who creates it, what may write into it, what happens to unexpected files; the collection procedure and its `flowchart`, triggered only by my press; where the attribution stamp is applied; which unit facts are materialised onto the subject node per V§14.15.
 *Done when:* every state in V§05 has at least one inbound and one outbound transition or an explicit note saying why not; the collection flowchart names every point where data could be silently lost.
 
-**DA-10 · MCP surface contract** — `not started` · 1.5 blocks · *blocked by:* DA-09
+**DA-10 · MCP surface contract** — `done` · 1.5 blocks · *blocked by:* DA-09
 *Inputs:* V§05 couriers and the wall constraints · V§10 Layer 4 · V§14.6
 *Activities:* request and response shape for each of the five tools; error shapes that leak nothing; what `fetch_context` may return and the explicit refusal case; **how a declared bulk input is delivered** — the asset list and the association engine's distilled corpus dump are the same mechanism, and neither may become a tool; `capture` as text-in, acknowledgement-out; the dispatch `sequenceDiagram`; **the negative test list, written as tests before the server exists**.
 *Done when:* the five tool schemas are written; the negative test list has at least seven entries, one of which asserts that no tool enumerates any slice of the store — assets included; no example response or error anywhere in the document contains a path, a filename, a table name, or a folder name.

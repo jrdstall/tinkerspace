@@ -100,6 +100,7 @@ class UnitOfWork:
     deliverable: dict[str, Any] = field(default_factory=dict)
     estimate: dict[str, Any] = field(default_factory=dict)
     template: str | None = None
+    action_guide: str = ""
 
 
 @dataclass
