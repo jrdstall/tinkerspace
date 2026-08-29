@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}{{ node.id }} · {{ node.title }} · Tinkerspace{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1rem;">
+    <a href="/" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+        &larr; Back to Explore
+    </a>
+</div>
+
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            <span class="badge" style="font-size: 0.85rem; font-weight: 700;">{{ node.type|upper }}</span>
+            <span class="mono" style="font-size: 1.25rem; font-weight: 700; color: var(--accent);">{{ node.id }}</span>
+            <span class="badge {% if node.state in ['active', 'have'] %}badge-green{% endif %}">{{ node.state }}</span>
+            {% if node.attrs.get('cml') %}
+            <span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}</span>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ node.id }}')">Copy ID</button>
+        </div>
+    </div>
+
+    <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-main);">
+        {{ node.title }}
+    </h1>
+
+    <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.875rem; color: var(--text-muted); padding: 0.75rem 0; border-top: 1px solid var(--border-color); border-bottom: 1px solid var(--border-color); margin-bottom: 1.5rem;">
+        <div>
+            Domain: <strong style="color: var(--text-main);">{{ node.domain }}</strong>
+        </div>
+        <div>
+            Author: 
+            <strong style="color: var(--text-main);">
+                {% if node.author %}
+                    {{ node.author.kind.value }} ({{ node.author.declared_model or node.author.courier }})
+                {% else %}
+                    external / manual
+                {% endif %}
+            </strong>
+        </div>
+        <div>
+            Created: <span class="mono" style="color: var(--text-main);">{{ node.created.strftime('%Y-%m-%d %H:%M UTC') if node.created else 'N/A' }}</span>
+        </div>
+        {% if node.last_touched %}
+        <div>
+            Touched: <span class="mono" style="color: var(--text-main);">{{ node.last_touched.strftime('%Y-%m-%d %H:%M UTC') }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if node.tags %}
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+        {% for tag in node.tags %}
+        <a href="/?tag={{ tag }}" class="badge" style="text-decoration: none;">#{{ tag }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Maturity & Worth Ratings (DA-06 §04) -->
+    {% if node.attrs.get('cml') or node.attrs.get('scores') or node.attrs.get('worth_to_me') %}
+    <div class="card" style="background-color: var(--bg-color); border-color: var(--border-color); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Maturity & Worth Ratings (Frontmatter Direct)
+        </h3>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem;">
+            {% if node.attrs.get('cml') %}
+            <div>
+                CML Level: <strong style="color: var(--accent);">{{ node.attrs.get('cml') }}</strong>
+            </div>
+            {% endif %}
+            {% if node.attrs.get('scores') %}
+            <div style="display: flex; gap: 0.75rem;">
+                <span>Novel: <strong>{{ node.attrs.scores.get('novel', '-') }}</strong></span>
+                <span>Works: <strong>{{ node.attrs.scores.get('works', '-') }}</strong></span>
+                <span>Reach: <strong>{{ node.attrs.scores.get('reach', '-') }}</strong></span>
+                <span>Story: <strong>{{ node.attrs.scores.get('story', '-') }}</strong></span>
+            </div>
+            {% endif %}
+            {% if node.attrs.get('worth_to_me') %}
+            <div>
+                Worth (me): <strong>{{ node.attrs.get('worth_to_me') }}</strong>
+            </div>
+            {% endif %}
+            {% if node.attrs.get('worth_to_others') %}
+            <div>
+                Worth (others): <strong>{{ node.attrs.get('worth_to_others') }}</strong>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Note Prose Body -->
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Note Prose (Markdown Body)
+        </h3>
+        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">
+            {{ node.body if node.body else '*(No body text provided)*' }}
+        </div>
+    </div>
+
+    <!-- Typed Relationships & Graph Edges -->
+    {% if node.edges or inbound_edges %}
+    <div style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Typed Relationships & Graph Edges
+        </h3>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for in_edge in inbound_edges %}
+            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="mono" style="color: var(--green);">&larr; [{{ in_edge.relation }}]</span>
+                <a href="/node/{{ in_edge.from_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ in_edge.from_id }}</a>
+                <span style="color: var(--text-muted);">("{{ in_edge.from_title }}")</span>
+            </div>
+            {% endfor %}
+
+            {% for out_edge in node.edges %}
+            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="mono" style="color: var(--accent);">&rarr; [{{ out_edge.relation }}]</span>
+                <a href="/node/{{ out_edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
+                {% if out_edge.note %}
+                <span style="color: var(--text-muted);">({{ out_edge.note }})</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Custom Attributes -->
+    {% if node.attrs %}
+    {% set custom_keys = [] %}
+    {% for k in node.attrs.keys() %}
+        {% if k not in ['cml', 'scores', 'worth_to_me', 'worth_to_others'] %}
+            {% set _ = custom_keys.append(k) %}
+        {% endif %}
+    {% endfor %}
+    {% if custom_keys %}
+    <div>
+        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
+            Custom Frontmatter Attributes
+        </h3>
+        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; font-size: 0.85rem;">
+            {% for k in custom_keys %}
+            <div style="display: flex; gap: 1rem; padding: 0.25rem 0;">
+                <span class="mono" style="color: var(--text-muted); width: 120px;">{{ k }}:</span>
+                <span style="color: var(--text-main);">{{ node.attrs[k] }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    {% endif %}
+</div>
+{% endblock %}

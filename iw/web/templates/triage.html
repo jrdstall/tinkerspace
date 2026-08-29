@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Triage · Tinkerspace{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+        <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 0.25rem;">Keyboard Triage Pass</h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Fast keyboard triage into typed nodes with stamped human attribution.</p>
+    </div>
+    {% if item %}
+    <span class="badge mono">Item {{ current_index + 1 }} of {{ total_items }}</span>
+    {% endif %}
+</div>
+
+{% if item %}
+<div class="card" style="border-color: var(--accent);">
+    <div style="margin-bottom: 1.25rem;">
+        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Raw Captured Thought</span>
+        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem; font-size: 1.05rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap;">{{ item.raw_text }}</div>
+    </div>
+
+    <form id="triage-form" action="/triage/accept" method="POST">
+        <input type="hidden" name="item_id" value="{{ item.id }}">
+        
+        <div style="margin-bottom: 1.25rem;">
+            <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">1. Select Node Type</span>
+            <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                <label class="btn type-btn active" id="btn-friction">
+                    <input type="radio" name="node_type" value="friction" checked style="display: none;">
+                    <strong>[1]</strong> Friction <span class="mono" style="opacity: 0.7;">(f)</span>
+                </label>
+                <label class="btn type-btn" id="btn-observation">
+                    <input type="radio" name="node_type" value="observation" style="display: none;">
+                    <strong>[2]</strong> Observation <span class="mono" style="opacity: 0.7;">(o)</span>
+                </label>
+                <label class="btn type-btn" id="btn-idea">
+                    <input type="radio" name="node_type" value="idea" style="display: none;">
+                    <strong>[3]</strong> Idea <span class="mono" style="opacity: 0.7;">(i)</span>
+                </label>
+                <label class="btn type-btn" id="btn-question">
+                    <input type="radio" name="node_type" value="question" style="display: none;">
+                    <strong>[4]</strong> Question <span class="mono" style="opacity: 0.7;">(q)</span>
+                </label>
+                <label class="btn type-btn" id="btn-asset">
+                    <input type="radio" name="node_type" value="asset" style="display: none;">
+                    <strong>[5]</strong> Asset <span class="mono" style="opacity: 0.7;">(a)</span>
+                </label>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Title</label>
+                <input type="text" id="triage-title" name="title" value="{{ item.raw_text[:80] }}" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;" required>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Domain</label>
+                <input type="text" name="domain" value="general" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
+                <input type="text" name="tags" placeholder="hardware, triage" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+            </div>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Candidate Edge Link (Optional)</label>
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
+                <input type="text" name="edge_target" placeholder="Target Node ID (e.g. FRI-A01)" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <input type="text" name="edge_rel" placeholder="Relation (e.g. addresses, derives_from)" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+            </div>
+        </div>
+
+        <textarea name="body" style="display: none;">{{ item.raw_text }}</textarea>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" formaction="/triage/discard" class="btn" style="color: #f85149; border-color: rgba(248,81,73,0.3);">[x] Discard</button>
+                <button type="submit" formaction="/triage/defer" class="btn">[d] Defer</button>
+            </div>
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <a href="/" class="btn">[Esc] Exit</a>
+                <button type="submit" class="btn btn-primary">[Enter] Accept & Create Node</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    function selectType(typeName) {
+        document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+        const input = document.querySelector(`input[name="node_type"][value="${typeName}"]`);
+        if (input) {
+            input.checked = true;
+            const label = document.getElementById(`btn-${typeName}`);
+            if (label) label.classList.add('active');
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const inInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+        
+        if (e.key === 'Escape') {
+            window.location.href = '/';
+            return;
+        }
+
+        if (!inInput) {
+            if (e.key === '1' || e.key === 'f') { e.preventDefault(); selectType('friction'); }
+            if (e.key === '2' || e.key === 'o') { e.preventDefault(); selectType('observation'); }
+            if (e.key === '3' || e.key === 'i') { e.preventDefault(); selectType('idea'); }
+            if (e.key === '4' || e.key === 'q') { e.preventDefault(); selectType('question'); }
+            if (e.key === '5' || e.key === 'a') { e.preventDefault(); selectType('asset'); }
+            if (e.key === 'x') {
+                e.preventDefault();
+                const form = document.getElementById('triage-form');
+                form.action = '/triage/discard';
+                form.submit();
+            }
+            if (e.key === 'd') {
+                e.preventDefault();
+                const form = document.getElementById('triage-form');
+                form.action = '/triage/defer';
+                form.submit();
+            }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('triage-form').submit();
+            }
+        } else if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
+            e.preventDefault();
+            document.getElementById('triage-form').submit();
+        }
+    });
+</script>
+<style>
+    .type-btn.active {
+        border-color: var(--accent);
+        color: var(--accent);
+        background-color: rgba(88, 166, 255, 0.15);
+    }
+</style>
+
+{% else %}
+<div class="card" style="text-align: center; padding: 4rem 1.5rem;">
+    <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--green);">Inbox Zero!</h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 450px; margin: 0 auto 1.5rem auto;">
+        All captured thoughts and synced notes have been triaged into mature nodes.
+    </p>
+    <a href="/" class="btn btn-primary">Return to Explore</a>
+</div>
+{% endif %}
+{% endblock %}
