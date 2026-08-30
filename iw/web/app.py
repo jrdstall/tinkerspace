@@ -23,7 +23,7 @@ from iw.core.events import FileEventLog
 from iw.core.index import InMemoryIndex
 from iw.core.store import MarkdownStore
 from iw.web.helpers import extract_facets, resolve_inbound_edges
-from iw.web import board_views, intake_views, triage_views
+from iw.web import board_views, intake_views, triage_views, workflow_views
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -121,6 +121,11 @@ async def board_entry_view(request: Request) -> Response:
     return await board_views.board_view(request, templates)
 
 
+async def workflow_entry_view(request: Request) -> Response:
+    """Workflow DAG view delegating to workflow_views."""
+    return await workflow_views.workflow_view(request, templates)
+
+
 async def triage_entry_view(request: Request) -> Response:
     """Triage page entry delegating to triage_views."""
     return await triage_views.triage_view(request, templates)
@@ -144,6 +149,7 @@ def create_app(store: StoreProtocol | None = None) -> Starlette:
         Route("/capture", endpoint=capture_view, methods=["POST"]),
         Route("/board", endpoint=board_entry_view, methods=["GET"]),
         Route("/workboard", endpoint=board_entry_view, methods=["GET"]),
+        Route("/workflow/{workflow_id}", endpoint=workflow_entry_view, methods=["GET"]),
         Route("/board/dispatch", endpoint=board_views.board_dispatch_view, methods=["POST"]),
         Route("/board/park", endpoint=board_views.board_park_view, methods=["POST"]),
         Route("/board/skip", endpoint=board_views.board_skip_view, methods=["POST"]),

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Workflow {{ workflow.id }} · Tinkerspace{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 1.5rem;">
+    <a href="/board" style="color: var(--accent); text-decoration: none; font-size: 0.85rem; font-weight: 500;">&larr; Back to Work Board</a>
+</div>
+
+<div class="card" style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+        <div>
+            <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 0.5rem;">
+                <span class="badge mono">{{ workflow.id }}</span>
+                {% if workflow.template_id %}<span class="badge">{{ workflow.template_id }}</span>{% endif %}
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;">{{ workflow.title }}</h1>
+        </div>
+        <form action="/board/refresh" method="POST" style="display: inline;">
+            <button type="submit" class="btn" title="Refresh state and sync">🔄 Refresh State</button>
+        </form>
+    </div>
+
+    {% if workflow.subject_ids %}
+    <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem;">
+        Subject Nodes: 
+        {% for sub in workflow.subject_ids %}
+        <a href="/node/{{ sub }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ sub }}</a>{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Visual DAG Workflow Pipeline -->
+<h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">Workflow Execution Graph (DAG)</h2>
+
+<div style="display: flex; flex-direction: column; gap: 1.25rem;">
+    {% for step in steps %}
+    <div class="card step-card" style="
+        margin-bottom: 0;
+        {% if step.state == 'ready' %}border-left: 4px solid var(--green);
+        {% elif step.state == 'dispatched' %}border-left: 4px solid var(--accent);
+        {% elif step.state == 'returned' %}border-left: 4px solid var(--orange);
+        {% elif step.state == 'accepted' %}border-left: 4px solid #8b949e; opacity: 0.85;
+        {% elif step.state == 'blocked' %}border-left: 4px solid #484f58; opacity: 0.6; border-style: dashed;
+        {% else %}border-left: 4px solid var(--border-color);{% endif %}
+    ">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <div>
+                <span class="badge mono">{{ step.id }}</span>
+                {% if step.state == 'ready' %}<span class="badge badge-green">Ready</span>
+                {% elif step.state == 'dispatched' %}<span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.3);">In Progress</span>
+                {% elif step.state == 'returned' %}<span class="badge" style="color: var(--orange); border-color: rgba(210,153,34,0.3);">Returned</span>
+                {% elif step.state == 'accepted' %}<span class="badge" style="color: #8b949e;">Accepted</span>
+                {% elif step.state == 'blocked' %}<span class="badge" style="color: #8b949e;">Blocked</span>
+                {% elif step.state == 'skipped' %}<span class="badge">Skipped</span>
+                {% else %}<span class="badge">{{ step.state }}</span>{% endif %}
+                <span class="badge" style="font-size: 0.7rem;">{{ step.activity }}</span>
+            </div>
+            
+            <!-- Step Dependency Flow Indicators -->
+            <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
+                {% if step.predecessors %}
+                <span>Depends on: <strong>{{ step.predecessors|join(', ') }}</strong></span>
+                {% else %}
+                <span style="color: var(--green);">Root Step</span>
+                {% endif %}
+                {% if step.successors %}
+                <span style="margin-left: 0.75rem;">&rarr; Next: <strong>{{ step.successors|join(', ') }}</strong></span>
+                {% endif %}
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">{{ step.title }}</h3>
+
+        {% if step.action_guide %}
+        <div style="background-color: rgba(88, 166, 255, 0.08); border-left: 3px solid var(--accent); padding: 0.75rem; border-radius: 4px; margin: 0.75rem 0; font-size: 0.85rem; line-height: 1.4;">
+            <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.25rem; font-size: 0.75rem; letter-spacing: 0.5px;">📋 ACTION GUIDE</div>
+            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: var(--text-main);">{{ step.action_guide }}</pre>
+        </div>
+        {% endif %}
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+            <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
+                Folder: work/{{ step.id }}/
+            </div>
+            
+            <div style="display: flex; gap: 0.5rem;">
+                {% if step.state == 'ready' %}
+                <form action="/board/park" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">⏸️ Park</button>
+                </form>
+                <form action="/board/skip" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">⏭️ Skip</button>
+                </form>
+                <form action="/board/dispatch" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;">🚀 Dispatch</button>
+                </form>
+                {% elif step.state == 'dispatched' %}
+                <form action="/board/reset" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel Dispatch</button>
+                </form>
+                {% elif step.state == 'returned' %}
+                <form action="/board/reset" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Rework</button>
+                </form>
+                <span class="badge badge-green">Ready to Collect</span>
+                {% elif step.state == 'parked' %}
+                <form action="/board/reset" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">▶️ Resume (Ready)</button>
+                </form>
+                {% elif step.state == 'blocked' %}
+                <span class="badge" style="color: var(--text-muted);">Waiting on Upstream</span>
+                {% elif step.state == 'accepted' %}
+                <span class="badge badge-green">✓ Completed</span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if not loop.last %}
+    <div style="text-align: center; color: var(--text-muted); font-size: 1.25rem; margin: -0.5rem 0;">
+        ↓
+    </div>
+    {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}
