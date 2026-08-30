@@ -105,11 +105,14 @@ class UnitOfWork:
 
 @dataclass
 class Workflow:
-    """Set of dependency-linked work units."""
+    """Set of dependency-linked work units forming a DAG."""
     id: str
+    title: str
     subject_ids: list[str]
     unit_ids: list[str]
-    created: datetime
+    dependencies: dict[str, list[str]] = field(default_factory=dict)
+    created: datetime = field(default_factory=datetime.now)
+    template_id: str | None = None
 
 
 @dataclass(frozen=True)
