@@ -151,6 +151,7 @@ def create_app(store: StoreProtocol | None = None) -> Starlette:
         Route("/workboard", endpoint=board_entry_view, methods=["GET"]),
         Route("/workflow/{workflow_id}", endpoint=workflow_entry_view, methods=["GET"]),
         Route("/board/dispatch", endpoint=board_views.board_dispatch_view, methods=["POST"]),
+        Route("/board/collect", endpoint=board_views.board_collect_view, methods=["POST"]),
         Route("/board/park", endpoint=board_views.board_park_view, methods=["POST"]),
         Route("/board/skip", endpoint=board_views.board_skip_view, methods=["POST"]),
         Route("/board/reset", endpoint=board_views.board_reset_view, methods=["POST"]),

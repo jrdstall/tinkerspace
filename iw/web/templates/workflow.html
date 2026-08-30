@@ -102,12 +102,20 @@
                 {% elif step.state == 'dispatched' %}
                 <form action="/board/reset" method="POST" style="display: inline;">
                     <input type="hidden" name="unit_id" value="{{ step.id }}">
-                    <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel Dispatch</button>
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel</button>
+                </form>
+                <form action="/board/collect" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;">📥 Attach Result</button>
                 </form>
                 {% elif step.state == 'returned' %}
                 <form action="/board/reset" method="POST" style="display: inline;">
                     <input type="hidden" name="unit_id" value="{{ step.id }}">
                     <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Rework</button>
+                </form>
+                <form action="/board/collect" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;">📥 Attach Result</button>
                 </form>
                 <span class="badge badge-green">Ready to Collect</span>
                 {% elif step.state == 'parked' %}

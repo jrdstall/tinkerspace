@@ -1,6 +1,6 @@
 """Work Board web view handlers.
 
-Serves the central Work Board UI (/board), displays units by lifecycle state, and handles dispatch, park, skip, reset, and refresh actions.
+Serves the central Work Board UI (/board), displays units by lifecycle state, and handles dispatch, collect, park, skip, reset, and refresh actions.
 """
 
 from typing import Any
@@ -10,6 +10,10 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, UnitOfWork, UnitState
 from iw.contracts.store import StoreProtocol
+from iw.domain.workflow.collection import (
+    collect_unit_results,
+    generate_human_starter_template,
+)
 from iw.domain.workflow.runtime import WorkflowRuntime
 from iw.domain.workflow.state import transition_unit_state
 
@@ -65,7 +69,7 @@ async def board_view(request: Request, templates: Jinja2Templates) -> Response:
 
 
 async def board_dispatch_view(request: Request) -> Response:
-    """Handle dispatch action for a ready unit."""
+    """Handle dispatch action for a ready unit and seed human template if assigned."""
     store: StoreProtocol = request.app.state.store
     form_data = await request.form()
     unit_id = str(form_data.get("unit_id", "")).strip().upper()
@@ -73,7 +77,25 @@ async def board_dispatch_view(request: Request) -> Response:
     unit = store.get_unit(unit_id)
     if unit and unit.state == UnitState.READY:
         author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+        vault_dir = getattr(store, "vault_dir", None)
+        if vault_dir and unit.assignee.get("kind") == "human":
+            generate_human_starter_template(unit, vault_dir / "work" / unit.id)
         transition_unit_state(unit, UnitState.DISPATCHED, author=author, store=store)
+
+    return RedirectResponse(url="/board", status_code=303)
+
+
+async def board_collect_view(request: Request) -> Response:
+    """Handle result collection and fact materialization for a unit (COLLECT-08)."""
+    store: StoreProtocol = request.app.state.store
+    form_data = await request.form()
+    unit_id = str(form_data.get("unit_id", "")).strip().upper()
+
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    try:
+        collect_unit_results(store=store, unit_id=unit_id, author=author)
+    except Exception:
+        pass
 
     return RedirectResponse(url="/board", status_code=303)
 

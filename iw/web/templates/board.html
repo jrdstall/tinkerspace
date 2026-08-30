@@ -104,14 +104,20 @@
                         <div>Assignee: <span style="color: var(--text-main);">{{ u.assignee.get('kind', 'unassigned') }} / {{ u.assignee.get('name', '') }}</span></div>
                         <div class="mono" style="font-size: 0.75rem; margin-top: 0.25rem;">work/{{ u.id }}/</div>
                     </div>
-                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
-                        <form action="/board/park" method="POST" style="display: inline;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+                        <div style="display: flex; gap: 0.35rem;">
+                            <form action="/board/park" method="POST" style="display: inline;">
+                                <input type="hidden" name="unit_id" value="{{ u.id }}">
+                                <button type="submit" class="btn" style="font-size: 0.75rem;">⏸️ Park</button>
+                            </form>
+                            <form action="/board/reset" method="POST" style="display: inline;">
+                                <input type="hidden" name="unit_id" value="{{ u.id }}">
+                                <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel</button>
+                            </form>
+                        </div>
+                        <form action="/board/collect" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn" style="font-size: 0.75rem;">⏸️ Park</button>
-                        </form>
-                        <form action="/board/reset" method="POST" style="display: inline;">
-                            <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel Dispatch</button>
+                            <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;" title="Parse deliverable and ingest artifacts">📥 Attach Result</button>
                         </form>
                     </div>
                 </div>
@@ -146,7 +152,10 @@
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
                             <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Rework</button>
                         </form>
-                        <span class="badge badge-green">Ready to Collect</span>
+                        <form action="/board/collect" method="POST" style="display: inline;">
+                            <input type="hidden" name="unit_id" value="{{ u.id }}">
+                            <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;" title="Accept and ingest results">📥 Attach Result</button>
+                        </form>
                     </div>
                 </div>
                 {% endfor %}

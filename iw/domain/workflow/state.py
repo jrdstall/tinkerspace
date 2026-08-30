@@ -8,8 +8,8 @@ from iw.contracts.store import StoreProtocol
 
 VALID_TRANSITIONS: dict[UnitState, set[UnitState]] = {
     UnitState.BLOCKED: {UnitState.READY, UnitState.PARKED, UnitState.SKIPPED},
-    UnitState.READY: {UnitState.DISPATCHED, UnitState.PARKED, UnitState.SKIPPED},
-    UnitState.DISPATCHED: {UnitState.RETURNED, UnitState.READY, UnitState.PARKED},
+    UnitState.READY: {UnitState.DISPATCHED, UnitState.PARKED, UnitState.SKIPPED, UnitState.ACCEPTED},
+    UnitState.DISPATCHED: {UnitState.RETURNED, UnitState.READY, UnitState.PARKED, UnitState.ACCEPTED},
     UnitState.RETURNED: {UnitState.ACCEPTED, UnitState.READY, UnitState.PARKED, UnitState.SKIPPED},
     UnitState.PARKED: {UnitState.READY, UnitState.BLOCKED},
     UnitState.ACCEPTED: set(),
