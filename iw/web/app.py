@@ -23,7 +23,7 @@ from iw.core.events import FileEventLog
 from iw.core.index import InMemoryIndex
 from iw.core.store import MarkdownStore
 from iw.web.helpers import extract_facets, resolve_inbound_edges
-from iw.web import intake_views, triage_views
+from iw.web import board_views, intake_views, triage_views
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -116,6 +116,11 @@ async def capture_view(request: Request) -> Response:
     return RedirectResponse(url="/", status_code=303)
 
 
+async def board_entry_view(request: Request) -> Response:
+    """Work Board entry delegating to board_views."""
+    return await board_views.board_view(request, templates)
+
+
 async def triage_entry_view(request: Request) -> Response:
     """Triage page entry delegating to triage_views."""
     return await triage_views.triage_view(request, templates)
@@ -137,6 +142,13 @@ def create_app(store: StoreProtocol | None = None) -> Starlette:
         Route("/", endpoint=index_view, methods=["GET"]),
         Route("/node/{node_id}", endpoint=node_detail_view, methods=["GET"]),
         Route("/capture", endpoint=capture_view, methods=["POST"]),
+        Route("/board", endpoint=board_entry_view, methods=["GET"]),
+        Route("/workboard", endpoint=board_entry_view, methods=["GET"]),
+        Route("/board/dispatch", endpoint=board_views.board_dispatch_view, methods=["POST"]),
+        Route("/board/park", endpoint=board_views.board_park_view, methods=["POST"]),
+        Route("/board/skip", endpoint=board_views.board_skip_view, methods=["POST"]),
+        Route("/board/reset", endpoint=board_views.board_reset_view, methods=["POST"]),
+        Route("/board/refresh", endpoint=board_views.board_refresh_view, methods=["POST", "GET"]),
         Route("/triage", endpoint=triage_entry_view, methods=["GET"]),
         Route("/triage/accept", endpoint=triage_views.triage_accept_view, methods=["POST"]),
         Route("/triage/discard", endpoint=triage_views.triage_discard_view, methods=["POST"]),
@@ -152,3 +164,4 @@ def create_app(store: StoreProtocol | None = None) -> Starlette:
 
 
 app = create_app()
+
