@@ -574,8 +574,8 @@ The only place status lives. Each task: status · inputs · activities · done w
 *Activities:* the exact required fields; how they are parsed out of a markdown file; what happens when parsing fails; the explicit statement of what is *not* parsed.
 *Done when:* the header is five fields or fewer; parse failure degrades to "keep the prose, attach the file, flag it" and never to an error; a reader can tell from the document that this is not a form.
 
-**DA-13 · Phase 2 slice plan** — `not started` · 1 block · *blocked by:* B1-4; *informed by:* TS-03, TS-04
-*Done when:* Phase 2 slices have the same shape as §09's Phase 1 table, each with a runnable definition of done, none larger than one evening's review.
+**DA-13 · Phase 2 slice plan** — `in work` · 1 block · *blocked by:* B1-4; *informed by:* TS-03, TS-04
+*Done when:* Phase 2 slices have the same shape as §09's Phase 1 table, each with a runnable definition of done, none larger than one evening's review. Output written to `docs/design/DA-13-phase-2-slices.md`.
 
 **DA-14 · Forward-compatibility checklist** — `done` · 0.5 block · *blocked by:* DA-09, DA-10, DA-11, DA-12
 *Inputs:* §12's seven items and its closing question · all completed design artifacts
