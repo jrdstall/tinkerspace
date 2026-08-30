@@ -577,13 +577,13 @@ The only place status lives. Each task: status · inputs · activities · done w
 **DA-13 · Phase 2 slice plan** — `not started` · 1 block · *blocked by:* B1-4; *informed by:* TS-03, TS-04
 *Done when:* Phase 2 slices have the same shape as §09's Phase 1 table, each with a runnable definition of done, none larger than one evening's review.
 
-**DA-14 · Forward-compatibility checklist** — `not started` · 0.5 block · *blocked by:* DA-09, DA-10, DA-11, DA-12
+**DA-14 · Forward-compatibility checklist** — `done` · 0.5 block · *blocked by:* DA-09, DA-10, DA-11, DA-12
 *Inputs:* §12's seven items and its closing question · all completed design artifacts
 *Activities:* for each item, name the specific place in the design that would have to change, and confirm it is a change rather than a rewrite; then answer the delete-every-other-tool question against the whole design.
 *Done when:* every item has a written verdict; anything failing produces a specific amendment to a named artifact, not a note.
 
-**DA-15 · User's guide & operational playbook** — `not started` · 0.5 block
-*Inputs:* All completed DA design artifacts, V§05, V§07, V§14
+**DA-15 · User's guide & operational playbook** — `deferred` · 0.5 block · *deferred until running system is deployed*
+*Inputs:* Running system, all completed DA design artifacts, V§05, V§07, V§14
 *Activities:* author `docs/USER_GUIDE.md` containing concise, step-by-step playbooks for every major user workflow (quick capture, keyboard triage, exploring ideas, executing human steps in Obsidian, dispatching AI agents via MCP/file-handoff, running freeform activities, authoring new template files, tablet drop sync) followed by an architectural "what happens behind the scenes" section for each.
 *Done when:* a new or returning user can execute any daily workflow in under 3 steps without reading technical design docs.
 

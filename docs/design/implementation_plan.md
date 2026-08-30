@@ -152,6 +152,6 @@ flowchart TD
 | **DA-11** | `done` | AI | `docs/design/DA-11-activity-templates.md` | **Activity Template Format, Seed Templates & Master Agent Guidance**: Template schema, zero-code discovery, `freeform@1`, `prior-art-survey@1`, `screening-assessment@1`, and `templates/guidance/AGENT_GUIDANCE.md`. |
 | **DA-12** | `done` | AI | `docs/design/DA-12-deliverable-header.md` | **Deliverable Header Spec**: Required fields, markdown parsing rules, graceful degradation on parse failure. |
 | **DA-13** | `not started` | AI / Jared | `docs/design/DA-13-phase-2-slices.md` | **Phase 2 Slice Plan**: Runnable slice definitions for B2-1 through B2-13. |
-| **DA-14** | `not started` | Jared | `docs/design/DA-14-forward-compatibility.md` | **Forward-Compatibility Checklist**: Review against Phases 3–5 requirements and vendor-independence test. |
-| **DA-15** | `not started` | AI | `docs/USER_GUIDE.md` | **Innovator's Workspace User's Guide & Operational Playbook**: Step-by-step execution guides for core workflows (capture, triage, Obsidian human steps, agent MCP dispatch, freeform tasks, template authoring) with behind-the-scenes system explanations for each. |
+| **DA-14** | `done` | AI | `docs/design/DA-14-forward-compatibility.md` | **Forward-Compatibility Checklist**: Review against Phases 3–5 requirements and vendor-independence test. |
+| **DA-15** | `deferred` | AI | `docs/USER_GUIDE.md` | **Innovator's Workspace User's Guide & Operational Playbook**: *Deferred until running system is deployed.* Step-by-step execution guides for core workflows with behind-the-scenes system explanations. |
 
