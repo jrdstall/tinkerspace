@@ -1,6 +1,6 @@
 """Layer 1 Markdown Store implementation.
 
-Reads and writes markdown files with YAML frontmatter atomically from disk.
+Reads and writes markdown files with YAML frontmatter and unit.yaml atomically from disk.
 Enforces zero-caching, atomic rename, author attribution, ID allocation, inbox, and intake drop.
 """
 
@@ -30,6 +30,7 @@ from iw.core.io import (
     read_raw_frontmatter_and_body,
     scan_vault_markdown_files,
 )
+from iw.core.units import atomic_write_unit_yaml, read_unit_yaml, scan_vault_units
 
 
 class MarkdownStore(StoreProtocol):
@@ -61,9 +62,8 @@ class MarkdownStore(StoreProtocol):
         nodes: list[Node] = []
         for path in scan_vault_markdown_files(self.vault_dir):
             node, _ = parse_vault_file(path)
-            if node is not None:
-                if type_filter is None or node.type.lower() == type_filter.lower():
-                    nodes.append(node)
+            if node is not None and (type_filter is None or node.type.lower() == type_filter.lower()):
+                nodes.append(node)
         return nodes
 
     def list_needs_attention(self) -> list[AttentionItem]:
@@ -77,7 +77,7 @@ class MarkdownStore(StoreProtocol):
 
     def allocate_id(self, prefix: str) -> str:
         """Deterministically allocate the next sequence ID for an entity prefix."""
-        known_ids: list[str] = [node.id for node in self.list_nodes()]
+        known_ids = [node.id for node in self.list_nodes()]
         if self.event_log:
             for event in self.event_log.read_events():
                 if event.subject_id:
@@ -93,65 +93,45 @@ class MarkdownStore(StoreProtocol):
         now = datetime.now(timezone.utc)
         target_file = find_file_by_id(self.vault_dir, clean_id)
 
-        existing_fm: dict[str, Any] = {}
-        existing_body = ""
+        existing_fm, existing_body = ({}, "")
         if target_file and target_file.exists():
             existing_fm, existing_body = read_raw_frontmatter_and_body(target_file)
 
         merged_fm = merge_frontmatter(existing_fm, node, clean_id, author, now)
         final_body = node.body if node.body else existing_body
-        final_path = target_file if target_file else build_node_path(self.vault_dir, node.type, node.title, clean_id, now)
+        final_path = target_file or build_node_path(self.vault_dir, node.type, node.title, clean_id, now)
 
         atomic_write_markdown(final_path, merged_fm, final_body)
-        self._record_mutation(clean_id, node, author, final_path)
+        self._record_node_mutation(clean_id, node, author, final_path)
 
-        updated_node = self.get_node(clean_id)
-        if updated_node is None:
+        updated = self.get_node(clean_id)
+        if updated is None:
             raise RuntimeError(f"Failed to read back written node {clean_id}")
-        return updated_node
+        return updated
 
     def sync_refresh(self) -> list[str]:
         """Discover and commit external notes arriving via sync without background watchers."""
         synced_ids: list[str] = []
         if self.git_committer and hasattr(self.git_committer, "commit_all_uncommitted"):
             sync_author = Author(kind=AuthorKind.EXTERNAL, courier="sync")
-            committed = self.git_committer.commit_all_uncommitted(
-                author=sync_author,
-                message="sync: ingest external notes from sync",
-            )
-            for path in committed:
+            for path in self.git_committer.commit_all_uncommitted(sync_author, "sync: ingest notes"):
                 if path.suffix == ".md" and path.exists():
                     node, _ = parse_vault_file(path)
                     node_id = node.id if node else path.stem
                     synced_ids.append(node_id)
                     if self.event_log:
-                        self.event_log.append(
-                            kind="node_synced",
-                            subject_id=node_id,
-                            author=sync_author,
-                            payload={"path": str(path)},
-                        )
+                        self.event_log.append("node_synced", node_id, sync_author, {"path": str(path)})
         return synced_ids
 
     def list_inbox(self) -> list[InboxItem]:
         """Scan and return all raw captured items in the inbox."""
         return self.inbox_manager.list_items()
 
-    def append_inbox(
-        self,
-        raw_text: str,
-        inlet: str = "quick-capture",
-        source_filename: str | None = None,
-    ) -> InboxItem:
+    def append_inbox(self, raw_text: str, inlet: str = "quick-capture", source_filename: str | None = None) -> InboxItem:
         """Append a raw captured thought to the store inbox."""
         item = self.inbox_manager.append_item(raw_text, inlet, source_filename)
         if self.event_log:
-            self.event_log.append(
-                kind="inbox_captured",
-                subject_id=item.id,
-                author=Author(kind=AuthorKind.HUMAN, courier=inlet),
-                payload={"text": item.raw_text},
-            )
+            self.event_log.append("inbox_captured", item.id, Author(AuthorKind.HUMAN, inlet), {"text": item.raw_text})
         return item
 
     def delete_inbox_item(self, item_id: str) -> bool:
@@ -167,24 +147,38 @@ class MarkdownStore(StoreProtocol):
         return self.intake_manager.intake_file(file_name, node, author)
 
     def get_unit(self, unit_id: str) -> UnitOfWork | None:
-        """Read a work unit and its unit.yaml state."""
+        """Read a work unit and its unit.yaml state without caching."""
+        target_id = unit_id.strip().upper()
+        unit_file = self.vault_dir / "work" / target_id / "unit.yaml"
+        if unit_file.exists():
+            return read_unit_yaml(unit_file)
+        for unit in scan_vault_units(self.vault_dir):
+            if unit.id.upper() == target_id:
+                return unit
         return None
 
     def write_unit(self, unit: UnitOfWork, author: Author) -> UnitOfWork:
         """Write unit.yaml state atomically into work/UOW-xxx/."""
-        return unit
+        if not author or not author.kind:
+            raise ValueError("Author with kind is required on unit write (UOW-08)")
+        clean_id = unit.id.strip().upper()
+        target_file = atomic_write_unit_yaml(self.vault_dir / "work" / clean_id, unit)
+        if self.event_log:
+            self.event_log.append("unit_written", clean_id, author, {"state": str(unit.state.value)})
+        if self.git_committer:
+            self.git_committer.commit_file(target_file, f"update {clean_id}: {unit.title}", author)
+        updated = self.get_unit(clean_id)
+        if updated is None:
+            raise RuntimeError(f"Failed to read back written unit {clean_id}")
+        return updated
 
-    def _record_mutation(
-        self, clean_id: str, node: Node, author: Author, path: Path
-    ) -> None:
+    def list_units(self) -> list[UnitOfWork]:
+        """Scan and return all work units from the vault."""
+        return scan_vault_units(self.vault_dir)
+
+    def _record_node_mutation(self, clean_id: str, node: Node, author: Author, path: Path) -> None:
         """Record write event to event log and trigger local git commit."""
         if self.event_log:
-            self.event_log.append(
-                kind="node_written",
-                subject_id=clean_id,
-                author=author,
-                payload={"type": node.type, "title": node.title, "path": str(path)},
-            )
+            self.event_log.append("node_written", clean_id, author, {"type": node.type, "title": node.title})
         if self.git_committer:
-            msg = f"update {clean_id}: {node.title}"
-            self.git_committer.commit_file(path, msg, author)
+            self.git_committer.commit_file(path, f"update {clean_id}: {node.title}", author)
