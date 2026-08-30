@@ -1,6 +1,6 @@
 """Event log behaviour tests.
 
-Proves the append-only event log records mutations and lifecycle events.
+Traces EVENT-01 and EVENT-02 per docs/design/specs/EVENT.md.
 """
 
 from datetime import datetime, timezone
@@ -11,8 +11,8 @@ from iw.core.events import FileEventLog
 from iw.core.store import MarkdownStore
 
 
-def test_event_log_appends_immutable_jsonl_records(tmp_path: Path):
-    """Event log writes valid JSONL lines and reads them back."""
+def test_event_01_event_log_appends_immutable_jsonl_records(tmp_path: Path):
+    """EVENT-01: Event log writes valid JSONL lines and reads them back."""
     log_file = tmp_path / "events.jsonl"
     event_log = FileEventLog(log_path=log_file)
     author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
@@ -44,8 +44,8 @@ def test_event_log_appends_immutable_jsonl_records(tmp_path: Path):
     assert records[1].subject_id == "FRI-A02"
 
 
-def test_store_write_emits_event_log_record(tmp_path: Path):
-    """MarkdownStore writing a node appends an event to the configured EventLog."""
+def test_event_02_store_write_emits_event_log_record(tmp_path: Path):
+    """EVENT-02: MarkdownStore writing a node appends an event to the configured EventLog."""
     log_file = tmp_path / "events.jsonl"
     event_log = FileEventLog(log_path=log_file)
     store = MarkdownStore(vault_dir=tmp_path, event_log=event_log)

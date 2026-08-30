@@ -1,6 +1,6 @@
 """Behaviour tests for Explore and Node views, multi-facet filtering, and full-text search.
 
-Traces DA-06 §03, §04 and STORE-09.
+Traces EXPLORE-01 through EXPLORE-04 per docs/design/specs/EXPLORE.md.
 """
 
 from datetime import datetime, timezone
@@ -55,8 +55,8 @@ def _sample_nodes() -> list[Node]:
     ]
 
 
-def test_full_text_search_finds_nodes_by_body_or_title_or_id():
-    """STORE-09: Full-text search locates nodes by words in body, title, tags, or ID."""
+def test_explore_01_full_text_search_finds_nodes_by_body_or_title_or_id():
+    """EXPLORE-01: Full-text search locates nodes by words in body, title, tags, or ID."""
     nodes = _sample_nodes()
     index = InMemoryIndex(nodes)
 
@@ -76,8 +76,8 @@ def test_full_text_search_finds_nodes_by_body_or_title_or_id():
     assert results_tag[0].id == "AST-A01"
 
 
-def test_multi_facet_filtering():
-    """QueryFilters correctly filter by domain, type, tag, and state."""
+def test_explore_02_multi_facet_filtering():
+    """EXPLORE-02: QueryFilters correctly filter by domain, type, tag, and state."""
     nodes = _sample_nodes()
     index = InMemoryIndex(nodes)
 
@@ -102,8 +102,8 @@ def test_multi_facet_filtering():
     assert res_cml[0].id == "IDEA-A01"
 
 
-def test_web_explore_search_and_filter_views(tmp_path: Path):
-    """Web explore landing page executes search queries and filters cleanly."""
+def test_explore_03_web_explore_search_and_filter_views(tmp_path: Path):
+    """EXPLORE-03: Web explore landing page executes search queries and filters cleanly."""
     store = MarkdownStore(vault_dir=tmp_path)
     author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
     for n in _sample_nodes():
@@ -134,8 +134,8 @@ def test_web_explore_search_and_filter_views(tmp_path: Path):
     assert "IDEA-A01" not in res_type.text
 
 
-def test_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path: Path):
-    """Node detail page renders CML scores and resolves inbound edge graph links."""
+def test_explore_04_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path: Path):
+    """EXPLORE-04: Node detail page renders CML scores and resolves inbound edge graph links."""
     store = MarkdownStore(vault_dir=tmp_path)
     author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
     for n in _sample_nodes():

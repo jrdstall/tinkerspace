@@ -1,6 +1,6 @@
 """Behaviour tests for Intake and File Drop workflow.
 
-Traces STORE-10, STORE-13, DA-05 §02, and B1-7 acceptance criteria.
+Traces INTAKE-01 through INTAKE-04 per docs/design/specs/INTAKE.md.
 """
 
 from datetime import datetime, timezone
@@ -12,8 +12,8 @@ from iw.core.store import MarkdownStore
 from iw.web.app import create_app
 
 
-def test_dropped_file_in_vault_drop_is_discovered_on_request(tmp_path: Path):
-    """STORE-10, STORE-13, B1-7: Exported sketches arriving via sync in drop/ are discovered on request."""
+def test_intake_01_dropped_file_in_vault_drop_is_discovered_on_request(tmp_path: Path):
+    """INTAKE-01: Exported sketches arriving via sync in drop/ are discovered on request."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
@@ -34,8 +34,8 @@ def test_dropped_file_in_vault_drop_is_discovered_on_request(tmp_path: Path):
     assert [p.name for p in dropped] == ["2026-08-29-puck-schematic.png", "nrf52840-datasheet.pdf"]
 
 
-def test_intake_creates_stub_node_with_attached_file_and_embed(tmp_path: Path):
-    """B1-7, DA-05 §02: Creating a stub node attaches the dropped file and sets markdown embed."""
+def test_intake_02_creates_stub_node_with_attached_file_and_embed(tmp_path: Path):
+    """INTAKE-02: Creating a stub node attaches the dropped file and sets markdown embed."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
@@ -67,8 +67,8 @@ def test_intake_creates_stub_node_with_attached_file_and_embed(tmp_path: Path):
     assert reloaded.attrs.get("rendered_file") == "drop/handlebar-sketch.png"
 
 
-def test_intake_attaches_dropped_file_to_existing_node(tmp_path: Path):
-    """DA-05 §02: Attaching dropped file to existing mature node updates its markdown body."""
+def test_intake_03_attaches_dropped_file_to_existing_node(tmp_path: Path):
+    """INTAKE-03: Attaching dropped file to existing mature node updates its markdown body."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
@@ -101,8 +101,8 @@ def test_intake_attaches_dropped_file_to_existing_node(tmp_path: Path):
     assert "Initial concept notes for display puck." in updated.body
 
 
-def test_web_intake_flow_and_empty_state(tmp_path: Path):
-    """Web intake views support browsing dropped items, stub creation, and attaching."""
+def test_intake_04_web_intake_flow_and_empty_state(tmp_path: Path):
+    """INTAKE-04: Web intake views support browsing dropped items, stub creation, and attaching."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)

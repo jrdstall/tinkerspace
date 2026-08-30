@@ -1,6 +1,6 @@
 """Behaviour tests for keyboard triage and inbox item conversion.
 
-Traces DA-05 §06 and §07 rapid keyboard triage pass.
+Traces TRIAGE-01 through TRIAGE-04 per docs/design/specs/TRIAGE.md.
 """
 
 from datetime import datetime, timezone
@@ -14,8 +14,8 @@ from iw.core.triage import TriageService
 from iw.web.app import create_app
 
 
-def test_triage_converts_inbox_item_into_node_with_author_stamped(tmp_path: Path):
-    """Triage assigns deterministic ID, stamps author, saves node, and removes inbox item."""
+def test_triage_01_converts_inbox_item_into_node_with_author_stamped(tmp_path: Path):
+    """TRIAGE-01: Triage assigns deterministic ID, stamps author, saves node, and removes inbox item."""
     event_log = FileEventLog(log_path=tmp_path / "events.jsonl")
     store = MarkdownStore(vault_dir=tmp_path, event_log=event_log)
     service = TriageService(store=store)
@@ -52,8 +52,8 @@ def test_triage_converts_inbox_item_into_node_with_author_stamped(tmp_path: Path
     assert fetched.id == "FRI-A01"
 
 
-def test_triage_creates_candidate_edge_links(tmp_path: Path):
-    """Triage can attach directed edges to existing nodes during conversion."""
+def test_triage_02_creates_candidate_edge_links(tmp_path: Path):
+    """TRIAGE-02: Triage can attach directed edges to existing nodes during conversion."""
     store = MarkdownStore(vault_dir=tmp_path)
     service = TriageService(store=store)
 
@@ -100,8 +100,8 @@ def test_triage_creates_candidate_edge_links(tmp_path: Path):
     assert saved_idea.edges[0].relation == "addresses"
 
 
-def test_discard_removes_inbox_item_without_creating_node(tmp_path: Path):
-    """Discarding an inbox item deletes it from disk without creating a mature node."""
+def test_triage_03_discard_removes_inbox_item_without_creating_node(tmp_path: Path):
+    """TRIAGE-03: Discarding an inbox item deletes it from disk without creating a mature node."""
     store = MarkdownStore(vault_dir=tmp_path)
     service = TriageService(store=store)
 
@@ -114,8 +114,8 @@ def test_discard_removes_inbox_item_without_creating_node(tmp_path: Path):
     assert len(store.list_nodes()) == 0
 
 
-def test_web_triage_flow_and_empty_state(tmp_path: Path):
-    """Web triage interface renders active item, handles accept/discard, and shows inbox zero."""
+def test_triage_04_web_triage_flow_and_empty_state(tmp_path: Path):
+    """TRIAGE-04: Web triage interface renders active item, handles accept/discard, and shows inbox zero."""
     store = MarkdownStore(vault_dir=tmp_path)
     app = create_app(store=store)
     client = TestClient(app)

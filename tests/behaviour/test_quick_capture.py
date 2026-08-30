@@ -1,6 +1,6 @@
 """Behaviour tests for zero-classification quick capture and inbox operations.
 
-Traces V§14.10 and DA-05 capture routes and inbox formats.
+Traces CAPTURE-01 through CAPTURE-04 per docs/design/specs/CAPTURE.md.
 """
 
 from pathlib import Path
@@ -12,8 +12,8 @@ from iw.core.store import MarkdownStore
 from iw.web.app import create_app
 
 
-def test_quick_capture_saves_raw_thought_without_classification(tmp_path: Path):
-    """Zero-classification capture creates a raw inbox item on disk with no metadata asked."""
+def test_capture_01_quick_capture_saves_raw_thought_without_classification(tmp_path: Path):
+    """CAPTURE-01: Zero-classification capture creates a raw inbox item on disk with no metadata asked."""
     event_log = FileEventLog(log_path=tmp_path / "events.jsonl")
     store = MarkdownStore(vault_dir=tmp_path, event_log=event_log)
     inlet = QuickCaptureInlet(store=store)
@@ -34,8 +34,8 @@ def test_quick_capture_saves_raw_thought_without_classification(tmp_path: Path):
     assert any(e.kind == "inbox_captured" and e.subject_id == item.id for e in events)
 
 
-def test_inbox_lists_synced_files_and_quick_lines(tmp_path: Path):
-    """Inbox manager discovers both standalone files and quick.txt lines."""
+def test_capture_02_inbox_lists_synced_files_and_quick_lines(tmp_path: Path):
+    """CAPTURE-02: Inbox manager discovers both standalone files and quick.txt lines."""
     store = MarkdownStore(vault_dir=tmp_path)
     inbox_dir = tmp_path / "inbox"
     inbox_dir.mkdir(parents=True)
@@ -59,8 +59,8 @@ def test_inbox_lists_synced_files_and_quick_lines(tmp_path: Path):
     assert "Tubeless valve core clogged with dried sealant" in texts
 
 
-def test_web_capture_endpoint_creates_inbox_item_and_updates_count(tmp_path: Path):
-    """POST /capture appends item to inbox and Explore page reflects updated count."""
+def test_capture_03_web_capture_endpoint_creates_inbox_item_and_updates_count(tmp_path: Path):
+    """CAPTURE-03: POST /capture appends item to inbox and Explore page reflects updated count."""
     store = MarkdownStore(vault_dir=tmp_path)
     app = create_app(store=store)
     client = TestClient(app)
@@ -85,8 +85,8 @@ def test_web_capture_endpoint_creates_inbox_item_and_updates_count(tmp_path: Pat
     assert "clean bike chains quickly" in items[0].raw_text
 
 
-def test_delete_inbox_item_removes_file_from_disk(tmp_path: Path):
-    """Deleting an inbox item removes it from disk and list_inbox."""
+def test_capture_04_delete_inbox_item_removes_file_from_disk(tmp_path: Path):
+    """CAPTURE-04: Deleting an inbox item removes it from disk and list_inbox."""
     store = MarkdownStore(vault_dir=tmp_path)
     item = store.append_inbox("Temporary thought to be discarded")
 
