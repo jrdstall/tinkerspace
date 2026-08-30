@@ -564,7 +564,7 @@ The only place status lives. Each task: status · inputs · activities · done w
 *Activities:* request and response shape for each of the five tools; error shapes that leak nothing; what `fetch_context` may return and the explicit refusal case; **how a declared bulk input is delivered** — the asset list and the association engine's distilled corpus dump are the same mechanism, and neither may become a tool; `capture` as text-in, acknowledgement-out; the dispatch `sequenceDiagram`; **the negative test list, written as tests before the server exists**.
 *Done when:* the five tool schemas are written; the negative test list has at least seven entries, one of which asserts that no tool enumerates any slice of the store — assets included; no example response or error anywhere in the document contains a path, a filename, a table name, or a folder name.
 
-**DA-11 · Activity template format + two worked templates** — `in work` · 1.5 blocks · *blocked by:* DA-09
+**DA-11 · Activity template format + two worked templates** — `done` · 1.5 blocks · *blocked by:* DA-09
 *Inputs:* V§06, V§10 content-not-code, D10 · DA-09, DA-12
 *Activities:* the template file schema — id, version, inputs, deliverable spec, default assignee and tier, size hint, prompt text, what it advances; versioning and how `trade-study@1` resolves; **write out prior-art survey and screening assessment in full**, not as sketches; state how a template is validated.
 *Done when:* both templates are complete enough to dispatch by hand today via file handoff, and I would accept the result; the schema is expressible in about 30 lines.
