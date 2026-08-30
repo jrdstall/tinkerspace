@@ -149,8 +149,9 @@ flowchart TD
 |---|:--:|:--:|---|---|
 | **DA-09** | `done` | AI | `docs/design/DA-09-uow-lifecycle.md` | **Unit-of-Work Lifecycle Spec**: State machine (`stateDiagram-v2`), ready-set computation, dispatch rules, folder ownership (`work/UOW-xxx/`), collection flowchart, data loss prevention, attribution stamping, frontmatter materialization. |
 | **DA-10** | `done` | AI | `docs/design/DA-10-mcp-contract.md` | **MCP Surface Contract**: Five tool schemas (`get_step`, `submit_result`, `list_ready`, `fetch_context`, `capture`), negative wall tests, error leakage prevention. |
-| **DA-11** | `not started` | AI | `docs/design/DA-11-activity-templates.md` | **Activity Template Format & Worked Templates**: Template schema + worked `prior-art-survey` and `screening-assessment` templates. |
-| **DA-12** | `not started` | AI | `docs/design/DA-12-deliverable-header.md` | **Deliverable Header Spec**: Required fields, markdown parsing rules, graceful degradation on parse failure. |
+| **DA-11** | `in work` | AI | `docs/design/DA-11-activity-templates.md` | **Activity Template Format, Seed Templates & Master Agent Guidance**: Template schema, zero-code discovery, `freeform@1`, `prior-art-survey@1`, `screening-assessment@1`, and `templates/guidance/AGENT_GUIDANCE.md`. |
+| **DA-12** | `done` | AI | `docs/design/DA-12-deliverable-header.md` | **Deliverable Header Spec**: Required fields, markdown parsing rules, graceful degradation on parse failure. |
 | **DA-13** | `not started` | AI / Jared | `docs/design/DA-13-phase-2-slices.md` | **Phase 2 Slice Plan**: Runnable slice definitions for B2-1 through B2-13. |
 | **DA-14** | `not started` | Jared | `docs/design/DA-14-forward-compatibility.md` | **Forward-Compatibility Checklist**: Review against Phases 3–5 requirements and vendor-independence test. |
+| **DA-15** | `not started` | AI | `docs/USER_GUIDE.md` | **Innovator's Workspace User's Guide & Operational Playbook**: Step-by-step execution guides for core workflows (capture, triage, Obsidian human steps, agent MCP dispatch, freeform tasks, template authoring) with behind-the-scenes system explanations for each. |
 

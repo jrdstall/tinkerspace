@@ -142,6 +142,7 @@ Full inputs, activities, and definitions of done are in the register, §13. This
 | **DA-12** | Deliverable header spec | D17's "short required header", exactly: which fields, how parsed, what happens on parse failure | Template file generation; result collection | B2-5 | 0.5 | Collection either over-parses — a form by the back door, violating V§14.7 — or under-parses and nothing files itself. |
 | **DA-13** | Phase 2 slice plan | The Phase 2 equivalent of §09's slice list | Me | — | 1 | Deliberately deferred until Phase 1 slice 4, so it is written by someone who has built on this design rather than someone who has only drawn it. |
 | **DA-14** | Forward-compatibility checklist | The short list of things Phases 1–2 must not preclude, checked against the finished design | Me, as a review pass | — | 0.5 | This is the scope boundary's explicit ask. Half a block of paranoia against a rewrite. |
+| **DA-15** | User's guide & playbook | Short step-by-step guides for all core use cases + behind-the-scenes system explanations | Jared (daily driver) | — | 0.5 | System becomes shelfware or steps are forgotten without a crisp operational playbook. |
 
 **~15.5 blocks of artifacts. Adding the three scaffolding tasks, about 13 blocks — roughly nine evenings — stand between here and the first line of Phase 1 code.**
 
@@ -563,12 +564,12 @@ The only place status lives. Each task: status · inputs · activities · done w
 *Activities:* request and response shape for each of the five tools; error shapes that leak nothing; what `fetch_context` may return and the explicit refusal case; **how a declared bulk input is delivered** — the asset list and the association engine's distilled corpus dump are the same mechanism, and neither may become a tool; `capture` as text-in, acknowledgement-out; the dispatch `sequenceDiagram`; **the negative test list, written as tests before the server exists**.
 *Done when:* the five tool schemas are written; the negative test list has at least seven entries, one of which asserts that no tool enumerates any slice of the store — assets included; no example response or error anywhere in the document contains a path, a filename, a table name, or a folder name.
 
-**DA-11 · Activity template format + two worked templates** — `not started` · 1.5 blocks · *blocked by:* DA-09
+**DA-11 · Activity template format + two worked templates** — `in work` · 1.5 blocks · *blocked by:* DA-09
 *Inputs:* V§06, V§10 content-not-code, D10 · DA-09, DA-12
 *Activities:* the template file schema — id, version, inputs, deliverable spec, default assignee and tier, size hint, prompt text, what it advances; versioning and how `trade-study@1` resolves; **write out prior-art survey and screening assessment in full**, not as sketches; state how a template is validated.
 *Done when:* both templates are complete enough to dispatch by hand today via file handoff, and I would accept the result; the schema is expressible in about 30 lines.
 
-**DA-12 · Deliverable header spec** — `not started` · 0.5 block · *blocked by:* DA-09
+**DA-12 · Deliverable header spec** — `done` · 0.5 block · *blocked by:* DA-09
 *Inputs:* D17, V§05 human steps · DA-09
 *Activities:* the exact required fields; how they are parsed out of a markdown file; what happens when parsing fails; the explicit statement of what is *not* parsed.
 *Done when:* the header is five fields or fewer; parse failure degrades to "keep the prose, attach the file, flag it" and never to an error; a reader can tell from the document that this is not a form.
@@ -580,6 +581,11 @@ The only place status lives. Each task: status · inputs · activities · done w
 *Inputs:* §12's seven items and its closing question · all completed design artifacts
 *Activities:* for each item, name the specific place in the design that would have to change, and confirm it is a change rather than a rewrite; then answer the delete-every-other-tool question against the whole design.
 *Done when:* every item has a written verdict; anything failing produces a specific amendment to a named artifact, not a note.
+
+**DA-15 · User's guide & operational playbook** — `not started` · 0.5 block
+*Inputs:* All completed DA design artifacts, V§05, V§07, V§14
+*Activities:* author `docs/USER_GUIDE.md` containing concise, step-by-step playbooks for every major user workflow (quick capture, keyboard triage, exploring ideas, executing human steps in Obsidian, dispatching AI agents via MCP/file-handoff, running freeform activities, authoring new template files, tablet drop sync) followed by an architectural "what happens behind the scenes" section for each.
+*Done when:* a new or returning user can execute any daily workflow in under 3 steps without reading technical design docs.
 
 ---
 
