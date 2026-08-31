@@ -1,6 +1,6 @@
 """Workflow runtime, DAG dependency validator, and ready-set evaluator.
 
-Implements on-demand ready-set computation (DA-09 §02) and DAG execution without background engines.
+Implements on-demand ready-set computation and cross-workflow DAG execution (CROSSWFL-01..05).
 """
 
 from pathlib import Path
@@ -17,17 +17,22 @@ from iw.core.workflows import (
 from iw.domain.workflow.state import transition_unit_state
 
 
-def validate_dag(unit_ids: list[str], dependencies: dict[str, list[str]]) -> None:
-    """Validate that the dependency graph has no unknown IDs or cycles (WORKFLOW-05)."""
-    unit_id_set = {u.upper() for u in unit_ids}
+def validate_dag(
+    unit_ids: list[str],
+    dependencies: dict[str, list[str]],
+    known_units: list[str] | None = None,
+) -> None:
+    """Validate that the dependency graph has no unknown IDs or cycles (WORKFLOW-05, CROSSWFL-03)."""
+    local_set = {u.upper() for u in unit_ids}
+    allowed_set = local_set if known_units is None else (local_set | {k.upper() for k in known_units})
+
     for unit, preds in dependencies.items():
-        if unit.upper() not in unit_id_set:
+        if unit.upper() not in local_set:
             raise ValueError(f"Unknown unit ID '{unit}' in workflow dependencies")
         for pred in preds:
-            if pred.upper() not in unit_id_set:
+            if pred.upper() not in allowed_set:
                 raise ValueError(f"Unknown predecessor ID '{pred}' in workflow dependencies")
 
-    # Cycle detection via depth-first search
     visited: set[str] = set()
     rec_stack: set[str] = set()
 
@@ -35,19 +40,46 @@ def validate_dag(unit_ids: list[str], dependencies: dict[str, list[str]]) -> Non
         visited.add(node)
         rec_stack.add(node)
         for neighbor in dependencies.get(node, []):
-            clean_neighbor = neighbor.upper()
-            if clean_neighbor not in visited:
-                if has_cycle(clean_neighbor):
+            c_nbr = neighbor.upper()
+            if c_nbr not in visited:
+                if has_cycle(c_nbr):
                     return True
-            elif clean_neighbor in rec_stack:
+            elif c_nbr in rec_stack:
                 return True
         rec_stack.remove(node)
         return False
 
-    for node in unit_id_set:
-        if node not in visited:
-            if has_cycle(node):
-                raise ValueError(f"Workflow contains cyclic dependencies (WORKFLOW-05): cycle at {node}")
+    for node in dependencies:
+        if node not in visited and has_cycle(node):
+            raise ValueError(f"Workflow contains cyclic dependencies (WORKFLOW-05, CROSSWFL-03): cycle at {node}")
+
+
+def _is_upstream_workflow_completed(wfl: Workflow, unit_map: dict[str, UnitOfWork]) -> bool:
+    """Check if all units in an upstream workflow are accepted or skipped (CROSSWFL-02)."""
+    for uid in wfl.unit_ids:
+        u = unit_map.get(uid.upper())
+        if not u or u.state not in (UnitState.ACCEPTED, UnitState.SKIPPED):
+            return False
+    return True
+
+
+def _is_unit_ready(unit: UnitOfWork, unit_map: dict[str, UnitOfWork], wfl_map: dict[str, Workflow]) -> bool:
+    """Evaluate whether a unit's workflow and predecessor dependencies are met (CROSSWFL-01, 02)."""
+    if not unit.workflow_id:
+        return unit.state in (UnitState.READY, UnitState.BLOCKED)
+
+    wfl = wfl_map.get(unit.workflow_id.upper())
+    if not wfl:
+        return False
+
+    for parent_wfl_id in wfl.workflow_dependencies:
+        parent_wfl = wfl_map.get(parent_wfl_id.upper())
+        if not parent_wfl or not _is_upstream_workflow_completed(parent_wfl, unit_map):
+            return False
+
+    preds = wfl.dependencies.get(unit.id.upper(), [])
+    pred_states = [unit_map[p.upper()].state for p in preds if p.upper() in unit_map]
+    return len(pred_states) == len(preds) and all(s in (UnitState.ACCEPTED, UnitState.SKIPPED) for s in pred_states)
 
 
 class WorkflowRuntime:
@@ -59,19 +91,19 @@ class WorkflowRuntime:
         self.event_log = event_log
 
     def create_workflow(self, workflow: Workflow, units: list[UnitOfWork], author: Author) -> Workflow:
-        """Create a workflow, validate its DAG, and initialize root/blocked unit states."""
+        """Create a workflow, validate its DAG, and initialize unit states (CROSSWFL-01..03)."""
         if not author or not author.kind:
             raise ValueError("Author with kind is required to create workflow (WORKFLOW-06)")
 
-        validate_dag(workflow.unit_ids, workflow.dependencies)
+        existing_unit_ids = [u.id for u in self.store.list_units()]
+        validate_dag(workflow.unit_ids, workflow.dependencies, known_units=existing_unit_ids)
         folder = self.vault_dir / "work" / workflow.id.upper()
         atomic_write_workflow_yaml(folder, workflow)
 
         for unit in units:
-            unit_id_upper = unit.id.upper()
-            preds = workflow.dependencies.get(unit_id_upper, [])
-            initial_state = UnitState.READY if len(preds) == 0 else UnitState.BLOCKED
-            unit.state = initial_state
+            preds = workflow.dependencies.get(unit.id.upper(), [])
+            has_unresolved_preds = len(preds) > 0 or len(workflow.workflow_dependencies) > 0
+            unit.state = UnitState.BLOCKED if has_unresolved_preds else UnitState.READY
             unit.workflow_id = workflow.id.upper()
             self.store.write_unit(unit, author=author)
 
@@ -95,37 +127,25 @@ class WorkflowRuntime:
         return scan_vault_workflows(self.vault_dir)
 
     def compute_ready_set(self, workflow_id: str | None = None) -> list[UnitOfWork]:
-        """Compute all units eligible for dispatch without background watchers (WORKFLOW-03)."""
+        """Compute all units eligible for dispatch without background watchers (CROSSWFL-04)."""
         all_units = self.store.list_units()
         unit_map = {u.id.upper(): u for u in all_units}
+        wfl_map = {w.id.upper(): w for w in self.list_workflows()}
+        filter_wfl_id = workflow_id.strip().upper() if workflow_id else None
+
         ready_units: list[UnitOfWork] = []
-
-        workflows = [self.get_workflow(workflow_id)] if workflow_id else self.list_workflows()
-        wfl_map = {w.id.upper(): w for w in workflows if w is not None}
-
         for unit in all_units:
             if unit.state in (UnitState.ACCEPTED, UnitState.SKIPPED, UnitState.PARKED):
                 continue
-            if not unit.workflow_id:
-                if unit.state in (UnitState.READY, UnitState.BLOCKED):
-                    ready_units.append(unit)
+            if filter_wfl_id and (not unit.workflow_id or unit.workflow_id.upper() != filter_wfl_id):
                 continue
-
-            wfl = wfl_map.get(unit.workflow_id.upper())
-            if not wfl:
-                continue
-
-            preds = wfl.dependencies.get(unit.id.upper(), [])
-            pred_states = [unit_map[p.upper()].state for p in preds if p.upper() in unit_map]
-            all_resolved = all(s in (UnitState.ACCEPTED, UnitState.SKIPPED) for s in pred_states)
-
-            if all_resolved and unit.state in (UnitState.READY, UnitState.BLOCKED):
+            if _is_unit_ready(unit, unit_map, wfl_map) and unit.state in (UnitState.READY, UnitState.BLOCKED):
                 ready_units.append(unit)
 
         return ready_units
 
     def refresh_workflow_states(self, workflow_id: str, author: Author) -> list[UnitOfWork]:
-        """Evaluate dependencies and unblock ready units in the workflow (WORKFLOW-04)."""
+        """Evaluate dependencies and unblock ready units in the workflow (CROSSWFL-05)."""
         ready_set = self.compute_ready_set(workflow_id)
         updated_units: list[UnitOfWork] = []
         for unit in ready_set:

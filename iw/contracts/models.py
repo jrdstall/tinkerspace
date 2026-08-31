@@ -111,6 +111,7 @@ class Workflow:
     subject_ids: list[str]
     unit_ids: list[str]
     dependencies: dict[str, list[str]] = field(default_factory=dict)
+    workflow_dependencies: list[str] = field(default_factory=list)
     created: datetime = field(default_factory=datetime.now)
     template_id: str | None = None
 

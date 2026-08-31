@@ -24,6 +24,7 @@ def serialize_workflow(workflow: Workflow) -> dict[str, Any]:
         "subject_ids": workflow.subject_ids,
         "unit_ids": [u.upper() for u in workflow.unit_ids],
         "dependencies": clean_deps,
+        "workflow_dependencies": [w.upper() for w in workflow.workflow_dependencies],
         "created": workflow.created.isoformat() if isinstance(workflow.created, datetime) else str(workflow.created),
     }
     if workflow.template_id:
@@ -53,12 +54,16 @@ def deserialize_workflow(data: dict[str, Any]) -> Workflow:
             else:
                 clean_deps[str(k).upper()] = []
 
+    raw_wfl_deps = data.get("workflow_dependencies", [])
+    clean_wfl_deps = [str(w).upper() for w in raw_wfl_deps if isinstance(w, str)]
+
     return Workflow(
         id=str(data.get("id", "")).upper(),
         title=str(data.get("title", "")),
         subject_ids=list(data.get("subject_ids", [])),
         unit_ids=[str(u).upper() for u in data.get("unit_ids", [])],
         dependencies=clean_deps,
+        workflow_dependencies=clean_wfl_deps,
         created=created_dt,
         template_id=data.get("template_id"),
     )
