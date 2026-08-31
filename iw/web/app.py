@@ -163,6 +163,7 @@ def create_app(store: StoreProtocol | None = None) -> Starlette:
         Route("/intake", endpoint=intake_entry_view, methods=["GET"]),
         Route("/intake/create", endpoint=intake_views.intake_create_view, methods=["POST"]),
         Route("/intake/attach", endpoint=intake_views.intake_attach_view, methods=["POST"]),
+        Route("/intake/external", endpoint=intake_views.intake_external_view, methods=["POST"]),
         Route("/health", endpoint=health_view, methods=["GET"]),
     ]
     application = Starlette(debug=True, routes=routes)

@@ -1,4 +1,4 @@
-"""Intake web view routes and dropped media ingestion handlers.
+"""Intake web view routes and dropped media / external note ingestion handlers.
 
 Layer 4 Web surface component.
 """
@@ -10,6 +10,7 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Node
 from iw.contracts.store import StoreProtocol
+from iw.domain.intake.external import ingest_external_node
 
 
 async def intake_view(request: Request, templates: Jinja2Templates) -> Response:
@@ -60,3 +61,17 @@ async def intake_attach_view(request: Request) -> Response:
     if hasattr(store, "intake_manager"):
         store.intake_manager.attach_file_to_node(file_name=file_name, target_node_id=target_id, author=author)
     return RedirectResponse(url=f"/node/{target_id}", status_code=303)
+
+
+async def intake_external_view(request: Request) -> Response:
+    """Ingest an external markdown note from another vault (EXTINT-01..04)."""
+    store: StoreProtocol = request.app.state.store
+    form = await request.form()
+    raw_text = str(form.get("content", "")).strip()
+    source_vault = str(form.get("source_vault", "external")).strip()
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+
+    if raw_text:
+        saved = ingest_external_node(store, raw_text, source_vault, author)
+        return RedirectResponse(url=f"/node/{saved.id}", status_code=303)
+    return RedirectResponse(url="/intake", status_code=303)
