@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Association Review Deck · Tinkerspace{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+            ⚡ Association Review Deck
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+            Rapid Two-Stage Combinatorial Triage · Press <strong style="color: var(--accent);">K</strong> to Keep or <strong style="color: #da3633;">D</strong> to Discard
+        </p>
+    </div>
+
+    <!-- Sampler Telemetry Bar (ASSOCREV-06) -->
+    <div style="display: flex; gap: 0.75rem; font-size: 0.75rem; background: var(--badge-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.4rem 0.75rem;">
+        <div>
+            <span style="color: var(--text-muted);">Anti-Similar:</span>
+            <strong style="color: var(--accent);">{{ telemetry.anti_similar.yield_pct }}%</strong> ({{ telemetry.anti_similar.kept }}/{{ telemetry.anti_similar.sampled }})
+        </div>
+        <div style="border-left: 1px solid var(--border-color); padding-left: 0.75rem;">
+            <span style="color: var(--text-muted);">Mid-Band:</span>
+            <strong style="color: var(--accent);">{{ telemetry.mid_band.yield_pct }}%</strong> ({{ telemetry.mid_band.kept }}/{{ telemetry.mid_band.sampled }})
+        </div>
+        <div style="border-left: 1px solid var(--border-color); padding-left: 0.75rem;">
+            <span style="color: var(--text-muted);">Random Control:</span>
+            <strong style="color: var(--text-main);">{{ telemetry.random.yield_pct }}%</strong> ({{ telemetry.random.kept }}/{{ telemetry.random.sampled }})
+        </div>
+    </div>
+</div>
+
+{% if current_card %}
+<!-- Active Review Card (ASSOCREV-01, ASSOCREV-04) -->
+<div class="card" style="max-width: 800px; margin: 0 auto 2rem auto; padding: 1.75rem; border-top: 4px solid var(--accent); box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
+    
+    <!-- Top Metadata Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="mono" style="font-weight: 700; color: var(--accent);">{{ current_card.id }}</span>
+            <span class="badge" style="text-transform: uppercase;">{{ current_card.sampler_strategy }} (dist={{ current_card.distance_metric }})</span>
+            <span class="badge badge-green">{{ current_card.target_domain }}</span>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted);">
+            Deck: <strong style="color: var(--text-main);">1 of {{ pending_count }}</strong> remaining
+        </div>
+    </div>
+
+    <!-- Parent Node Pairing Banner -->
+    <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; margin-bottom: 1.25rem;">
+        <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">PARENT A</div>
+            <a href="/node/{{ current_card.node_a_id }}" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+                {{ current_card.node_a_id }}: {{ current_card.node_a_title }}
+            </a>
+        </div>
+        <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: 700;">&times;</div>
+        <div>
+            <div style="font-size: 0.7rem; color: var(--text-muted);">PARENT B</div>
+            <a href="/node/{{ current_card.node_b_id }}" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+                {{ current_card.node_b_id }}: {{ current_card.node_b_title }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Synthesized Proposal -->
+    <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--text-main); margin-bottom: 1rem;">
+        {{ current_card.proposal_title }}
+    </h2>
+
+    <!-- Stage 1 Abstraction -->
+    <div style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--accent); margin-bottom: 0.35rem;">
+            1 · Abstract Mechanism
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; border-left: 3px solid var(--accent);">
+            {{ current_card.abstract_mechanism }}
+        </p>
+    </div>
+
+    <!-- Stage 2 Transfer Proposal -->
+    <div style="margin-bottom: 1.25rem;">
+        <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #3fb950; margin-bottom: 0.35rem;">
+            2 · Third-Domain Transfer Proposal
+        </h3>
+        <p style="font-size: 0.9rem; color: var(--text-main); line-height: 1.5; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; border-left: 3px solid #3fb950;">
+            {{ current_card.transfer_proposal }}
+        </p>
+    </div>
+
+    <!-- Adversarial Refutation Pass (ASSOC-04) -->
+    <div style="margin-bottom: 1.5rem; background: rgba(218, 54, 51, 0.08); border: 1px solid rgba(218, 54, 51, 0.4); border-radius: 6px; padding: 1rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h3 style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: #da3633; font-weight: 700;">
+                ⚖️ Adversarial Judge Refutation Pass
+            </h3>
+            <span class="badge {% if current_card.judge_verdict == 'keep' %}badge-green{% else %}badge-orange{% endif %}">
+                VERDICT: {{ current_card.judge_verdict|upper }} ({{ (current_card.confidence * 100)|round|int }}% conf)
+            </span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-main); line-height: 1.4;">
+            <strong>Strongest Objection:</strong> {{ current_card.strongest_objection }}
+        </div>
+    </div>
+
+    <!-- Action Bar (ASSOCREV-02, ASSOCREV-03) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+        <form method="POST" action="/associations/discard">
+            <input type="hidden" name="proposal_id" value="{{ current_card.id }}">
+            <button id="discard-btn" type="submit" class="btn" style="background: rgba(218,54,51,0.2); color: #f85149; border-color: #da3633; padding: 0.6rem 1.5rem; font-weight: 700; font-size: 0.9rem;">
+                [D] Discard
+            </button>
+        </form>
+
+        <div style="color: var(--text-muted); font-size: 0.8rem;">
+            Shortcut: <kbd style="background: var(--badge-bg); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 4px;">K</kbd> Keep · <kbd style="background: var(--badge-bg); border: 1px solid var(--border-color); padding: 0.2rem 0.5rem; border-radius: 4px;">D</kbd> Discard
+        </div>
+
+        <form method="POST" action="/associations/keep">
+            <input type="hidden" name="proposal_id" value="{{ current_card.id }}">
+            <button id="keep-btn" type="submit" class="btn btn-primary" style="padding: 0.6rem 1.75rem; font-weight: 700; font-size: 0.9rem;">
+                [K] Keep &rarr; Promote to Idea
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    document.addEventListener('keydown', function(event) {
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+        if (event.key === 'k' || event.key === 'K') {
+            document.getElementById('keep-btn')?.click();
+        } else if (event.key === 'd' || event.key === 'D') {
+            document.getElementById('discard-btn')?.click();
+        }
+    });
+</script>
+
+{% else %}
+<!-- Empty State & Generator (ASSOCREV-05) -->
+<div class="card" style="max-width: 600px; margin: 3rem auto; padding: 2.5rem; text-align: center; border-top: 4px solid #3fb950;">
+    <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎉</div>
+    <h2 style="font-size: 1.4rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+        Review Deck Cleared!
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.75rem; line-height: 1.5;">
+        You've reviewed all pending association proposals. Launch a new combinatorial run across your corpus pool.
+    </p>
+
+    <form method="POST" action="/associations/generate" style="display: flex; flex-direction: column; gap: 1rem; text-align: left; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem;">
+        <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Sampler Strategy:</label>
+            <select name="strategy" style="width: 100%; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
+                <option value="anti_similar">Anti-Similar (Maximum Cross-Domain Distance)</option>
+                <option value="mid_band">Mid-Band (Moderate Structural Overlap)</option>
+                <option value="random">Random (Control Arm Baseline)</option>
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 0.35rem;">Number of Candidate Pairs:</label>
+            <select name="count" style="width: 100%; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
+                <option value="3">3 Candidates</option>
+                <option value="5" selected>5 Candidates</option>
+                <option value="10">10 Candidates</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="padding: 0.6rem; font-weight: 700; margin-top: 0.5rem;">
+            + Generate Association Deck
+        </button>
+    </form>
+</div>
+{% endif %}
+
+{% endblock %}

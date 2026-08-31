@@ -3,6 +3,11 @@
 Zero implementation logic is allowed in this package.
 """
 
+from iw.contracts.association import (
+    AssociationSamplerProtocol,
+    DistilledRecord,
+    PairCandidate,
+)
 from iw.contracts.capture import CaptureInletProtocol
 from iw.contracts.courier import CourierProtocol
 from iw.contracts.event_log import EventLogProtocol
@@ -28,11 +33,13 @@ from iw.contracts.workflow import WorkflowProtocol
 
 __all__ = [
     "Artifact",
+    "AssociationSamplerProtocol",
     "AttentionItem",
     "Author",
     "AuthorKind",
     "CaptureInletProtocol",
     "CourierProtocol",
+    "DistilledRecord",
     "Edge",
     "EventLogProtocol",
     "EventRecord",
@@ -40,6 +47,7 @@ __all__ = [
     "IndexProtocol",
     "Node",
     "NodeSummary",
+    "PairCandidate",
     "QueryFilters",
     "StoreProtocol",
     "TriageProtocol",

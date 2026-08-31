@@ -1,0 +1,64 @@
+<div class="card" style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 6px; display: flex; flex-direction: column; gap: 0.5rem; transition: border-color 0.15s ease;">
+    
+    <!-- Concept Graphic Thumbnail Tile (ASSESS-08 / MATBOARD-03) -->
+    {% if item.concept_graphic %}
+    <div style="width: 100%; height: 90px; overflow: hidden; border-radius: 4px; background: #000; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color);">
+        <img src="/vault-file/{{ item.concept_graphic }}" alt="{{ item.node.title }}" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    {% endif %}
+
+    <!-- Top Badge Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="mono" style="font-size: 0.75rem; font-weight: 700; color: var(--accent);">{{ item.node.id }}</span>
+        <span class="badge" style="font-size: 0.65rem;">{{ item.node.domain }}</span>
+    </div>
+
+    <!-- Title -->
+    <a href="/node/{{ item.node.id }}" style="color: var(--text-main); font-weight: 600; font-size: 0.85rem; text-decoration: none; line-height: 1.3;">
+        {{ item.node.title }}
+    </a>
+
+    <!-- 4-Score Mini Equalizer (MATBOARD-02) -->
+    <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.7rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.25rem; text-align: center;">
+        <div>
+            <div style="color: var(--text-muted); font-size: 0.6rem;">NOV</div>
+            <strong style="color: {% if item.scores.get('novel') == item.cml and item.cml < 4 %}#f0883e{% else %}var(--text-main){% endif %};">{{ item.scores.get('novel', '-') }}</strong>
+        </div>
+        <div>
+            <div style="color: var(--text-muted); font-size: 0.6rem;">WRK</div>
+            <strong style="color: {% if item.scores.get('works') == item.cml and item.cml < 4 %}#f0883e{% else %}var(--text-main){% endif %};">{{ item.scores.get('works', '-') }}</strong>
+        </div>
+        <div>
+            <div style="color: var(--text-muted); font-size: 0.6rem;">RCH</div>
+            <strong style="color: {% if item.scores.get('reach') == item.cml and item.cml < 4 %}#f0883e{% else %}#f0883e{% endif %};">{{ item.scores.get('reach', '-') }}</strong>
+        </div>
+        <div>
+            <div style="color: var(--text-muted); font-size: 0.6rem;">STY</div>
+            <strong style="color: {% if item.scores.get('story') == item.cml and item.cml < 4 %}#f0883e{% else %}var(--text-main){% endif %};">{{ item.scores.get('story', '-') }}</strong>
+        </div>
+    </div>
+
+    <!-- Laggard Spotlight & Action Button (MATBOARD-04) -->
+    {% if item.primary_laggard and item.cml < 5 %}
+    <div style="display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.25rem;">
+        <span style="font-size: 0.65rem; color: #f0883e; font-weight: 600;">
+            ⚠️ Laggard: {{ item.primary_laggard|upper }}
+        </span>
+        <a href="/workflow/new?subject={{ item.node.id }}&template={{ item.activity_rec }}" 
+           class="btn btn-primary" style="font-size: 0.65rem; padding: 0.2rem 0.4rem; text-align: center; text-decoration: none; display: block;">
+            + Advance: {{ item.activity_rec.split('@')[0] }}
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Bottom Metadata Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem; margin-top: 0.25rem; color: var(--text-muted);">
+        <span title="Worth to Me / Worth to Others">❤️ {{ item.worth_to_me|upper }} · 🌍 {{ item.worth_to_others|upper }}</span>
+        {% if item.screening_verdict %}
+        <span class="badge {% if item.screening_verdict == 'pursue' %}badge-green{% endif %}" style="font-size: 0.6rem;">
+            {{ item.screening_verdict|upper }}
+        </span>
+        {% endif %}
+    </div>
+
+</div>

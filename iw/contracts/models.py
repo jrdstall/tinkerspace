@@ -84,6 +84,11 @@ class NodeSummary:
     state: str
     cml: int = 1
     last_touched: datetime | None = None
+    scores: dict[str, int] = field(default_factory=dict)
+    worth_to_me: str | None = None
+    worth_to_others: str | None = None
+    concept_graphic: str | None = None
+
 
 
 @dataclass

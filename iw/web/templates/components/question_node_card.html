@@ -1,0 +1,47 @@
+<div class="card" style="background: var(--bg-color); border: 1px solid {% if q.importance == 'high' %}#f0883e{% else %}var(--border-color){% endif %}; padding: 0.75rem; border-radius: 6px; display: flex; flex-direction: column; gap: 0.5rem;">
+    
+    <!-- Top Row -->
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="/node/{{ q.id }}" class="mono" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none;">{{ q.id }}</a>
+            <span class="badge {% if q.importance == 'high' %}badge-orange{% endif %}" style="font-size: 0.65rem;">
+                {% if q.importance == 'high' %}⚡ HIGH{% elif q.importance == 'medium' %}MED{% else %}LOW{% endif %}
+            </span>
+        </div>
+        <span class="badge" style="font-size: 0.65rem; color: var(--text-muted);">{{ q.state }}</span>
+    </div>
+
+    <!-- Question Prose -->
+    <div style="color: var(--text-main); font-size: 0.9rem; font-weight: 500; line-height: 1.4;">
+        {{ q.title }}
+    </div>
+
+    <!-- Edge Links (QGRAPH-04) -->
+    {% if q.out_edges %}
+    <div style="display: flex; flex-direction: column; gap: 0.25rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem;">
+        {% for edge in q.out_edges %}
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
+            <span class="mono" style="color: var(--accent);">&rarr; [{{ edge.relation }}]</span>
+            <a href="/node/{{ edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ edge.to_id }}</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Transform Form (QGRAPH-05) -->
+    <details style="margin-top: 0.25rem; font-size: 0.75rem;">
+        <summary style="cursor: pointer; color: var(--accent); font-weight: 500;">
+            {% if q.form == 'open' %}&#8644; Transform to Closed Question{% else %}&#8644; Transform to Open Question{% endif %}
+        </summary>
+        <form method="POST" action="/question-graph/transform" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+            <input type="hidden" name="question_id" value="{{ q.id }}">
+            <input type="hidden" name="subject_id" value="{{ subject.id }}">
+            <input type="text" name="new_text" required placeholder="Type opposite form question..." 
+                   style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+            <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; align-self: flex-start;">
+                Save Transformation
+            </button>
+        </form>
+    </details>
+
+</div>

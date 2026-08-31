@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Maturity Board · Tinkerspace{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+            🚀 Idea Maturity Board
+        </h1>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">
+            Concept Maturity Levels (CML 1–5), 4-Score Breakdown, Laggard Advancement & Worth Ratings
+        </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem; align-items: center;">
+        <div style="background: var(--badge-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.25rem; display: flex; gap: 0.25rem;">
+            <a href="/maturity?view=columns&domain={{ current_domain }}&verdict={{ current_verdict }}&sort={{ current_sort }}" 
+               class="btn" style="{% if view_mode != 'matrix' %}background: var(--accent); color: #000; font-weight: 700;{% endif %} font-size: 0.75rem; text-decoration: none;">
+                📊 CML Columns
+            </a>
+            <a href="/maturity?view=matrix&domain={{ current_domain }}&verdict={{ current_verdict }}&sort={{ current_sort }}" 
+               class="btn" style="{% if view_mode == 'matrix' %}background: var(--accent); color: #000; font-weight: 700;{% endif %} font-size: 0.75rem; text-decoration: none;">
+                🎯 Worth Matrix
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="card" style="padding: 0.75rem 1rem; margin-bottom: 1.5rem;">
+    <form method="GET" action="/maturity" style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; font-size: 0.85rem;">
+        <input type="hidden" name="view" value="{{ view_mode }}">
+        
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--text-muted);">Domain:</span>
+            <select name="domain" onchange="this.form.submit()" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem;">
+                <option value="">All Domains</option>
+                {% for d in domains %}
+                <option value="{{ d }}" {% if current_domain == d %}selected{% endif %}>{{ d }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--text-muted);">Verdict:</span>
+            <select name="verdict" onchange="this.form.submit()" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem;">
+                <option value="">All Verdicts</option>
+                <option value="pursue" {% if current_verdict == 'pursue' %}selected{% endif %}>Pursue</option>
+                <option value="park" {% if current_verdict == 'park' %}selected{% endif %}>Park</option>
+                <option value="let_go" {% if current_verdict == 'let_go' %}selected{% endif %}>Let Go</option>
+            </select>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--text-muted);">Sort:</span>
+            <select name="sort" onchange="this.form.submit()" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem;">
+                <option value="laggard" {% if current_sort == 'laggard' %}selected{% endif %}>Laggard / Lowest Score First</option>
+                <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title (A-Z)</option>
+                <option value="touched" {% if current_sort == 'touched' %}selected{% endif %}>Recently Created</option>
+            </select>
+        </div>
+
+        <div style="margin-left: auto; color: var(--text-muted);">
+            Total Ideas: <strong style="color: var(--text-main);">{{ total_ideas }}</strong>
+        </div>
+    </form>
+</div>
+
+{% if view_mode != 'matrix' %}
+<!-- CML 5-Column Progression Grid -->
+<div style="display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 1rem; align-items: flex-start; overflow-x: auto; padding-bottom: 1rem;">
+    
+    <!-- Level 1 · Spark -->
+    <div class="card" style="background: rgba(26, 34, 48, 0.6); padding: 0.75rem; border-top: 3px solid #79c0ff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #79c0ff;">1 · SPARK ⚡</span>
+            <span class="badge">{{ cml_columns[1]|length }}</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Napkin sketch & spark</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in cml_columns[1] %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0.5rem; border: 1px dashed var(--border-color); border-radius: 4px;">
+                    No Spark ideas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Level 2 · Plausible -->
+    <div class="card" style="background: rgba(26, 34, 48, 0.6); padding: 0.75rem; border-top: 3px solid #d29922;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #d29922;">2 · PLAUSIBLE 💡</span>
+            <span class="badge">{{ cml_columns[2]|length }}</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">One path sketched</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in cml_columns[2] %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0.5rem; border: 1px dashed var(--border-color); border-radius: 4px;">
+                    No Plausible ideas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Level 3 · Explored -->
+    <div class="card" style="background: rgba(26, 34, 48, 0.6); padding: 0.75rem; border-top: 3px solid #58a6ff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #58a6ff;">3 · EXPLORED 🧭</span>
+            <span class="badge">{{ cml_columns[3]|length }}</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Trade space mapped</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in cml_columns[3] %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0.5rem; border: 1px dashed var(--border-color); border-radius: 4px;">
+                    No Explored ideas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Level 4 · Chosen -->
+    <div class="card" style="background: rgba(26, 34, 48, 0.6); padding: 0.75rem; border-top: 3px solid #a371f7;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #a371f7;">4 · CHOSEN 🎯</span>
+            <span class="badge">{{ cml_columns[4]|length }}</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Point design selected</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in cml_columns[4] %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0.5rem; border: 1px dashed var(--border-color); border-radius: 4px;">
+                    No Chosen ideas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Level 5 · Real -->
+    <div class="card" style="background: rgba(26, 34, 48, 0.6); padding: 0.75rem; border-top: 3px solid #3fb950;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span style="font-weight: 700; font-size: 0.85rem; color: #3fb950;">5 · REAL 🏆</span>
+            <span class="badge badge-green">{{ cml_columns[5]|length }}</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.75rem;">Working & proven</p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in cml_columns[5] %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 1.5rem 0.5rem; border: 1px dashed var(--border-color); border-radius: 4px;">
+                    No Realized ideas
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+
+{% else %}
+<!-- Worth Matrix 2x2 Quadrant Grid -->
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+    
+    <!-- Quadrant 1: Passion Projects -->
+    <div class="card" style="border-top: 4px solid #f0883e;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.1rem; color: #f0883e; font-weight: 700;">❤️ Passion Projects</h2>
+            <span class="badge">{{ passion_projects|length }}</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <strong>Worth to Me: HIGH · Others: LOW</strong> — Pure joy, curiosity, and hobby builds.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in passion_projects %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); padding: 2rem; text-align: center;">No Passion Projects</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quadrant 2: High Impact -->
+    <div class="card" style="border-top: 4px solid #3fb950;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.1rem; color: #3fb950; font-weight: 700;">🚀 High Impact (The Big Bets)</h2>
+            <span class="badge badge-green">{{ high_impact|length }}</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <strong>Worth to Me: HIGH · Others: HIGH</strong> — High intrinsic joy and major outside value.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in high_impact %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); padding: 2rem; text-align: center;">No High Impact ideas</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quadrant 3: The Trap -->
+    <div class="card" style="border-top: 4px solid #da3633;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.1rem; color: #da3633; font-weight: 700;">🪤 The Trap (Danger Zone)</h2>
+            <span class="badge">{{ the_trap|length }}</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            <strong>Worth to Me: LOW · Others: HIGH</strong> — Good ideas Jared does not personally care about.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in the_trap %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); padding: 2rem; text-align: center;">No Traps</div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quadrant 4: Other / Exploratory -->
+    <div class="card" style="border-top: 4px solid var(--border-color);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <h2 style="font-size: 1.1rem; color: var(--text-muted); font-weight: 700;">🌱 Other & Unassessed</h2>
+            <span class="badge">{{ hobby_other|length }}</span>
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Ideas sitting at early stages or moderate worth ratings.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            {% for item in hobby_other %}
+                {% include "components/idea_card.html" %}
+            {% else %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); padding: 2rem; text-align: center;">No Other ideas</div>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endif %}
+
+{% endblock %}

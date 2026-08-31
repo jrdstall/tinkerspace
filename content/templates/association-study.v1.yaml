@@ -1,0 +1,41 @@
+id: association-study@1
+title: "Combinatorial Association Study & Adversarial Refutation"
+version: 1
+category: generation
+target_output: deliverable.md
+
+description: >
+  Two-stage creativity synthesis over a forced candidate pair (Abstraction -> 3rd-Domain Transfer)
+  followed by an Adversarial Refutation pass by a skeptical judge.
+
+prompt_instructions: >
+  You are an expert cross-domain innovator and skeptical technical judge.
+  You are given two distinct nodes from the corpus: Parent A and Parent B.
+
+  Execute the following three steps:
+  1. STAGE 1 (MECHANISM ABSTRACTION):
+     Extract the core structural or physical mechanism shared between Parent A and Parent B.
+     Describe this mechanism in abstract, neutral terms that belong to neither domain.
+
+  2. STAGE 2 (THIRD-DOMAIN TRANSFER):
+     Take the abstract mechanism and instantiate it into a completely new, practical idea
+     in a third, unrelated domain. Name the new idea and specify how it solves a real problem.
+
+  3. ADVERSARIAL REFUTATION (JUDGE PASS):
+     Adopt the persona of a harsh technical critic. What is the single strongest objection
+     or fatal flaw in this proposal? State whether Jared should KEEP (worth thinking about)
+     or DISCARD this concept.
+
+deliverable_schema:
+  required_sections:
+    - "abstract_mechanism"
+    - "transfer_proposal"
+    - "adversarial_judgment"
+  fields:
+    proposal_title: string
+    target_domain: string
+    abstract_mechanism: string
+    transfer_proposal: string
+    strongest_objection: string
+    judge_verdict: string # keep | discard
+    confidence: float # 0.0 to 1.0

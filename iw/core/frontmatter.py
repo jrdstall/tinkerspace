@@ -164,7 +164,7 @@ def merge_frontmatter(
     out["domain"] = node.domain
     out["tags"] = node.tags
     out["state"] = node.state
-    out["last_touched"] = now.isoformat()
+    out["last_touched"] = node.last_touched.isoformat() if node.last_touched else now.isoformat()
     out["author"] = serialize_author(author)
 
     if node.attrs:

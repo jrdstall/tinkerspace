@@ -20,6 +20,7 @@
             {% endif %}
         </div>
         <div style="display: flex; gap: 0.5rem;">
+            <a href="/question-graph/{{ node.id }}" class="btn" style="font-size: 0.75rem; text-decoration: none;">🧭 Question Graph</a>
             <button class="btn" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ node.id }}')">Copy ID</button>
         </div>
     </div>
@@ -60,20 +61,42 @@
     </div>
     {% endif %}
 
-    <!-- Maturity & Worth Ratings (DA-06 §04) -->
-    {% if node.attrs.get('cml') or node.attrs.get('scores') or node.attrs.get('worth_to_me') %}
+    <!-- Concept Graphic (OV-1 / Tablet Drawing / Sketch) -->
+    {% if node.attrs.get('concept_graphic') %}
+    <div class="card" style="background-color: var(--bg-color); border-color: var(--border-color); padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); font-weight: 700;">
+                🖼️ Concept Graphic (OV-1 / Architecture / Sketch)
+            </span>
+            <span class="mono" style="font-size: 0.75rem; color: var(--accent);">{{ node.attrs.get('concept_graphic') }}</span>
+        </div>
+        <div style="max-height: 420px; overflow: hidden; border-radius: 6px; border: 1px solid var(--border-color); background: #000; display: flex; align-items: center; justify-content: center;">
+            <img src="/vault-file/{{ node.attrs.get('concept_graphic') }}" alt="Concept graphic for {{ node.title }}" style="max-width: 100%; max-height: 420px; object-fit: contain;">
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Maturity & Worth Ratings (DA-06 §04, V§11) -->
+    {% if node.attrs.get('cml') or node.attrs.get('scores') or node.attrs.get('worth_to_me') or node.attrs.get('screening_verdict') %}
     <div class="card" style="background-color: var(--bg-color); border-color: var(--border-color); padding: 1.25rem; margin-bottom: 1.5rem;">
-        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
-            Maturity & Worth Ratings (Frontmatter Direct)
-        </h3>
-        <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap;">
+            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0;">
+                Maturity & Worth Ratings (Frontmatter Direct)
+            </h3>
+            {% if node.attrs.get('screening_verdict') %}
+            <span class="badge {% if node.attrs.screening_verdict == 'pursue' %}badge-green{% endif %}" style="font-weight: 700;">
+                VERDICT: {{ node.attrs.get('screening_verdict')|upper }}
+            </span>
+            {% endif %}
+        </div>
+        <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem; align-items: center;">
             {% if node.attrs.get('cml') %}
             <div>
-                CML Level: <strong style="color: var(--accent);">{{ node.attrs.get('cml') }}</strong>
+                CML Level: <strong style="color: var(--accent); font-size: 1.1rem;">{{ node.attrs.get('cml') }}</strong>
             </div>
             {% endif %}
             {% if node.attrs.get('scores') %}
-            <div style="display: flex; gap: 0.75rem;">
+            <div style="display: flex; gap: 1rem; background: rgba(255,255,255,0.03); padding: 0.4rem 0.8rem; border-radius: 4px; border: 1px solid var(--border-color);">
                 <span>Novel: <strong>{{ node.attrs.scores.get('novel', '-') }}</strong></span>
                 <span>Works: <strong>{{ node.attrs.scores.get('works', '-') }}</strong></span>
                 <span>Reach: <strong>{{ node.attrs.scores.get('reach', '-') }}</strong></span>
@@ -91,6 +114,11 @@
             </div>
             {% endif %}
         </div>
+        {% if node.attrs.get('screening_reason') %}
+        <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted); font-style: italic;">
+            "{{ node.attrs.get('screening_reason') }}"
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 

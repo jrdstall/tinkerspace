@@ -91,6 +91,12 @@ class InMemoryIndex(IndexProtocol):
     def _to_summary(self, node: Node) -> NodeSummary:
         """Project full Node into lightweight NodeSummary."""
         cml_val = int(node.attrs.get("cml", 1))
+        scores_raw = node.attrs.get("scores", {})
+        scores_val: dict[str, int] = {}
+        if isinstance(scores_raw, dict):
+            for k, v in scores_raw.items():
+                if isinstance(v, (int, float)):
+                    scores_val[k] = int(v)
         return NodeSummary(
             id=node.id,
             type=node.type,
@@ -100,4 +106,8 @@ class InMemoryIndex(IndexProtocol):
             state=node.state,
             cml=cml_val,
             last_touched=node.last_touched,
+            scores=scores_val,
+            worth_to_me=node.attrs.get("worth_to_me"),
+            worth_to_others=node.attrs.get("worth_to_others"),
+            concept_graphic=node.attrs.get("concept_graphic"),
         )
