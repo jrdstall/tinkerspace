@@ -1,0 +1,33 @@
+id: parts-and-skills-survey@1
+title: "Parts & Skills Gap Survey against Asset Portfolio"
+version: 1
+category: costing
+advances: reach
+target_output: deliverable.md
+
+description: >
+  Cross-references the project requirements against owned assets (AST-xxx) in the corpus.
+  Identifies what tools, materials, and skills are already on hand versus what must be acquired and at what cost.
+
+prompt_instructions: >
+  You are an operations planner surveying project feasibility against an existing maker portfolio.
+  
+  Execute the following:
+  1. Parse the declared asset list (AST-xxx nodes) provided in the inputs.
+  2. Map required technical capabilities and tooling against the on-hand assets.
+  3. Identify missing parts, unowned equipment, and unmastered skills.
+  4. Estimate acquisition cost and learning curve duration to bridge each identified gap.
+  5. State an overall Reach assessment (feasibility within Jared's constraints).
+
+deliverable_schema:
+  required_sections:
+    - "required_capabilities"
+    - "matched_assets"
+    - "capability_gaps"
+    - "acquisition_and_learning_plan"
+  fields:
+    matched_asset_ids: list
+    missing_tools: list
+    missing_skills: list
+    estimated_gap_cost: string
+    reach_verdict: string

@@ -1,0 +1,32 @@
+id: divergent-generation@1
+title: "A-Team Divergent Architecture Generation"
+version: 1
+category: divergence
+advances: works
+target_output: deliverable.md
+
+description: >
+  Divergent generation of multiple distinct architectural approaches to solve a problem.
+  Enforces the JPL A-Team discipline: generate candidate options with zero filtering or critique.
+
+prompt_instructions: >
+  You are an expert systems architect facilitating a divergent A-Team study phase.
+  Your goal is to generate as many distinct, creative, and viable architectural concepts as possible.
+
+  STRICT RULE: Do NOT filter, evaluate, rank, or select options during this step.
+  Every approach that obeys physics or logic should be included.
+
+  Execute the following:
+  1. Define 4 to 8 distinct architectural concepts for the given subject.
+  2. For each concept, describe the core mechanism, primary components, key advantage, and distinct hazard.
+  3. Ensure the concepts explore widely different paradigms (e.g., mechanical vs. electronic, passive vs. active, centralized vs. distributed).
+
+deliverable_schema:
+  required_sections:
+    - "problem_boundary"
+    - "candidate_architectures"
+    - "paradigm_diversity_summary"
+  fields:
+    problem_summary: string
+    candidate_count: int
+    candidate_architectures: list

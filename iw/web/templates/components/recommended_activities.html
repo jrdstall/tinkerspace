@@ -1,0 +1,40 @@
+{% if offers and offers|length > 0 %}
+<div class="bg-amber-50 border border-amber-200 rounded-lg p-5 mb-6 shadow-sm">
+  <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center space-x-2">
+      <span class="text-amber-600 font-bold text-lg">&#9881;</span>
+      <h2 class="text-base font-bold text-amber-900">Recommended Activities (Scout)</h2>
+    </div>
+    <span class="text-xs text-amber-700 font-medium">{{ offers|length }} standing interest(s) ready for review</span>
+  </div>
+
+  <div class="space-y-3">
+    {% for offer in offers %}
+    <div class="bg-white border border-amber-200/70 rounded p-3.5 flex items-center justify-between">
+      <div>
+        <div class="flex items-center space-x-2">
+          <span class="px-2 py-0.5 text-xs font-semibold rounded bg-amber-100 text-amber-800 uppercase">{{ offer.interest.id }}</span>
+          <span class="px-2 py-0.5 text-xs rounded bg-gray-100 text-gray-700 font-mono">{{ offer.interest.domain }}</span>
+          <span class="text-xs text-amber-700 font-semibold font-mono">{{ offer.days_stale }}d stale</span>
+        </div>
+        <h3 class="text-sm font-bold text-gray-900 mt-1">{{ offer.interest.topic }}</h3>
+        <p class="text-xs text-gray-500 mt-0.5">{{ offer.reason }}</p>
+      </div>
+
+      <div class="flex items-center space-x-2">
+        <form method="POST" action="/scout/{{ offer.interest.id }}/sweep">
+          <button type="submit" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded shadow-sm">
+            Raise Sweep Order
+          </button>
+        </form>
+        <form method="POST" action="/scout/{{ offer.interest.id }}/dismiss">
+          <button type="submit" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded">
+            Dismiss
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}

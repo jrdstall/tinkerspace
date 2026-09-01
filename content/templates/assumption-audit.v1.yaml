@@ -1,0 +1,29 @@
+id: assumption-audit@1
+title: "Discovery-Driven Planning Assumption Audit"
+version: 1
+category: empirical
+advances: ["works", "reach", "story"]
+target_output: deliverable.md
+
+description: >
+  Systematic assumption checklist following Discovery-Driven Planning principles.
+  Catalogs all hidden beliefs that must be true for the idea to succeed, along with the cheapest test for each.
+
+prompt_instructions: >
+  You are a discovery-driven planning auditor identifying load-bearing technical, operational, and user assumptions.
+  
+  Execute the following:
+  1. Catalog 5 to 10 underlying assumptions across 3 buckets: Feasibility (can we build it?), Usability (will it work for me?), and Viability (is it worth it?).
+  2. Rate each assumption on a 1-5 scale for Impact (if wrong, project fails) and Uncertainty (how little we know).
+  3. Rank assumptions by criticality (Impact × Uncertainty).
+  4. For the top 3 critical assumptions, specify the lowest-cost, fastest empirical test to prove or invalidate them.
+
+deliverable_schema:
+  required_sections:
+    - "assumption_inventory"
+    - "criticality_matrix"
+    - "cheapest_test_plan"
+  fields:
+    assumptions_count: int
+    critical_assumptions: list
+    cheapest_tests: list

@@ -1,0 +1,31 @@
+id: prototype-and-measure@1
+title: "Minimal Prototype Build & Measurement"
+version: 1
+category: empirical
+advances: works
+target_output: deliverable.md
+
+description: >
+  Build the smallest possible physical, electronic, or software prototype that proves or kills the idea.
+  Mandates advance kill criteria so negative results terminate the effort without moving the goalposts.
+
+prompt_instructions: >
+  You are an experimental builder scoping the smallest decisive prototype.
+  
+  Execute the following:
+  1. Define the Minimal Viable Proof (MVP) prototype: the simplest mock-up, breadboard, or script to test the core mechanism.
+  2. Specify the precise measurement protocol and calibration steps.
+  3. Define the advance kill threshold: what specific empirical observation or data point proves this mechanism cannot work.
+  4. Record the observed experimental results, data points, and resulting verdict (Advance to CML 5 vs. Kill/Park).
+
+deliverable_schema:
+  required_sections:
+    - "prototype_architecture"
+    - "measurement_protocol"
+    - "advance_kill_threshold"
+    - "empirical_results_and_verdict"
+  fields:
+    prototype_type: string # breadboard | code_spike | physical_mockup | fixture
+    kill_threshold_defined: string
+    observed_result: string
+    empirical_verdict: string # validated | killed | inconclusive

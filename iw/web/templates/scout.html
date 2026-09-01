@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Scout Standing Interests — Tinkerspace{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Scout Standing Interests</h1>
+      <p class="text-sm text-gray-500">Persistent topic and domain monitoring with staleness interval triggers.</p>
+    </div>
+  </div>
+
+  <!-- Active Offers Panel -->
+  {% include "components/recommended_activities.html" %}
+
+  <!-- Register New Interest Form -->
+  <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">Register Standing Interest</h2>
+    <form method="POST" action="/scout/new" class="space-y-4">
+      <div>
+        <label for="topic" class="block text-xs font-semibold text-gray-700 uppercase">Research Topic / Technology</label>
+        <input type="text" id="topic" name="topic" required placeholder="e.g. Solid state lithium metal cathode degradation" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 text-sm">
+      </div>
+
+      <div class="grid grid-cols-3 gap-4">
+        <div>
+          <label for="domain" class="block text-xs font-semibold text-gray-700 uppercase">Domain</label>
+          <input type="text" id="domain" name="domain" value="hardware" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label for="staleness_interval_days" class="block text-xs font-semibold text-gray-700 uppercase">Interval (Days)</label>
+          <input type="number" id="staleness_interval_days" name="staleness_interval_days" value="30" min="1" max="365" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label for="subject_id" class="block text-xs font-semibold text-gray-700 uppercase">Subject Idea ID (Optional)</label>
+          <input type="text" id="subject_id" name="subject_id" placeholder="e.g. IDEA-A01" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 text-sm">
+        </div>
+      </div>
+
+      <div>
+        <label for="tags" class="block text-xs font-semibold text-gray-700 uppercase">Tags (comma-separated)</label>
+        <input type="text" id="tags" name="tags" placeholder="battery, energy, materials" class="mt-1 block w-full border border-gray-300 rounded px-3 py-2 text-sm">
+      </div>
+
+      <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded shadow-sm">
+        Register Standing Interest
+      </button>
+    </form>
+  </div>
+
+  <!-- Existing Interests Table -->
+  <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+    <h2 class="text-lg font-bold text-gray-900 mb-4">All Registered Interests ({{ interests|length }})</h2>
+    {% if interests|length == 0 %}
+    <p class="text-sm text-gray-500">No standing interests registered yet.</p>
+    {% else %}
+    <div class="divide-y divide-gray-100">
+      {% for interest in interests %}
+      <div class="py-3.5 flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 text-xs font-semibold rounded bg-gray-100 text-gray-800 font-mono">{{ interest.id }}</span>
+            <span class="text-xs text-gray-500 font-semibold">{{ interest.domain }}</span>
+            <span class="text-xs text-gray-400">| interval: {{ interest.staleness_interval_days }}d</span>
+            {% if interest.subject_id %}
+            <a href="/node/{{ interest.subject_id }}" class="text-xs text-indigo-600 hover:underline font-mono">{{ interest.subject_id }}</a>
+            {% endif %}
+          </div>
+          <div class="text-sm font-medium text-gray-900 mt-1">{{ interest.topic }}</div>
+          {% if interest.tags %}
+          <div class="flex space-x-1 mt-1">
+            {% for t in interest.tags %}
+            <span class="text-xs text-gray-500 bg-gray-50 px-1.5 py-0.5 rounded border border-gray-200">#{{ t }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+        <div class="text-right text-xs text-gray-500 font-mono">
+          <div>Created: {{ interest.created_at.strftime('%Y-%m-%d') }}</div>
+          {% if interest.last_swept_at %}<div>Last Swept: {{ interest.last_swept_at.strftime('%Y-%m-%d') }}</div>{% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

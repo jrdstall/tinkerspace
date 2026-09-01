@@ -1,0 +1,32 @@
+id: trade-study@1
+title: "Weighted Criteria Architecture Trade Study"
+version: 1
+category: trade_space
+advances: ["works", "reach"]
+target_output: deliverable.md
+
+description: >
+  Rigorous comparative trade study evaluating surviving architectural options across weighted technical,
+  operational, and cost criteria, concluding with a sensitivity analysis and recommendation.
+
+prompt_instructions: >
+  You are an expert systems engineer conducting a trade study.
+  
+  Execute the following:
+  1. Define 4 to 6 weighted evaluation criteria (weights summing to 100% or 1.0).
+  2. Score each surviving candidate option on a 1-5 scale across all criteria.
+  3. Compute weighted composite scores and rank the candidates.
+  4. Perform a sensitivity pass: test if reasonable weight variations alter the top-ranked choice.
+  5. Provide a crisp architectural recommendation justifying the preferred option.
+
+deliverable_schema:
+  required_sections:
+    - "criteria_and_weights"
+    - "trade_matrix"
+    - "sensitivity_analysis"
+    - "architectural_recommendation"
+  fields:
+    criteria: list
+    ranked_options: list
+    recommended_option: string
+    sensitivity_summary: string

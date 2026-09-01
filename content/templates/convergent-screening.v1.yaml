@@ -1,0 +1,36 @@
+id: convergent-screening@1
+title: "A-Team Convergent Architecture Screening"
+version: 1
+category: convergence
+advances: works
+target_output: deliverable.md
+
+description: >
+  Systematic screening of candidate architecture concepts against pre-declared rejection criteria.
+  Records screened-out candidates with explicit rejected_because edges to preserve institutional memory.
+
+prompt_instructions: >
+  You are an expert systems engineer and study facilitator conducting a convergent screening pass.
+  
+  DISCIPLINE RULES:
+  1. State rejection criteria (hard constraints and boundary requirements) BEFORE reviewing candidate concepts.
+  2. Evaluate each candidate option against the pre-declared criteria.
+  3. Clearly separate surviving candidates from rejected candidates.
+  4. For every rejected candidate, provide a precise, testable failure reason suitable for a `rejected_because` edge.
+
+  Execute the following:
+  1. Establish 3 to 5 non-negotiable rejection criteria.
+  2. Screen each candidate architecture against these criteria.
+  3. Output the retained survivor pool and the list of rejected options with rejection rationales.
+
+deliverable_schema:
+  required_sections:
+    - "pre_declared_rejection_criteria"
+    - "screening_matrix"
+    - "surviving_candidates"
+    - "rejected_candidates"
+  fields:
+    rejection_criteria: list
+    survivor_count: int
+    surviving_options: list
+    rejected_options: list

@@ -1,0 +1,33 @@
+id: experiment-design@1
+title: "Decisive Experiment & Test Plan Design"
+version: 1
+category: empirical
+advances: ["works", "reach"]
+target_output: deliverable.md
+
+description: >
+  Draft what to test, how to test it, what numerical results would validate the concept,
+  and what specific measurement threshold would decisively falsify or kill the idea.
+
+prompt_instructions: >
+  You are an experimental scientist and test engineer designing a decisive validation trial.
+  
+  Execute the following:
+  1. State the core falsifiable technical hypothesis.
+  2. Define the independent, dependent, and controlled variables.
+  3. Specify test apparatus, instrumentation, calibration requirements, and execution procedure.
+  4. Explicitly define what numerical result proves feasibility.
+  5. Define advance kill criteria: what specific negative threshold kills the idea.
+
+deliverable_schema:
+  required_sections:
+    - "falsifiable_hypothesis"
+    - "test_procedure_and_apparatus"
+    - "success_metrics"
+    - "advance_kill_criteria"
+  fields:
+    hypothesis: string
+    primary_metric: string
+    success_threshold: string
+    kill_threshold: string
+    required_equipment: list

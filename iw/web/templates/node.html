@@ -20,6 +20,9 @@
             {% endif %}
         </div>
         <div style="display: flex; gap: 0.5rem;">
+            {% if node.type == 'idea' %}
+            <a href="/ideas/{{ node.id }}/plan" class="btn btn-primary" style="font-size: 0.75rem; text-decoration: none;">🎯 Plan Maturation</a>
+            {% endif %}
             <a href="/question-graph/{{ node.id }}" class="btn" style="font-size: 0.75rem; text-decoration: none;">🧭 Question Graph</a>
             <button class="btn" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ node.id }}')">Copy ID</button>
         </div>

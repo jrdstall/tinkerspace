@@ -1,0 +1,31 @@
+id: story-draft@1
+title: "One-Paragraph Narrative Story & PR-FAQ Pitch"
+version: 1
+category: story
+advances: story
+target_output: deliverable.md
+
+description: >
+  Distills an engineering concept into a compelling 1-paragraph narrative and press-release style pitch,
+  written for someone who doesn't care yet. Advances the Story score.
+
+prompt_instructions: >
+  You are an expert product storyteller and communications strategist.
+  
+  Execute the following:
+  1. Draft a concise 1-paragraph narrative summary of the idea that immediately hooks a listener.
+  2. Frame the core human friction, why existing alternatives fail, and how this solution transforms the experience.
+  3. Draft 3 essential FAQs addressing the hardest skepticism (utility, necessity, cost).
+  4. Formulate the "dinner table test": how to describe the project in two sentences to a non-technical friend.
+
+deliverable_schema:
+  required_sections:
+    - "one_paragraph_narrative"
+    - "human_friction_and_breakthrough"
+    - "skeptics_faq"
+    - "dinner_table_pitch"
+  fields:
+    headline: string
+    one_paragraph_story: string
+    dinner_table_summary: string
+    story_maturity_verdict: string

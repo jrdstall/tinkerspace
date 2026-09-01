@@ -1,0 +1,32 @@
+id: point-design@1
+title: "Single Concept Point Design & Costing"
+version: 1
+category: costing
+advances: reach
+target_output: deliverable.md
+
+description: >
+  Detailed operational and physical breakdown of a single chosen concept.
+  Costs the concept in bill-of-materials parts, labor hours, calendar schedule, and budget.
+
+prompt_instructions: >
+  You are a lead project engineer producing a baseline point design.
+  
+  Execute the following:
+  1. Specify the subsystem breakdown and physical/software components of the chosen concept.
+  2. Produce a preliminary Bill of Materials (BOM) detailing major components, suppliers, and estimated hardware costs.
+  3. Estimate engineering and build effort broken down by subsystem into hours and weeks.
+  4. Identify critical path risks, lead-time bottlenecks, and estimated total financial cost.
+
+deliverable_schema:
+  required_sections:
+    - "subsystem_architecture"
+    - "bill_of_materials"
+    - "effort_and_schedule"
+    - "budget_and_risk_summary"
+  fields:
+    chosen_concept: string
+    estimated_bom_cost: string
+    estimated_hours: int
+    estimated_schedule_weeks: int
+    primary_risks: list
