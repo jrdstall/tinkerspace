@@ -12,25 +12,63 @@ Tinkerspace is built around a few foundational commitments:
 
 1. **You Are the Chief Architect**: AI agents are tireless research assistants and pair programmers operating behind a secure tool wall. They draft, survey, analyze, and propose — but **only you make decisions, approve changes, and advance ideas**.
 2. **Zero-Classification Frictionless Capture**: Thoughts, irritations, and sparks enter the system instantly without forcing you to stop and categorize them. Categorization happens later during focused triage.
-3. **No Vendor Lock-In (Plain Markdown + Git)**: All notes, work units, and workflows are stored as clean Markdown and YAML files in your `iw-vault/` directory. Writes are atomic (`tempfile` + rename), and changes are automatically committed to git. You can inspect or edit everything directly in Obsidian, VS Code, or any text editor.
-4. **No Background Engines or Watchers**: The system runs entirely on-demand in response to your explicit interactions. No surprise token bills, background battery drains, or phantom watchers.
+3. **No Vendor Lock-In (Plain Markdown + Git)**: All notes, work units, and workflows are stored as clean Markdown and YAML files in your vault. Writes are atomic (`tempfile` + rename), and changes are automatically committed to git. You can inspect or edit everything directly in Obsidian, VS Code, or any text editor.
+4. **Separation of Code and Data**: Development code (`tinkerspace`) is kept strictly separated from your official personal datastore (`IW/vault`), keeping your real ideas clean and safe during testing.
+5. **No Background Engines or Watchers**: The system runs entirely on-demand in response to your explicit interactions. No surprise token bills, background battery drains, or phantom watchers.
 
 ---
 
-## 02 · Starting the Application
+## 02 · Environments: Production vs Development
 
-To launch the local web server:
+Your workstation is set up with two distinct environments:
 
+### 1. Production Deployment (`C:\Users\jrdst\software\IW`)
+This is your **daily-driver workspace** where your real notes and official datastore live.
+- **Location**: `C:\Users\jrdst\software\IW`
+- **To Launch**: Double-click `start.bat` (or run `.\start.ps1` in PowerShell).
+- **Contents**:
+  ```
+  C:\Users\jrdst\software\IW\
+  ├── .venv/            # Dedicated, self-contained Python runtime
+  ├── vault/            # Your official personal datastore (git repo)
+  ├── content/templates # Activity library templates
+  ├── start.bat         # 1-click double-clickable launcher
+  ├── start.ps1         # PowerShell launcher
+  └── USER_GUIDE.md     # This handbook
+  ```
+- Automatically opens your browser to `http://localhost:8000` connected to your official vault.
+
+### 2. Development Playground (`C:\Users\jrdst\software\tinkerspace`)
+This is where we write code, fix bugs, and add new features.
+- Contains the full source code, test suites (`tests/`), design specs (`docs/design/`), and build scaffolding.
+- All automated tests run against temporary scratch folders in `tmp_path`, never touching your production vault.
+
+### 3. Upgrading Production
+Whenever code changes or new features are added in `tinkerspace`, update your production installation with one command:
 ```powershell
-uv run uvicorn iw.web.app:app --port 8000 --reload
+uv run python scripts/deploy.py --target "C:\Users\jrdst\software\IW"
 ```
-
-Open your browser to:
-👉 **`http://localhost:8000`**
+*This installs the latest package and templates in 5 seconds while leaving your existing `vault/` data 100% untouched.*
 
 ---
 
-## 03 · The Daily Innovation Rhythm
+## 03 · Syncing Your Vault with GitHub (Multi-Device Sync)
+
+Your production datastore at `C:\Users\jrdst\software\IW\vault` is initialized as a standard Git repository. To sync your notes across your workstation, tablet, and laptop:
+
+1. Create a private repository on GitHub (e.g. `github.com/jrdstall/tinkerspace-vault`).
+2. Link your local vault to GitHub:
+   ```powershell
+   cd C:\Users\jrdst\software\IW\vault
+   git remote add origin https://github.com/jrdstall/tinkerspace-vault.git
+   git branch -M main
+   git push -u origin main
+   ```
+3. On your tablet or laptop, clone that same repository into your Obsidian or tablet sync folder. Every write by Tinkerspace commits automatically to git!
+
+---
+
+## 04 · The Daily Innovation Rhythm
 
 ```
    ┌────────────────────────────────────────────────────────┐
@@ -61,7 +99,7 @@ Open your browser to:
 
 ---
 
-## 04 · Feature Playbooks
+## 05 · Feature Playbooks
 
 ### A. Quick Capture (`Ctrl+K` or Header Button)
 - **Shortcut**: Press `Ctrl+K` anywhere in the app to open the quick-capture modal.
@@ -73,7 +111,7 @@ Open your browser to:
 
 ### B. Fast Keyboard Triage (`/triage`)
 Process your raw inbox efficiently without taking your hands off the keyboard:
-- **`[A]` Accept**: Converts the raw thought into a permanent typed node in `iw-vault/notes/`.
+- **`[A]` Accept**: Converts the raw thought into a permanent typed node in `vault/notes/`.
 - **`[D]` Discard**: Cleanses noise or irrelevant snippets.
 - **`[E]` Defer**: Keeps the item in the inbox for later review.
 - **Node Type Selection**:
@@ -85,7 +123,7 @@ Process your raw inbox efficiently without taking your hands off the keyboard:
 - **Attribution**: Automatically records your authorship (`kind: human`) and syncs to git.
 
 ### C. Intake & File Drop (`/intake`)
-- **Drop Folder**: Drop PDF datasheets, tablet sketches, images, or Markdown files into `iw-vault/inbox/drop/`.
+- **Drop Folder**: Drop PDF datasheets, tablet sketches, images, or Markdown files into `vault/inbox/drop/`.
 - **Intake Flow**: Review dropped files on `/intake`, extract readable text automatically with pluggable extractors, and attach them as assets, observations, or idea concept art.
 
 ### D. Idea Maturity Board (`/maturity`)
@@ -113,7 +151,7 @@ Navigate to any idea node and click **🎯 Plan Maturation**:
   - Assign to **Agent (AI)**, **Human (Jared)**, or **Tool (Local)**.
   - Set estimated duration (sized to 1–2 hr single-session blocks).
   - Declare upstream step dependencies (e.g., Step 2 depends on Step 1).
-- **Instantiate**: One click generates a `WFL-xxx` workflow containing concrete `UOW-xxx` units in `iw-vault/work/`.
+- **Instantiate**: One click generates a `WFL-xxx` workflow containing concrete `UOW-xxx` units in `vault/work/`.
 
 ### F. Association Engine (`/associations`)
 Uncover serendipitous, non-obvious cross-domain links:
@@ -144,12 +182,12 @@ Deconstruct and expand upon any idea using the **Why &rarr; What If &rarr; How**
 
 ---
 
-## 05 · Vault Architecture Reference
+## 06 · Vault Architecture Reference
 
-All your data lives inside `iw-vault/`:
+All your data lives inside `vault/`:
 
 ```
-iw-vault/
+vault/
 ├── notes/               # Permanent atomic Markdown nodes (IDEA-xxx, FRI-xxx, etc.)
 ├── work/                # Active and completed work units and workflows
 │   ├── WFL-A01/         # workflow.yaml
@@ -164,7 +202,7 @@ iw-vault/
 
 ---
 
-## 06 · Quick Reference Keybindings & URLs
+## 07 · Quick Reference Keybindings & URLs
 
 | Route | Purpose | Key Actions |
 |---|---|---|
