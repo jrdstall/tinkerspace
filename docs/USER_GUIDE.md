@@ -147,62 +147,84 @@ You don't need to re-create a plan if requirements change:
 
 ---
 
+---
+
 ### Step 3: Dispatching to Your AI Tool
 
-Units on the **Work Board** (`/board`) are organized by state:
+Units on the **Work Board** (`/board`) are organized into four lifecycle columns:
 - **Blocked**: Waiting for upstream prerequisite steps to complete.
 - **Ready**: Upstream dependencies are met. Ready for dispatch!
 - **Dispatched / In Progress**: Currently being researched or executed.
 - **Accepted / Done**: Deliverables collected and scores materialized.
 
-Choose the dispatch method that fits your workflow:
-
-#### 📋 Method 1: Copy-Paste Prompt (Claude, ChatGPT, or Antigravity Chat — Zero Setup)
-This is the simplest, most versatile method for daily interactive work.
-
-1. On `/board` or `/workflow/WFL-xxx`, locate your **Ready** unit.
-2. Click **📋 Copy Prompt** (or highlight the Action Guide text).
-3. Open your preferred AI tool (Claude Desktop, Antigravity chat, or ChatGPT).
-4. **What to say to the AI**:
-   ```text
-   I am executing an innovation task for an idea in my Tinkerspace workspace. 
-   Here is the complete context, objective, and action guide for this unit:
-
-   [PASTE COPIED PROMPT HERE]
-
-   Please thoroughly execute this research/analysis and produce the final deliverable 
-   using the requested markdown structure with the deliverable metadata header.
-   ```
-5. **Interactive Pair Programming / Brainstorming**:
-   - Chat back and forth with the AI! Push back on weak ideas, ask it to look up specific patents or datasheets, or have it compare alternative architectures.
-   - When the analysis is solid, instruct the AI:
-     *"Please generate the final deliverable markdown, including the YAML/comment header with your summary, verdict, and proposed scores."*
-
-#### 🤖 Method 2: Automated MCP Server (Claude Desktop or Antigravity IDE)
-If you use Claude Desktop or Antigravity IDE, Tinkerspace provides a native Model Context Protocol (MCP) server that lets the agent read tasks and submit deliverables automatically:
-
-1. In your `claude_desktop_config.json` (or Antigravity MCP configuration):
-   ```json
-   {
-     "mcpServers": {
-       "tinkerspace": {
-         "command": "C:\\Users\\jrdst\\software\\IW\\.venv\\Scripts\\python.exe",
-         "args": ["-m", "iw.mcp.server", "--vault", "C:\\Users\\jrdst\\software\\IW\\vault"]
-       }
-     }
-   }
-   ```
-2. In the AI chat, simply say:
-   - *"List the ready units on my Tinkerspace work board."* &rarr; AI calls `list_steps()`.
-   - *"Execute unit UOW-A01 for the cycle computer idea."* &rarr; AI calls `get_step("UOW-A01")`, conducts research, and calls `submit_result("UOW-A01", content=...)`.
-
-#### 💻 Method 3: CLI Courier
-You can also dispatch directly from your terminal:
-```powershell
-uv run python -m iw.adapters.couriers.cli_courier dispatch UOW-A01
-```
+#### 🎯 What Does Clicking the "Dispatch" Button Actually Do?
+When you click **Dispatch** on a Ready unit card on `/board`:
+1. **Lifecycle Transition (`READY` &rarr; `DISPATCHED`)**: The unit's state officially shifts to `dispatched`, signaling that work is actively in flight.
+2. **Visual Column Shift**: The card moves from the **Ready** column into the **Dispatched** column on your Work Board so you can see at a glance what tasks are currently out with an AI or on your workbench.
+3. **Automatic Human Scaffolding**: If the unit's assignee is `Human (Jared)`, clicking Dispatch automatically generates a starter template file at `vault/work/UOW-xxx/deliverable.md` pre-populated with standard Markdown sections (`## Executive Summary`, `## Options & Trade-Offs`, `## Recommendation`) and an evaluation header template ready for you to fill out.
+4. **Arms the Collection Action**: Once dispatched, the card's primary action button changes to **📥 Collect / Complete**, ready for you to finalize the unit when research concludes.
+5. **Reset & Park Controls**: If you decide to postpone or re-evaluate, the dispatched card gives you instant buttons to **Reset** (moves back to Ready) or **Park** (pauses work).
 
 ---
+
+### Setting Up MCP in Claude Desktop & Antigravity IDE
+
+Tinkerspace features a native Model Context Protocol (MCP) server (`iw.mcp.server`) that operates behind a secure **MCP Wall (Vision §14.8)**. It gives AI agents structured tools to fetch task context (`read_unit`) and write completed deliverables (`submit_result`) without exposing your entire file system to arbitrary edits.
+
+#### 1. Configuration in Claude Desktop
+Open your Claude Desktop configuration file at `%APPDATA%\Claude\claude_desktop_config.json` (or click *Settings &rarr; Developer &rarr; Edit Config* in Claude Desktop):
+
+```json
+{
+  "mcpServers": {
+    "tinkerspace": {
+      "command": "C:\\Users\\jrdst\\software\\IW\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "iw.mcp.server",
+        "--vault",
+        "C:\\Users\\jrdst\\software\\IW\\vault"
+      ]
+    }
+  }
+}
+```
+*Restart Claude Desktop after editing. You will see the hammer icon 🔨 indicate the `tinkerspace` tools are active.*
+
+#### 2. Configuration in Google Antigravity IDE
+In Antigravity IDE (or via your Antigravity MCP settings):
+- **Server Name**: `tinkerspace`
+- **Command**: `C:\Users\jrdst\software\IW\.venv\Scripts\python.exe`
+- **Args**: `["-m", "iw.mcp.server", "--vault", "C:\\Users\\jrdst\\software\\IW\\vault"]`
+
+#### 3. How Should You Work in the Claude / Antigravity GUI? (Project Directory Best Practices)
+
+A common question is: *Should I open `C:\Users\jrdst\software\IW\vault` as a Project in Claude or Antigravity?*
+
+> [!WARNING]
+> **Do NOT open your production vault (`C:\Users\jrdst\software\IW\vault`) directly as an AI project workspace.**
+> 
+> The core design principle of Tinkerspace is the **MCP Wall**: AI tools should interact with your vault through strict, unit-scoped tool calls (`read_unit`, `submit_result`). If you open the raw vault directory as an AI project, the assistant will index all your private notes, consume excessive tokens on unrelated files, and risks making untracked direct modifications outside the maturation lifecycle.
+
+Here are the three recommended ways to work within Claude Desktop or Antigravity:
+
+##### 🌟 Option A: No Project / Clean Chat (Recommended for 90% of Maturation Work)
+- **Workflow**: Open a standard, clean chat session in Claude Desktop or Antigravity with **no project directory** open.
+- **Why it works**: Because the Tinkerspace MCP server is configured globally, the AI can call `read_unit` and `submit_result` anywhere.
+- **What to say**:
+  - *"Check my Tinkerspace work board and read unit UOW-A01."*
+  - *"Perform a comprehensive patent and literature survey for this handlebar display concept."*
+  - *"Submit the completed deliverable for UOW-A01 with a verdict to proceed and scores of novel=3, works=3."*
+- The AI fetches the Action Guide, performs the analysis, and saves the deliverable into `vault/work/UOW-A01/deliverable.md` automatically. Zero project setup required!
+
+##### 🛠️ Option B: Dedicated Scratch / Research Workspace (For Heavy Code, Prototyping, or Hardware Tasks)
+- **When to use**: When your maturation plan reaches CML 4 or 5 (e.g. writing firmware, running Python simulation scripts, or creating KiCad schematics).
+- **Workflow**: Create a separate research folder outside the vault (e.g. `C:\Users\jrdst\software\projects\cycle-computer-puck`). Open *that* folder as your project in Antigravity or VS Code.
+- **Why it works**: The AI can author scripts, run code, and build prototypes locally in that sandbox without cluttering your vault. When finished, it calls `submit_result` to send the final summary report back into Tinkerspace.
+
+##### 📋 Option C: Pure Web Chat (Zero MCP Setup)
+- **Workflow**: If you are using ChatGPT or web-based Claude, simply click **📋 Copy Prompt** on the Work Board, paste it into the web chat, chat iteratively, and save the AI's final response to `vault/work/UOW-xxx/deliverable.md`. Click **📥 Collect / Complete** on `/board` to finish.
+
 
 ### Step 4: Getting Results Back into Tinkerspace & Advancing CML
 

@@ -152,3 +152,28 @@ def create_mcp_server(store: StoreProtocol) -> MCPServer:
         return query_nodes_tool(store, type_filter, domain_filter, tag_filter)
 
     return server
+
+
+def main() -> None:
+    """Run the Tinkerspace MCP server over stdio transport (MCP-01..06)."""
+    import argparse
+    import os
+    from iw.core.store import MarkdownStore
+
+    parser = argparse.ArgumentParser(description="Tinkerspace MCP Server")
+    parser.add_argument(
+        "--vault",
+        type=str,
+        default=os.environ.get("IW_VAULT_DIR", r"C:\Users\jrdst\software\IW\vault"),
+        help="Path to Tinkerspace vault directory",
+    )
+    args = parser.parse_args()
+    vault_path = Path(args.vault).resolve()
+    store = MarkdownStore(vault_path)
+    server = create_mcp_server(store)
+    server.run(transport="stdio")
+
+
+if __name__ == "__main__":
+    main()
+
