@@ -14,19 +14,32 @@ def _sanitize(text: str, max_len: int = 40) -> str:
     return cleaned
 
 
+def _format_move_label(move: str | None) -> str:
+    if not move or str(move).lower() in ("custom", "blank", "none", ""):
+        return ""
+    labels = {
+        "why": "Why", "why_must_it_be": "Why Must It Be",
+        "question_the_question": "Assumptions", "constraint_removal": "Constraint",
+        "inversion": "Inversion", "how_might_we": "How",
+        "dissenter": "Dissenter", "open_closed": "Transform",
+    }
+    return labels.get(str(move).lower(), str(move).replace("_", " ").title())
+
+
 def _render_question_nodes(questions: list[Node]) -> tuple[list[str], set[str]]:
     lines: list[str] = []
     has_parent: set[str] = set()
     for q in questions:
         form = q.attrs.get("form", "open")
-        move = q.attrs.get("move", "why")
+        move_label = _format_move_label(q.attrs.get("move"))
+        move_suffix = f" ({move_label})" if move_label else ""
         icon = "🌌" if form == "open" else "🎯"
         q_title = _sanitize(q.title, 35)
         node_id = q.id.replace("-", "_")
         css_class = "closedNode" if form == "closed" else "openNode"
         if q.attrs.get("importance") == "high":
             css_class += " highImp"
-        lines.append(f'  {node_id}["{icon} <b>{q.id}</b> ({move})<br/>{q_title}"]:::{css_class}')
+        lines.append(f'  {node_id}["{icon} <b>{q.id}</b>{move_suffix}<br/>{q_title}"]:::{css_class}')
 
     for q in questions:
         q_node_id = q.id.replace("-", "_")

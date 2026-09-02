@@ -98,11 +98,28 @@
         </div>
     </div>
 
-    <!-- Mermaid Interactive Diagram Area -->
-    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.5rem; overflow-x: auto; text-align: center; min-height: 220px; display: flex; justify-content: center; align-items: center;">
-        <pre class="mermaid" style="margin: 0; font-family: inherit;">
+    <!-- Mermaid Interactive Diagram Viewport with Pan & Zoom -->
+    <div id="diagram-viewport" style="position: relative; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; height: 500px; overflow: hidden; display: flex; justify-content: center; align-items: center; cursor: grab; user-select: none;">
+        
+        <!-- Zoom & Pan Controls Floating Toolbar -->
+        <div style="position: absolute; top: 12px; right: 12px; z-index: 10; display: flex; gap: 0.35rem; background: rgba(26, 34, 48, 0.85); backdrop-filter: blur(4px); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.25rem;">
+            <button type="button" onclick="zoomDiagram(1.2)" class="btn" title="Zoom In" style="padding: 0.25rem 0.6rem; font-size: 0.85rem; font-weight: 700;">➕</button>
+            <button type="button" onclick="zoomDiagram(0.8)" class="btn" title="Zoom Out" style="padding: 0.25rem 0.6rem; font-size: 0.85rem; font-weight: 700;">➖</button>
+            <button type="button" onclick="resetDiagramZoom()" class="btn" title="Reset / Fit View" style="padding: 0.25rem 0.6rem; font-size: 0.8rem;">⟲ Reset</button>
+            <span id="zoom-level-badge" class="badge" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; display: flex; align-items: center;">100%</span>
+        </div>
+
+        <!-- Navigation Guide Hint -->
+        <div style="position: absolute; bottom: 8px; left: 12px; z-index: 10; font-size: 0.75rem; color: var(--text-muted); pointer-events: none; background: rgba(15, 20, 28, 0.7); padding: 0.2rem 0.5rem; border-radius: 4px;">
+            🖱️ Drag to pan · Scroll to zoom
+        </div>
+
+        <!-- Diagram Transform Stage -->
+        <div id="diagram-stage" style="transform-origin: center center; will-change: transform; transition: transform 0.05s ease-out; padding: 2rem;">
+            <pre class="mermaid" style="margin: 0; font-family: inherit;">
 {{ mermaid_code|safe }}
-        </pre>
+            </pre>
+        </div>
     </div>
 </div>
 
@@ -286,6 +303,7 @@
 <script>
 const BERGER_STEMS = {{ berger_stems_json|safe }};
 
+// --- View Switcher ---
 function switchGraphMode(mode) {
     const btnGraph = document.getElementById('tab-btn-graph');
     const btnSplit = document.getElementById('tab-btn-split');
@@ -296,7 +314,6 @@ function switchGraphMode(mode) {
     const secCards = document.getElementById('section-cards');
     const secLinker = document.getElementById('section-edge-linker');
 
-    // Reset buttons
     document.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
 
     if (mode === 'graph') {
@@ -320,10 +337,74 @@ function switchGraphMode(mode) {
     }
 }
 
+// --- Zoom & Pan Controller ---
+let scale = 1.0;
+let pointX = 0;
+let pointY = 0;
+let isPanning = false;
+let startX = 0;
+let startY = 0;
+
+function updateDiagramTransform() {
+    const stage = document.getElementById('diagram-stage');
+    const badge = document.getElementById('zoom-level-badge');
+    if (stage) {
+        stage.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
+    }
+    if (badge) {
+        badge.innerText = `${Math.round(scale * 100)}%`;
+    }
+}
+
+function zoomDiagram(factor) {
+    const newScale = Math.min(Math.max(0.3, scale * factor), 4.0);
+    scale = Number(newScale.toFixed(2));
+    updateDiagramTransform();
+}
+
+function resetDiagramZoom() {
+    scale = 1.0;
+    pointX = 0;
+    pointY = 0;
+    updateDiagramTransform();
+}
+
+const viewport = document.getElementById('diagram-viewport');
+if (viewport) {
+    viewport.addEventListener('mousedown', function(e) {
+        if (e.target.closest('button')) return;
+        isPanning = true;
+        startX = e.clientX - pointX;
+        startY = e.clientY - pointY;
+        viewport.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isPanning) return;
+        e.preventDefault();
+        pointX = e.clientX - startX;
+        pointY = e.clientY - startY;
+        updateDiagramTransform();
+    });
+
+    window.addEventListener('mouseup', function() {
+        if (isPanning) {
+            isPanning = false;
+            viewport.style.cursor = 'grab';
+        }
+    });
+
+    viewport.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.15 : 0.85;
+        zoomDiagram(factor);
+    }, { passive: false });
+}
+
+// --- Question Creation ---
 function applyBergerMove(moveKey) {
-    // If in graph-only mode, switch to split or composer so textarea is visible
     const secComposer = document.getElementById('section-composer');
-    if (secComposer.style.display === 'none') {
+    if (secComposer && secComposer.style.display === 'none') {
         switchGraphMode('split');
     }
 
@@ -331,12 +412,10 @@ function applyBergerMove(moveKey) {
     const moveInput = document.getElementById('selected-move-input');
     const formSelect = document.getElementById('question-form-select');
     
-    // Update active button highlight
     document.querySelectorAll('.move-chip-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById('move-btn-' + moveKey);
     if (activeBtn) activeBtn.classList.add('active');
 
-    // Update move and text
     if (moveInput) moveInput.value = moveKey;
     if (textarea && BERGER_STEMS[moveKey]) {
         textarea.value = BERGER_STEMS[moveKey];
@@ -344,7 +423,6 @@ function applyBergerMove(moveKey) {
         textarea.setSelectionRange(textarea.value.length, textarea.value.length);
     }
 
-    // Auto set open vs closed
     if (formSelect) {
         if (moveKey === 'dissenter' || moveKey === 'open_closed') {
             formSelect.value = 'closed';
@@ -356,10 +434,12 @@ function applyBergerMove(moveKey) {
 
 function clearQuestionText() {
     const secComposer = document.getElementById('section-composer');
-    if (secComposer.style.display === 'none') {
+    if (secComposer && secComposer.style.display === 'none') {
         switchGraphMode('split');
     }
     const textarea = document.getElementById('question-text');
+    const moveInput = document.getElementById('selected-move-input');
+    if (moveInput) moveInput.value = 'custom';
     document.querySelectorAll('.move-chip-btn').forEach(btn => btn.classList.remove('active'));
     if (textarea) {
         textarea.value = '';

@@ -196,3 +196,28 @@ def test_qgraph_07_mermaid_visual_graph_rendering(tmp_path: Path):
     assert "QUE_A02" in response.text
     assert "narrows" in response.text
 
+
+def test_qgraph_08_blank_slate_custom_question_omits_move_label(tmp_path: Path):
+    """QGRAPH-08: Blank slate questions created with move=custom omit move suffix in visual graph."""
+    store, service, subject_id = _setup_graph_fixture(tmp_path)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    custom_q = service.create_question(
+        subject_id=subject_id,
+        text="Custom freeform inquiry without berger move",
+        form="open",
+        move="custom",
+        author=author,
+    )
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    response = client.get(f"/question-graph/{subject_id}")
+    assert response.status_code == 200
+    # QUE_A01 has move="why" -> (Why)
+    assert "(Why)" in response.text
+    # custom_q (QUE-A03) has move="custom" -> should NOT have (why) or (custom)
+    assert "QUE_A03" in response.text
+    assert f'QUE_A03["🌌 <b>{custom_q.id}</b><br/>' in response.text
+
+
