@@ -2,7 +2,7 @@
 
 Welcome to **Tinkerspace**, your personal, distraction-free innovation workstation. 
 
-This guide provides step-by-step instructions for running, operating, and mastering the workspace, along with operational playbooks for everyday innovation routines.
+This guide provides step-by-step instructions for running, operating, and mastering the workspace, along with concrete operational playbooks for everyday innovation routines.
 
 ---
 
@@ -92,14 +92,179 @@ Your production datastore at `C:\Users\jrdst\software\IW\vault` is initialized a
    └──────────────────────────┬─────────────────────────────┘
                               ▼
    ┌────────────────────────────────────────────────────────┐
-   │ 5. DISPATCH & COLLECT (/board, MCP, CLI Courier)       │
-   │    Run activities with Claude/Antigravity and collect.  │
+   │ 5. DISPATCH & COLLECT (/board, MCP, Chat, CLI Courier) │
+   │    Execute activities with AI, collect & level up CML. │
    └────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 05 · Feature Playbooks
+## 05 · Complete Maturation Playbook: From Idea to AI Dispatch to Results
+
+This section details how to take an idea from a raw seedling (CML 1) through research, design, and validation using Tinkerspace workflows and external AI assistants.
+
+### Step 1: Open the Plan Builder (`/ideas/{id}/plan`)
+Navigate to any idea node (e.g. `IDEA-A01`) from the **Explore** page or the **Maturity Board**, and click **🎯 Plan Maturation**:
+
+You have two ways to construct a plan:
+
+#### Option A: 🤖 Auto-Drafting a Plan
+- Select your target CML (e.g., advancing from **CML 1 &rarr; CML 2**, or **CML 2 &rarr; CML 3**).
+- The planner inspects your idea's 4-score equalizer (`Novel`, `Works`, `Reach`, `Story`), spotlights the lowest-scoring dimension ("laggard"), and automatically sequences activities following the *"cheap and decisive first"* rule (e.g., Prior Art &rarr; Divergent Generation &rarr; Trade Study).
+
+#### Option B: 🛠️ Custom Plan Builder
+Build a bespoke workflow tailored to your exact project:
+1. Click **+ Add Custom Step** to add as many activity cards as needed.
+2. For each card:
+   - **Step Title**: e.g., *"Comprehensive Patent & Prior Art Survey"*, *"Explore 5 Architecture Options"*, *"Draft Breadboard Test Plan"*.
+   - **Activity Template**: Select from standard templates (`prior-art-survey@1`, `questionstorm@1`, `divergent-generation@1`, `trade-study@1`, `point-design@1`, `parts-and-skills-survey@1`, `experiment-design@1`) or choose `freeform@1`.
+   - **Assignee**: Choose `Agent (AI)` for LLM research/synthesis, `Human (Jared)` for physical assembly/testing, or `Tool (Local)` for scripts.
+   - **Estimated Duration**: Sized to 1–2 hour single-session blocks.
+   - **Step Dependencies (Predecessors)**: Select which prior steps must finish before this step can begin (e.g., Step 2 depends on Step 1). Tinkerspace ensures dependent steps stay blocked until their inputs are ready.
+   - **Custom Step Instructions (Optional)**: Type specific constraints, databases to search, part numbers, or focus areas. If left blank, Tinkerspace automatically populates the rich default instructions from the activity template.
+3. Click **Generate Workflow**:
+   - Tinkerspace creates a workflow container (`WFL-xxx`) in `vault/work/`.
+   - Generates concrete units of work (`UOW-xxx`) with pre-compiled action guide prompts in `vault/work/UOW-xxx/action_guide.md`.
+   - Immediately redirects you to the visual DAG diagram at `/workflow/WFL-xxx`.
+
+---
+
+### Step 2: Review & Edit Prompts (Action Guides)
+Every generated unit of work has an **Action Guide** — a self-contained, high-context prompt that tells the AI (or human) exactly what to do.
+
+#### What an Action Guide Contains:
+- **Project Context**: Idea ID, title, domain, tags, and description.
+- **Activity Objectives**: What this step accomplishes (e.g., finding prior patents, evaluating trade-offs, designing test circuits).
+- **Core Rubric / Questions**: DARPA Heilmeier questions, evaluation criteria, and failure thresholds.
+- **Output Schema**: The structured Markdown format and metadata header the deliverable must follow.
+
+#### How to Edit Prompts In-Flight:
+You don't need to re-create a plan if requirements change:
+1. On the **Workflow page** (`/workflow/WFL-xxx`) or the **Work Board** (`/board`), locate the unit card.
+2. Click **✏️ Edit Prompt**.
+3. Add or modify instructions, search keywords, or special constraints in the text area.
+4. Click **Save Action Guide** — your edits are instantly updated in `vault/work/UOW-xxx/unit.yaml` and saved to git.
+
+---
+
+### Step 3: Dispatching to Your AI Tool
+
+Units on the **Work Board** (`/board`) are organized by state:
+- **Blocked**: Waiting for upstream prerequisite steps to complete.
+- **Ready**: Upstream dependencies are met. Ready for dispatch!
+- **Dispatched / In Progress**: Currently being researched or executed.
+- **Accepted / Done**: Deliverables collected and scores materialized.
+
+Choose the dispatch method that fits your workflow:
+
+#### 📋 Method 1: Copy-Paste Prompt (Claude, ChatGPT, or Antigravity Chat — Zero Setup)
+This is the simplest, most versatile method for daily interactive work.
+
+1. On `/board` or `/workflow/WFL-xxx`, locate your **Ready** unit.
+2. Click **📋 Copy Prompt** (or highlight the Action Guide text).
+3. Open your preferred AI tool (Claude Desktop, Antigravity chat, or ChatGPT).
+4. **What to say to the AI**:
+   ```text
+   I am executing an innovation task for an idea in my Tinkerspace workspace. 
+   Here is the complete context, objective, and action guide for this unit:
+
+   [PASTE COPIED PROMPT HERE]
+
+   Please thoroughly execute this research/analysis and produce the final deliverable 
+   using the requested markdown structure with the deliverable metadata header.
+   ```
+5. **Interactive Pair Programming / Brainstorming**:
+   - Chat back and forth with the AI! Push back on weak ideas, ask it to look up specific patents or datasheets, or have it compare alternative architectures.
+   - When the analysis is solid, instruct the AI:
+     *"Please generate the final deliverable markdown, including the YAML/comment header with your summary, verdict, and proposed scores."*
+
+#### 🤖 Method 2: Automated MCP Server (Claude Desktop or Antigravity IDE)
+If you use Claude Desktop or Antigravity IDE, Tinkerspace provides a native Model Context Protocol (MCP) server that lets the agent read tasks and submit deliverables automatically:
+
+1. In your `claude_desktop_config.json` (or Antigravity MCP configuration):
+   ```json
+   {
+     "mcpServers": {
+       "tinkerspace": {
+         "command": "C:\\Users\\jrdst\\software\\IW\\.venv\\Scripts\\python.exe",
+         "args": ["-m", "iw.mcp.server", "--vault", "C:\\Users\\jrdst\\software\\IW\\vault"]
+       }
+     }
+   }
+   ```
+2. In the AI chat, simply say:
+   - *"List the ready units on my Tinkerspace work board."* &rarr; AI calls `list_steps()`.
+   - *"Execute unit UOW-A01 for the cycle computer idea."* &rarr; AI calls `get_step("UOW-A01")`, conducts research, and calls `submit_result("UOW-A01", content=...)`.
+
+#### 💻 Method 3: CLI Courier
+You can also dispatch directly from your terminal:
+```powershell
+uv run python -m iw.adapters.couriers.cli_courier dispatch UOW-A01
+```
+
+---
+
+### Step 4: Getting Results Back into Tinkerspace & Advancing CML
+
+Once the AI produces the deliverable, bringing the results back into Tinkerspace takes just a few seconds.
+
+#### 1. The Deliverable Format
+A valid deliverable is a standard Markdown file containing a metadata header (either YAML frontmatter or an HTML comment block):
+
+```markdown
+<!--
+unit: UOW-A01
+summary: "Identified 3 key prior patents; memory-in-pixel display is fully unencumbered."
+verdict: proceed
+scores:
+  novel: 3
+  works: 3
+-->
+
+# Prior Art & Patent Landscape Survey: Handlebar Display
+
+## 1. Executive Summary
+Conducted patent database and literature search across USPTO, Espacenet, and Google Patents...
+
+## 2. Identified Prior Art
+1. **US Patent 7,123,456** (Garmin): Relates to transflective LCD backlights; expired 2021.
+2. **EP Patent 2,987,654** (Wahoo): GPS cycle computer BLE synchronization. Does not cover low-power memory-in-pixel display circuitry.
+
+## 3. Novelty & Freedom-to-Operate Assessment
+No active patents restrict reflective Sharp memory LCD pairing with micro-power BLE SoC. Freedom-to-operate is clear.
+
+## 4. Recommendations
+Proceed to divergent architecture trade study (UOW-A02).
+```
+
+#### 2. Saving the Deliverable:
+- Save the text above to `C:\Users\jrdst\software\IW\vault\work\UOW-A01\deliverable.md`.
+- *(Optional)*: If the AI generated supporting files (e.g. `circuit_schematic.png`, `trade_matrix.csv`, or `bom.xlsx`), drop them directly into the same `vault/work/UOW-A01/` folder.
+
+#### 3. Completing the Unit on the Work Board:
+1. Open the Work Board (`/board`).
+2. Click **📥 Collect / Complete** on the unit card.
+
+#### 4. What Tinkerspace Does Automatically Upon Collection:
+- **Extracts Structured Findings**: Reads the header for summary, verdict (`proceed`, `pivot`, `kill`), and score evaluations.
+- **Catalogs Artifacts**: Automatically registers `deliverable.md` and any supporting images/CSVs as permanent Artifact nodes (`ART-xxx`) in your vault.
+- **Materializes Facts onto the Idea**:
+  - Links the artifacts to the Idea node (`IDEA-A01 --> [illustrates] --> ART-001`).
+  - Appends the summary to the Idea's permanent activity log.
+  - Updates the Idea's 4-score equalizer (`Novel`, `Works`, `Reach`, `Story`).
+  - Automatically recalculates the idea's overall Concept Maturity Level (`min(scores)`).
+- **Unblocks Downstream Steps**: Downstream units in the workflow whose dependencies are now fulfilled automatically transition from **Blocked** to **Ready**!
+
+---
+
+### Step 5: Reviewing the Maturing Idea
+- Visit `/node/IDEA-A01`: See the updated CML badge, score equalizer, activity log, and clickable artifact links.
+- Visit `/maturity`: Watch the idea card advance from CML 1 &rarr; CML 2 &rarr; CML 3 across the board columns.
+- Visit `/board`: Pick up the newly unblocked downstream unit and dispatch the next phase of work!
+
+---
+
+## 06 · Individual Subsystem Reference
 
 ### A. Quick Capture (`Ctrl+K` or Header Button)
 - **Shortcut**: Press `Ctrl+K` anywhere in the app to open the quick-capture modal.
@@ -114,13 +279,8 @@ Process your raw inbox efficiently without taking your hands off the keyboard:
 - **`[A]` Accept**: Converts the raw thought into a permanent typed node in `vault/notes/`.
 - **`[D]` Discard**: Cleanses noise or irrelevant snippets.
 - **`[E]` Defer**: Keeps the item in the inbox for later review.
-- **Node Type Selection**:
-  - `friction`: A problem, irritation, or bottleneck.
-  - `idea`: A potential solution, invention, or concept.
-  - `observation`: An empirical real-world signal (observed, networked, or experimented).
-  - `question`: An inquiry driving further exploration.
-  - `asset`: A physical tool, skill, software, or part you own.
-- **Attribution**: Automatically records your authorship (`kind: human`) and syncs to git.
+- **Editable Raw Text**: Edit typos or clarify wording directly in the raw capture box during triage before committing.
+- **Searchable Edge Linker**: Search existing nodes by title or pick from dropdowns to link related nodes immediately.
 
 ### C. Intake & File Drop (`/intake`)
 - **Drop Folder**: Drop PDF datasheets, tablet sketches, images, or Markdown files into `vault/inbox/drop/`.
@@ -142,16 +302,12 @@ Track ideas through the 5 Concept Maturity Levels (CML):
 - *The overall CML equals `min(Novel, Works, Reach, Story)`.*
 - **Laggard Spotlight**: Orange indicators immediately identify your lowest-scoring dimension and recommend targeted activities to advance it.
 
-### E. Maturation Planner & Custom Plan Builder (`/ideas/{id}/plan`)
-Navigate to any idea node and click **🎯 Plan Maturation**:
-- **🤖 Auto-Draft Mode**: Select your target CML (e.g. CML 2 &rarr; 4). The Planner drafts a deterministic, DAG-sequenced workflow enforcing "cheap and decisive first".
-- **🛠️ Custom Plan Builder**: Build your own plan from scratch:
-  - Add custom steps dynamically.
-  - Pick from 12+ activity templates (e.g., `divergent-generation@1`, `trade-study@1`, `point-design@1`, `experiment-design@1`, `parts-and-skills-survey@1`) or define `freeform@1` tasks.
-  - Assign to **Agent (AI)**, **Human (Jared)**, or **Tool (Local)**.
-  - Set estimated duration (sized to 1–2 hr single-session blocks).
-  - Declare upstream step dependencies (e.g., Step 2 depends on Step 1).
-- **Instantiate**: One click generates a `WFL-xxx` workflow containing concrete `UOW-xxx` units in `vault/work/`.
+### E. Question Graph & Inquiry Arc (`/question-graph/{id}`)
+Deconstruct and expand upon any idea using Warren Berger's **Why &rarr; What If &rarr; How** inquiry arc:
+- **Interactive Stems**: Click preset chips (*Why?*, *Why Must It Be?*, *Question Assumptions*, *Constraint Removal*, *Inversion*, *How Might We?*, *Harsh Critic*) or use *Blank Slate* to compose custom questions.
+- **Visual DAG Viewport**: Interactive Mermaid flowchart diagram with full mouse drag-to-pan, wheel zoom, and reset/fit controls.
+- **Sub-Question Scoping**: Questionstorming questions are preserved as focused idea sub-artifacts and excluded from the top-level Explore catalog.
+- **Branch Follow-up**: Click *➕ Branch Follow-up* on any question card to seed child questions and build deep inquiry trees.
 
 ### F. Association Engine (`/associations`)
 Uncover serendipitous, non-obvious cross-domain links:
@@ -160,20 +316,7 @@ Uncover serendipitous, non-obvious cross-domain links:
 - **Adversarial Judge**: Automatically scores candidate pairs on plausibility, surprise, and generative potential before presenting them.
 - **Card Deck Interface**: Review generated candidate cards with one-click **Keep** (creates permanent typed edge) or **Discard**.
 
-### G. Question Graph (`/question-graph/{id}`)
-Deconstruct and expand upon any idea using the **Why &rarr; What If &rarr; How** inquiry arc:
-- Transform frictions into high-leverage "Why" questions.
-- Branch into divergent "What If" possibilities.
-- Converge into actionable "How" implementation questions.
-
-### H. Work Board & Dispatching Agents (`/board`)
-- **Ready vs Blocked**: Units whose upstream dependencies are met appear in the **Ready** column.
-- **Dispatch to AI**:
-  - **MCP Surface**: If using Claude Desktop or Antigravity IDE, connect the MCP server (`iw/mcp/server.py`). The agent fetches task context (`get_step`) and submits deliverables (`submit_result`) without touching your file system directly.
-  - **CLI Courier**: Run `uv run python -m iw.adapters.couriers.cli_courier dispatch UOW-xxx` to output structured prompts or dispatches.
-- **Result Collection**: Review agent deliverables on `/board`, adjust scores, approve findings, and auto-unblock downstream steps.
-
-### I. Scout Standing Interests (`/scout`)
+### G. Scout Standing Interests (`/scout`)
 - Register long-term research topics (e.g., "Solid state cathode degradation").
 - Specify domain and staleness intervals (e.g., 30 days).
 - When an interest becomes stale, it surfaces on your home dashboard under **Recommended Activities** with one-click actions:
@@ -182,7 +325,7 @@ Deconstruct and expand upon any idea using the **Why &rarr; What If &rarr; How**
 
 ---
 
-## 06 · Vault Architecture Reference
+## 07 · Vault Architecture Reference
 
 All your data lives inside `vault/`:
 
@@ -190,7 +333,7 @@ All your data lives inside `vault/`:
 vault/
 ├── notes/               # Permanent atomic Markdown nodes (IDEA-xxx, FRI-xxx, etc.)
 ├── work/                # Active and completed work units and workflows
-│   ├── WFL-A01/         # workflow.yaml
+│   ├── WFL-A01/         # workflow.yaml (DAG structure and dependencies)
 │   └── UOW-A01/         # unit.yaml, action_guide.md, deliverable.md
 ├── inbox/
 │   ├── raw.jsonl        # Append-only quick-capture inbox
@@ -202,7 +345,7 @@ vault/
 
 ---
 
-## 07 · Quick Reference Keybindings & URLs
+## 08 · Quick Reference Keybindings & URLs
 
 | Route | Purpose | Key Actions |
 |---|---|---|
@@ -210,11 +353,13 @@ vault/
 | `/triage` | **Keyboard Triage** | `[A]` Accept, `[D]` Discard, `[E]` Defer. |
 | `/maturity` | **Maturity Board** | CML columns, Worth Matrix, Laggard spotlight. |
 | `/associations` | **Association Deck** | Keep/Discard serendipity card review. |
-| `/board` | **Work Board** | Ready/Blocked units, dispatch, result collection. |
+| `/board` | **Work Board** | Ready/Blocked units, prompt editing, dispatch, result collection. |
+| `/ideas/{id}/plan` | **Plan Builder** | Auto-draft CML plans, custom step builder, instructions authoring. |
+| `/question-graph/{id}` | **Question Graph** | Visual inquiry tree DAG, pan & zoom, Berger move composer. |
 | `/scout` | **Scout Interests** | Register standing topics, review sweep recommendations. |
 | `/intake` | **File Drop Intake** | Ingest sketches, PDFs, and tablet exports. |
 | `Ctrl+K` | **Quick Capture** | Global hotkey to record raw thoughts. |
 
 ---
 
-*Tinkerspace is your workspace — run it, explore it, and let it accelerate your ideas!*
+*Tinkerspace is your personal innovation engine — plan boldly, dispatch fearlessly, and let your ideas mature into reality!*
