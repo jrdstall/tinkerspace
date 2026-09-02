@@ -1,0 +1,38 @@
+id: prior-art-survey@1
+title: "Prior-Art & Patent Landscape Survey"
+version: 1
+category: novelty
+advances: novel
+target_output: deliverable.md
+
+description: >
+  Thorough adversarial survey of global patents, commercial products, academic literature, and open source
+  projects to test idea novelty and identify freedom-to-operate boundaries.
+
+prompt_instructions: >
+  You are an expert patent researcher and technology scout conducting an ADVERSARIAL NOVELTY SURVEY.
+  Do not act as a cheerleader. Actively attempt to refute the idea's novelty by locating direct or adjacent prior art.
+
+  Execute the following:
+  1. Search 4 key arenas:
+     - Active & Expired Patents (USPTO, EPO, WIPO).
+     - Commercial Products (teardowns, existing market devices).
+     - Academic Literature (IEEE, ACM, arXiv, university labs).
+     - Adjacent Domain Transfers (mechanisms in aerospace, automotive, medical).
+  2. No Hallucinations: Provide real patent numbers, real assignees, and real publication dates. Flag unverified citations.
+  3. Freedom-to-Operate & Design-Arounds: Identify active IP risks and expired foundational mechanics in the public domain.
+  4. Provide a Novelty Score (1-5) and actionable recommendation.
+
+deliverable_schema:
+  required_sections:
+    - "executive_summary"
+    - "sources_and_search_strategy"
+    - "direct_and_adjacent_prior_art"
+    - "freedom_to_operate_assessment"
+    - "novelty_verdict_and_recommendation"
+  fields:
+    prior_art_found: bool
+    closest_patents: list
+    closest_products: list
+    novelty_score: int # 1 to 5
+    freedom_to_operate_verdict: string # clear | risk | blocked

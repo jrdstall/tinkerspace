@@ -150,3 +150,45 @@ def test_planui_07_custom_plan_instantiation_creates_workflow(web_test_env):
     # Verify units
     units = list(store.vault_dir.glob("work/UOW-*/unit.yaml"))
     assert len(units) >= 2
+
+
+def test_planui_08_custom_step_instructions_and_prompt_editing(web_test_env):
+    """PLANUI-08: Custom step instructions and inline action guide editing persist to unit.yaml."""
+    client, store, _, _ = web_test_env
+
+    data = {
+        "target_cml": "3",
+        "step_title": ["Custom Thermal Bench Test"],
+        "step_activity": ["freeform@1"],
+        "step_assignee": ["human"],
+        "step_estimate": ["2.0"],
+        "step_target_score": ["works"],
+        "step_depends_on": [""],
+        "step_instructions": ["Measure coil temperature rise under 3A continuous load for 30 minutes."],
+    }
+
+    res = client.post("/ideas/IDEA-A01/plan/custom_instantiate", data=data)
+    assert res.status_code == 303
+    wfl_id = res.headers["location"].split("/")[-1]
+
+    # Find the created unit
+    units = store.list_units()
+    unit = [u for u in units if u.workflow_id == wfl_id][0]
+    assert "Measure coil temperature rise" in unit.action_guide
+
+    # Test editing the action guide via POST /board/action_guide
+    edit_res = client.post(
+        "/board/action_guide",
+        data={
+            "unit_id": unit.id,
+            "action_guide": "UPDATED: Also measure ambient temp and use FLIR camera.",
+            "return_url": f"/workflow/{wfl_id}",
+        },
+    )
+    assert edit_res.status_code == 303
+    assert edit_res.headers["location"] == f"/workflow/{wfl_id}"
+
+    reloaded_unit = store.get_unit(unit.id)
+    assert reloaded_unit is not None
+    assert "UPDATED: Also measure ambient temp" in reloaded_unit.action_guide
+

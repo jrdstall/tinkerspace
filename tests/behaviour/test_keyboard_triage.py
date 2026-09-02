@@ -157,3 +157,58 @@ def test_triage_04_web_triage_flow_and_empty_state(tmp_path: Path):
     assert node is not None
     assert node.title == "Messy chain cleaning process"
     assert node.domain == "maintenance"
+
+
+def test_triage_05_web_triage_editable_body_and_node_datalist(tmp_path: Path):
+    """TRIAGE-02 & TRIAGE-04: Web triage allows editing raw thought text and linking with datalist formatted IDs."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    app = create_app(store=store)
+    client = TestClient(app)
+    author = Author(kind=AuthorKind.HUMAN, courier="test")
+
+    # Pre-create target friction node
+    fri_node = Node(
+        id="FRI-A01",
+        type="friction",
+        title="Bike computer screen unreadable",
+        created=datetime.now(timezone.utc),
+        domain="hardware",
+        tags=["cycling"],
+        state="active",
+    )
+    store.write_node(fri_node, author=author)
+
+    # Inbox item with typos
+    item = store.append_inbox("byke compooter unredable in sunlite")
+
+    # GET triage view - verify editable textarea and datalist options
+    res_get = client.get("/triage")
+    assert res_get.status_code == 200
+    assert "Captured Thought &amp; Note Body (Editable)" in res_get.text or "Captured Thought & Note Body (Editable)" in res_get.text
+    assert "FRI-A01" in res_get.text
+    assert "existing-nodes-list" in res_get.text
+
+    # Submit with edited body and datalist-formatted target node
+    res_post = client.post(
+        "/triage/accept",
+        data={
+            "item_id": item.id,
+            "node_type": "idea",
+            "title": "Sunlight Readable Bike Display",
+            "domain": "hardware",
+            "tags": "cycling, display",
+            "body": "Fixed typo: Bike computer display with transflective memory layer.",
+            "edge_target": "FRI-A01 — Bike computer screen unreadable (friction)",
+            "edge_rel": "addresses",
+        },
+        follow_redirects=True,
+    )
+    assert res_post.status_code == 200
+
+    saved_idea = store.get_node("IDEA-A01")
+    assert saved_idea is not None
+    assert saved_idea.body == "Fixed typo: Bike computer display with transflective memory layer."
+    assert len(saved_idea.edges) == 1
+    assert saved_idea.edges[0].to_id == "FRI-A01"
+    assert saved_idea.edges[0].relation == "addresses"
+

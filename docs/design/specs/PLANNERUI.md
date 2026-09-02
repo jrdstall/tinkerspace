@@ -15,3 +15,5 @@ PLANUI-04  The Recommended Activities panel renders all stale Scout standing int
 PLANUI-05  Interacting with a Scout offer provides two one-click actions: "Dismiss" (resets staleness clock) and "Raise Sweep Order" (instantiates an observation sweep workflow and resets the clock).
 PLANUI-06  The Custom Plan Builder UI allows Jared to author a plan from scratch, dynamically adding steps from the full activity library or freeform tasks.
 PLANUI-07  Custom steps allow configuring title, template/activity ID, assignee (`human`, `agent`, `tool`), estimated hours, size (`small`, `medium`, `large`), and upstream step dependencies.
+PLANUI-08  Custom step cards accept custom prompt instructions, and web views allow editing and saving unit action guide prompts directly.
+

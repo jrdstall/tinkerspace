@@ -14,3 +14,5 @@ QGRAPH-03  Question nodes reflect importance styling (High: prominent accent/amb
 QGRAPH-04  Directed relationship indicators display question-to-question edge relationships (`broadens`, `narrows`, `presupposes`, `reframes`, `sibling`).
 QGRAPH-05  An interactive quick-action interface enables creating new questions with Berger moves, transforming open <-> closed, and linking questions via HTMX without full page reload.
 QGRAPH-06  Orphan questions and connected question chains are clearly distinguished in the visual graph layout.
+QGRAPH-07  The Question Graph generates a Mermaid visual DAG diagram with view mode switching (Visual Graph, Split View, and Composer & Cards).
+

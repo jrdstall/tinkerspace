@@ -1,291 +1,348 @@
 {% extends "base.html" %}
 
-{% block title %}Maturation Planner — {{ node.title }}{% endblock %}
+{% block title %}Maturation Planner — {{ node.title }} · Tinkerspace{% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto space-y-6">
-  <!-- Header -->
-  <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-    <div class="flex items-center justify-between">
-      <div>
-        <div class="flex items-center space-x-3">
-          <span class="px-2.5 py-1 text-xs font-semibold rounded bg-amber-100 text-amber-800 uppercase">{{ node.id }}</span>
-          <span class="text-xs text-gray-500 font-mono">Current CML: <strong class="text-indigo-700 font-bold text-sm">{{ current_cml }}</strong></span>
-        </div>
-        <h1 class="text-2xl font-bold text-gray-900 mt-2">{{ node.title }}</h1>
-        <p class="text-sm text-gray-600 mt-1">{{ plan.rationale }}</p>
-      </div>
-      <a href="/node/{{ node.id }}" class="px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded">
-        Back to Idea
-      </a>
-    </div>
+<div style="margin-bottom: 1rem;">
+    <a href="/node/{{ node.id }}" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+        &larr; Back to Idea ({{ node.id }})
+    </a>
+</div>
 
-    <!-- Current Scores Grid -->
-    <div class="grid grid-cols-4 gap-4 mt-6 pt-4 border-t border-gray-100">
-      {% for dim in ["novel", "works", "reach", "story"] %}
-      <div class="bg-gray-50 p-3 rounded border {% if dim in laggards %}border-red-300 bg-red-50/50{% else %}border-gray-200{% endif %}">
-        <div class="flex justify-between items-center text-xs text-gray-500 uppercase font-semibold">
-          <span>{{ dim }}</span>
-          {% if dim in laggards %}<span class="text-red-600 font-bold">LAGGARD</span>{% endif %}
-        </div>
-        <div class="text-xl font-bold mt-1 {% if dim in laggards %}text-red-700{% else %}text-gray-800{% endif %}">
-          {{ scores.get(dim, 1) }} <span class="text-xs text-gray-400 font-normal">/ 5</span>
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- Planning Mode Tabs -->
-  <div class="flex border-b border-gray-200 bg-gray-100 p-1 rounded-lg">
-    <button id="tab-btn-auto" onclick="switchPlanTab('auto')" class="flex-1 py-2 text-sm font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition">
-      🤖 Auto-Draft Proposal (CML Target)
-    </button>
-    <button id="tab-btn-custom" onclick="switchPlanTab('custom')" class="flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 transition">
-      🛠️ Custom Plan Builder & Sequence
-    </button>
-  </div>
-
-  <!-- TAB 1: Auto-Draft Proposal -->
-  <div id="tab-panel-auto" class="space-y-6">
-    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <h2 class="text-lg font-bold text-gray-900 mb-3">Maturation Target</h2>
-      <form method="GET" action="/ideas/{{ node.id }}/plan" class="flex items-center space-x-4">
-        <label for="target_cml" class="text-sm font-medium text-gray-700">Target Concept Maturity Level:</label>
-        <select id="target_cml" name="target_cml" onchange="this.form.submit()" class="border-gray-300 rounded text-sm px-3 py-1.5 bg-gray-50 font-semibold text-indigo-700 border">
-          {% for lvl in range(current_cml + 1, 6) %}
-          <option value="{{ lvl }}" {% if lvl == target_cml %}selected{% endif %}>
-            CML {{ lvl }} — {% if lvl == 2 %}Plausible (Initial Feasibility){% elif lvl == 3 %}Explored (Trade Space){% elif lvl == 4 %}Chosen (Point Design){% elif lvl == 5 %}Real (Working Prototype){% endif %}
-          </option>
-          {% endfor %}
-        </select>
-      </form>
-    </div>
-
-    <!-- Proposed Activity Sequence -->
-    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm space-y-4">
-      <div class="flex items-center justify-between border-b pb-3">
+<!-- Header Card -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
         <div>
-          <h2 class="text-lg font-bold text-gray-900">Proposed Maturation Path ({{ plan.steps|length }} Steps)</h2>
-          <p class="text-xs text-gray-500">Ordered by cheap & decisive validation first. Dependencies automatically enforced.</p>
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                <span class="badge mono" style="font-size: 0.85rem; font-weight: 700;">{{ node.id }}</span>
+                <span class="badge badge-green">Current CML: {{ current_cml }}</span>
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">
+                {{ node.title }}
+            </h1>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">{{ plan.rationale }}</p>
         </div>
-        <form method="POST" action="/ideas/{{ node.id }}/plan/instantiate">
-          <input type="hidden" name="target_cml" value="{{ target_cml }}">
-          <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded shadow-sm">
-            Instantiate Workflow &rarr;
-          </button>
-        </form>
-      </div>
+        <a href="/node/{{ node.id }}" class="btn" style="font-size: 0.8rem; text-decoration: none;">View Note &rarr;</a>
+    </div>
 
-      <div class="space-y-3 pt-2">
-        {% for step in plan.steps %}
-        <div class="border rounded-lg p-4 bg-gray-50 hover:bg-white transition-colors">
-          <div class="flex items-start justify-between">
-            <div class="space-y-1">
-              <div class="flex items-center space-x-2">
-                <span class="text-xs font-mono font-bold text-gray-500">Step {{ step.step_index + 1 }}</span>
-                <h3 class="text-sm font-bold text-gray-900">{{ step.title }}</h3>
-                <span class="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-800 font-mono">{{ step.activity_id }}</span>
-              </div>
-              <p class="text-xs text-gray-600">{{ step.reason }}</p>
+    <!-- 4-Score Breakdown Grid -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        {% for dim in ["novel", "works", "reach", "story"] %}
+        <div style="background-color: var(--bg-color); border: 1px solid {% if dim in laggards %}#f85149{% else %}var(--border-color){% endif %}; border-radius: 6px; padding: 0.75rem 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.25rem;">
+                <span>{{ dim }}</span>
+                {% if dim in laggards %}
+                <span style="color: #f85149; font-weight: 700; font-size: 0.7rem;">LAGGARD</span>
+                {% endif %}
             </div>
-            <div class="text-right space-y-1">
-              <div class="flex items-center space-x-2">
-                <span class="px-2 py-0.5 text-xs rounded uppercase font-semibold {% if step.assignee_kind.value == 'human' %}bg-purple-100 text-purple-800{% else %}bg-green-100 text-green-800{% endif %}">
-                  {{ step.assignee_kind.value }}
-                </span>
-                <span class="text-xs font-mono text-gray-600 bg-gray-200 px-2 py-0.5 rounded">{{ step.estimate_hours }}h ({{ step.size }})</span>
-              </div>
-              {% if step.depends_on %}
-              <div class="text-xs text-gray-500 font-mono">
-                Depends on: Step(s) {% for dep in step.depends_on %}{{ dep + 1 }}{% if not loop.last %}, {% endif %}{% endfor %}
-              </div>
-              {% endif %}
+            <div style="font-size: 1.4rem; font-weight: 700; color: {% if dim in laggards %}#f85149{% else %}var(--text-main){% endif %};">
+                {{ scores.get(dim, 1) }} <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">/ 5</span>
             </div>
-          </div>
         </div>
         {% endfor %}
-      </div>
     </div>
-  </div>
+</div>
 
-  <!-- TAB 2: Custom Plan Builder -->
-  <div id="tab-panel-custom" class="hidden space-y-6">
-    <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
-      <form id="custom-plan-form" method="POST" action="/ideas/{{ node.id }}/plan/custom_instantiate">
-        <div class="flex items-center justify-between border-b pb-4 mb-4">
-          <div>
-            <h2 class="text-lg font-bold text-gray-900">Custom Maturation Plan Builder</h2>
-            <p class="text-xs text-gray-500">Pick from available library templates or create freeform tasks. Sequence dependencies freely.</p>
-          </div>
-          <div class="flex items-center space-x-3">
-            <select name="target_cml" class="text-xs border border-gray-300 rounded px-2.5 py-1.5 font-semibold text-indigo-700">
-              <option value="2">Target: CML 2 (Plausible)</option>
-              <option value="3">Target: CML 3 (Explored)</option>
-              <option value="4">Target: CML 4 (Chosen)</option>
-              <option value="5" selected>Target: CML 5 (Real)</option>
+<!-- Planning Mode Switcher (Tabs) -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--card-bg); padding: 0.35rem; border-radius: 6px; border: 1px solid var(--border-color);">
+    <button id="tab-btn-auto" type="button" onclick="switchPlanTab('auto')" class="btn plan-tab-btn active" style="flex: 1; padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 600;">
+        🤖 Auto-Draft Proposal (Recommended)
+    </button>
+    <button id="tab-btn-custom" type="button" onclick="switchPlanTab('custom')" class="btn plan-tab-btn" style="flex: 1; padding: 0.6rem 1rem; font-size: 0.9rem; font-weight: 600;">
+        🛠️ Custom Plan Builder & Sequence
+    </button>
+</div>
+
+<!-- TAB 1: Auto-Draft Proposal Panel -->
+<div id="tab-panel-auto" class="plan-tab-panel active">
+    <!-- Info Banner -->
+    <div style="background-color: rgba(88, 166, 255, 0.08); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-main);">
+        <strong style="color: var(--accent);">How Auto-Draft Works:</strong> Tinkerspace analyzes your laggard scores (<strong>{{ laggards|join(', ')|upper }}</strong>) and dynamically selects the cheapest, decisive activity templates to advance this idea to your target CML level.
+    </div>
+
+    <!-- Target CML Selector Card -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <form method="GET" action="/ideas/{{ node.id }}/plan" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <label for="target_cml" style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">
+                    Target Concept Maturity Level (CML)
+                </label>
+                <span style="font-size: 0.85rem; color: var(--text-muted);">Changing target recalculates the proposed validation steps below.</span>
+            </div>
+            <select id="target_cml" name="target_cml" onchange="this.form.submit()" style="background: var(--bg-color); color: var(--accent); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 1rem; font-size: 0.95rem; font-weight: 700;">
+                {% for lvl in range(current_cml + 1, 6) %}
+                <option value="{{ lvl }}" {% if lvl == target_cml %}selected{% endif %}>
+                    CML {{ lvl }} — {% if lvl == 2 %}Plausible (Initial Feasibility){% elif lvl == 3 %}Explored (Trade Space){% elif lvl == 4 %}Chosen (Point Design){% elif lvl == 5 %}Real (Working Prototype){% endif %}
+                </option>
+                {% endfor %}
             </select>
-            <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-semibold rounded shadow-sm">
-              Instantiate Custom Workflow &rarr;
-            </button>
-          </div>
-        </div>
-
-        <!-- Custom Steps Container -->
-        <div id="custom-steps-list" class="space-y-4 mb-4">
-          <!-- Step 1 Template -->
-          <div class="custom-step-card border border-gray-200 bg-gray-50 rounded-lg p-4 space-y-3 relative">
-            <div class="flex items-center justify-between">
-              <span class="step-num-badge font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Step 1</span>
-              <button type="button" onclick="removeCustomStep(this)" class="text-xs text-red-600 hover:underline">Remove</button>
-            </div>
-            <div class="grid grid-cols-3 gap-3">
-              <div class="col-span-2">
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Step Title</label>
-                <input type="text" name="step_title" value="Prior-Art & Patent Landscape Survey" required class="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5">
-              </div>
-              <div>
-                <label class="block text-xs font-semibold text-gray-700 mb-1">Activity Template</label>
-                <select name="step_activity" class="w-full text-xs border border-gray-300 rounded px-2 py-1.5 font-mono">
-                  {% for item in catalog %}
-                  <option value="{{ item.id }}" {% if item.id == 'prior-art-survey@1' %}selected{% endif %}>{{ item.id }} — {{ item.title }}</option>
-                  {% endfor %}
-                </select>
-              </div>
-            </div>
-            <div class="grid grid-cols-4 gap-3 text-xs">
-              <div>
-                <label class="block font-semibold text-gray-700 mb-1">Assignee</label>
-                <select name="step_assignee" class="w-full border border-gray-300 rounded px-2 py-1">
-                  <option value="agent" selected>Agent (AI)</option>
-                  <option value="human">Human (Jared)</option>
-                  <option value="tool">Tool (Local)</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-semibold text-gray-700 mb-1">Duration (Hours)</label>
-                <input type="number" name="step_estimate" value="1.0" step="0.5" min="0.5" max="8.0" class="w-full border border-gray-300 rounded px-2 py-1">
-              </div>
-              <div>
-                <label class="block font-semibold text-gray-700 mb-1">Advances</label>
-                <select name="step_target_score" class="w-full border border-gray-300 rounded px-2 py-1">
-                  <option value="novel" selected>Novel</option>
-                  <option value="works">Works</option>
-                  <option value="reach">Reach</option>
-                  <option value="story">Story</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-semibold text-gray-700 mb-1">Depends on Steps (e.g. 1,2)</label>
-                <input type="text" name="step_depends_on" placeholder="e.g. 1" class="w-full border border-gray-300 rounded px-2 py-1 font-mono">
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Add Step Button -->
-        <div class="flex justify-between items-center pt-2">
-          <button type="button" onclick="addCustomStep()" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold rounded border border-gray-300">
-            + Add Another Step
-          </button>
-          <span class="text-xs text-gray-500">Pick from 12+ activity templates or custom freeform tasks.</span>
-        </div>
-      </form>
+        </form>
     </div>
-  </div>
+
+    <!-- Proposed Activity Sequence Card -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+                    Proposed Maturation Path ({{ plan.steps|length }} Steps)
+                </h2>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                    Ordered by cheap & decisive validation first. Dependencies automatically enforced.
+                </p>
+            </div>
+            <form method="POST" action="/ideas/{{ node.id }}/plan/instantiate">
+                <input type="hidden" name="target_cml" value="{{ target_cml }}">
+                <button type="submit" class="btn btn-primary" style="font-weight: 600; padding: 0.5rem 1rem;">
+                    🚀 Instantiate Auto-Draft Workflow &rarr;
+                </button>
+            </form>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem;">
+            {% for step in plan.steps %}
+            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+                            <span class="badge mono" style="font-weight: 700;">Step {{ step.step_index + 1 }}</span>
+                            <span class="badge mono" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">{{ step.activity_id }}</span>
+                            <strong style="font-size: 0.95rem; color: var(--text-main);">{{ step.title }}</strong>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0;">{{ step.reason }}</p>
+                    </div>
+                    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 0.35rem; min-width: 140px;">
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                            <span class="badge" style="text-transform: uppercase;">{{ step.assignee_kind.value }}</span>
+                            <span class="badge mono">{{ step.estimate_hours }}h ({{ step.size }})</span>
+                        </div>
+                        {% if step.depends_on %}
+                        <span class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
+                            Depends on: Step(s) {% for dep in step.depends_on %}{{ dep + 1 }}{% if not loop.last %}, {% endif %}{% endfor %}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+            <form method="POST" action="/ideas/{{ node.id }}/plan/instantiate">
+                <input type="hidden" name="target_cml" value="{{ target_cml }}">
+                <button type="submit" class="btn btn-primary" style="font-weight: 600; padding: 0.5rem 1.25rem;">
+                    🚀 Instantiate Auto-Draft Workflow &rarr;
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TAB 2: Custom Plan Builder Panel -->
+<div id="tab-panel-custom" class="plan-tab-panel" style="display: none;">
+    <!-- Info Banner -->
+    <div style="background-color: rgba(63, 185, 80, 0.08); border: 1px solid rgba(63, 185, 80, 0.3); border-radius: 6px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-main);">
+        <strong style="color: var(--green);">Custom Plan Builder:</strong> Pick templates from the Activity Library or define freeform tasks. Sequence dependencies freely and instantiate your customized workflow.
+    </div>
+
+    <div class="card">
+        <form id="custom-plan-form" method="POST" action="/ideas/{{ node.id }}/plan/custom_instantiate">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.25rem;">
+                        Custom Maturation Plan Builder
+                    </h2>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">
+                        Add and configure steps manually.
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <select name="target_cml" style="background: var(--bg-color); color: var(--accent); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.75rem; font-size: 0.85rem; font-weight: 600;">
+                        <option value="2">Target: CML 2 (Plausible)</option>
+                        <option value="3">Target: CML 3 (Explored)</option>
+                        <option value="4">Target: CML 4 (Chosen)</option>
+                        <option value="5" selected>Target: CML 5 (Real)</option>
+                    </select>
+                    <button type="submit" class="btn btn-primary" style="font-weight: 600; padding: 0.4rem 0.85rem; font-size: 0.85rem;">
+                        🚀 Instantiate Custom Workflow &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Steps Container -->
+            <div id="custom-steps-list" style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.25rem;">
+                <!-- Step 1 Template -->
+                <div class="custom-step-card" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span class="step-num-badge badge mono" style="font-weight: 700; color: var(--accent); border-color: rgba(88,166,255,0.4);">Step 1</span>
+                        <button type="button" onclick="removeCustomStep(this)" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);">Remove</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Step Title</label>
+                            <input type="text" name="step_title" value="Prior-Art & Patent Landscape Survey" required style="width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Activity Template</label>
+                            <select name="step_activity" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem; font-family: inherit;">
+                                {% for item in catalog %}
+                                <option value="{{ item.id }}" {% if item.id == 'prior-art-survey@1' %}selected{% endif %}>{{ item.id }} — {{ item.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Assignee</label>
+                            <select name="step_assignee" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                                <option value="agent" selected>Agent (AI)</option>
+                                <option value="human">Human (Jared)</option>
+                                <option value="tool">Tool (Local)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Duration (Hours)</label>
+                            <input type="number" name="step_estimate" value="1.0" step="0.5" min="0.5" max="8.0" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Advances Score</label>
+                            <select name="step_target_score" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                                <option value="novel" selected>Novel</option>
+                                <option value="works">Works</option>
+                                <option value="reach">Reach</option>
+                                <option value="story">Story</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Depends on Step(s)</label>
+                            <input type="text" name="step_depends_on" placeholder="e.g. 1" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: monospace;">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Prompt / Instructions (Optional)</label>
+                        <textarea name="step_instructions" rows="2" placeholder="Custom instructions, focus areas, constraints, or specific queries for this step..." style="width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Step Button and Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <button type="button" onclick="addCustomStep()" class="btn" style="font-weight: 600;">
+                    + Add Another Step
+                </button>
+                <button type="submit" class="btn btn-primary" style="font-weight: 600; padding: 0.5rem 1.25rem;">
+                    🚀 Instantiate Custom Workflow &rarr;
+                </button>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script>
 function switchPlanTab(tab) {
-  const autoBtn = document.getElementById('tab-btn-auto');
-  const customBtn = document.getElementById('tab-btn-custom');
-  const autoPanel = document.getElementById('tab-panel-auto');
-  const customPanel = document.getElementById('tab-panel-custom');
+    const autoBtn = document.getElementById('tab-btn-auto');
+    const customBtn = document.getElementById('tab-btn-custom');
+    const autoPanel = document.getElementById('tab-panel-auto');
+    const customPanel = document.getElementById('tab-panel-custom');
 
-  if (tab === 'auto') {
-    autoBtn.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition';
-    customBtn.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 transition';
-    autoPanel.classList.remove('hidden');
-    customPanel.classList.add('hidden');
-  } else {
-    customBtn.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-white text-indigo-700 shadow-sm transition';
-    autoBtn.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-gray-600 hover:text-gray-900 transition';
-    customPanel.classList.remove('hidden');
-    autoPanel.classList.add('hidden');
-  }
+    if (tab === 'auto') {
+        autoBtn.classList.add('active');
+        customBtn.classList.remove('active');
+        autoPanel.style.display = 'block';
+        customPanel.style.display = 'none';
+    } else {
+        customBtn.classList.add('active');
+        autoBtn.classList.remove('active');
+        customPanel.style.display = 'block';
+        autoPanel.style.display = 'none';
+    }
 }
 
 function reindexCustomSteps() {
-  const list = document.getElementById('custom-steps-list');
-  const cards = list.querySelectorAll('.custom-step-card');
-  cards.forEach((card, idx) => {
-    const badge = card.querySelector('.step-num-badge');
-    if (badge) badge.textContent = `Step ${idx + 1}`;
-  });
+    const list = document.getElementById('custom-steps-list');
+    const cards = list.querySelectorAll('.custom-step-card');
+    cards.forEach((card, idx) => {
+        const badge = card.querySelector('.step-num-badge');
+        if (badge) badge.textContent = `Step ${idx + 1}`;
+    });
 }
 
 function removeCustomStep(btn) {
-  const card = btn.closest('.custom-step-card');
-  const list = document.getElementById('custom-steps-list');
-  if (list.querySelectorAll('.custom-step-card').length > 1) {
-    card.remove();
-    reindexCustomSteps();
-  }
+    const card = btn.closest('.custom-step-card');
+    const list = document.getElementById('custom-steps-list');
+    if (list.querySelectorAll('.custom-step-card').length > 1) {
+        card.remove();
+        reindexCustomSteps();
+    }
 }
 
 function addCustomStep() {
-  const list = document.getElementById('custom-steps-list');
-  const count = list.querySelectorAll('.custom-step-card').length + 1;
-  const card = document.createElement('div');
-  card.className = 'custom-step-card border border-gray-200 bg-gray-50 rounded-lg p-4 space-y-3 relative';
-  card.innerHTML = `
-    <div class="flex items-center justify-between">
-      <span class="step-num-badge font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">Step ${count}</span>
-      <button type="button" onclick="removeCustomStep(this)" class="text-xs text-red-600 hover:underline">Remove</button>
-    </div>
-    <div class="grid grid-cols-3 gap-3">
-      <div class="col-span-2">
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Step Title</label>
-        <input type="text" name="step_title" placeholder="e.g. Freeform CAD Sketch or Trade Study" required class="w-full text-xs border border-gray-300 rounded px-2.5 py-1.5">
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-gray-700 mb-1">Activity Template</label>
-        <select name="step_activity" class="w-full text-xs border border-gray-300 rounded px-2 py-1.5 font-mono">
-          {% for item in catalog %}
-          <option value="{{ item.id }}">{{ item.id }} — {{ item.title }}</option>
-          {% endfor %}
-        </select>
-      </div>
-    </div>
-    <div class="grid grid-cols-4 gap-3 text-xs">
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Assignee</label>
-        <select name="step_assignee" class="w-full border border-gray-300 rounded px-2 py-1">
-          <option value="agent" selected>Agent (AI)</option>
-          <option value="human">Human (Jared)</option>
-          <option value="tool">Tool (Local)</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Duration (Hours)</label>
-        <input type="number" name="step_estimate" value="1.0" step="0.5" min="0.5" max="8.0" class="w-full border border-gray-300 rounded px-2 py-1">
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Advances</label>
-        <select name="step_target_score" class="w-full border border-gray-300 rounded px-2 py-1">
-          <option value="works" selected>Works</option>
-          <option value="novel">Novel</option>
-          <option value="reach">Reach</option>
-          <option value="story">Story</option>
-        </select>
-      </div>
-      <div>
-        <label class="block font-semibold text-gray-700 mb-1">Depends on Steps</label>
-        <input type="text" name="step_depends_on" placeholder="e.g. ${count - 1}" class="w-full border border-gray-300 rounded px-2 py-1 font-mono">
-      </div>
-    </div>
-  `;
-  list.appendChild(card);
+    const list = document.getElementById('custom-steps-list');
+    const count = list.querySelectorAll('.custom-step-card').length + 1;
+    const card = document.createElement('div');
+    card.className = 'custom-step-card';
+    card.style.cssText = 'background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;';
+    card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <span class="step-num-badge badge mono" style="font-weight: 700; color: var(--accent); border-color: rgba(88,166,255,0.4);">Step ${count}</span>
+            <button type="button" onclick="removeCustomStep(this)" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);">Remove</button>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Step Title</label>
+                <input type="text" name="step_title" placeholder="e.g. Freeform CAD Sketch or Trade Study" required style="width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Activity Template</label>
+                <select name="step_activity" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem; font-family: inherit;">
+                    {% for item in catalog %}
+                    <option value="{{ item.id }}">{{ item.id }} — {{ item.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Assignee</label>
+                <select name="step_assignee" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                    <option value="agent" selected>Agent (AI)</option>
+                    <option value="human">Human (Jared)</option>
+                    <option value="tool">Tool (Local)</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Duration (Hours)</label>
+                <input type="number" name="step_estimate" value="1.0" step="0.5" min="0.5" max="8.0" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Advances Score</label>
+                <select name="step_target_score" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem;">
+                    <option value="works" selected>Works</option>
+                    <option value="novel">Novel</option>
+                    <option value="reach">Reach</option>
+                    <option value="story">Story</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Depends on Step(s)</label>
+                <input type="text" name="step_depends_on" placeholder="e.g. ${count - 1}" style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.5rem; font-size: 0.85rem; font-family: monospace;">
+            </div>
+        </div>
+        <div>
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Prompt / Instructions (Optional)</label>
+            <textarea name="step_instructions" rows="2" placeholder="Custom instructions, focus areas, constraints, or specific queries for this step..." style="width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit; resize: vertical;"></textarea>
+        </div>
+    `;
+    list.appendChild(card);
 }
 </script>
+<style>
+.plan-tab-btn.active {
+    background-color: var(--accent) !important;
+    color: #0f141c !important;
+    font-weight: 700 !important;
+}
+</style>
 {% endblock %}

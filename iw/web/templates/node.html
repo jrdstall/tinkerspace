@@ -18,12 +18,19 @@
             {% if node.attrs.get('cml') %}
             <span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}</span>
             {% endif %}
+            {% if node.attrs.get('is_subquestion') and node.attrs.get('subject_id') %}
+            <a href="/question-graph/{{ node.attrs.get('subject_id') }}" class="badge" style="background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3); text-decoration: none;">
+                Sub-Question of {{ node.attrs.get('subject_id') }} &rarr;
+            </a>
+            {% endif %}
         </div>
-        <div style="display: flex; gap: 0.5rem;">
+        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
             {% if node.type == 'idea' %}
             <a href="/ideas/{{ node.id }}/plan" class="btn btn-primary" style="font-size: 0.75rem; text-decoration: none;">🎯 Plan Maturation</a>
             {% endif %}
-            <a href="/question-graph/{{ node.id }}" class="btn" style="font-size: 0.75rem; text-decoration: none;">🧭 Question Graph</a>
+            <a href="/question-graph/{{ node.id }}" class="btn" style="font-size: 0.75rem; text-decoration: none;">
+                🧭 Question Graph {% if question_count %}<span class="badge" style="margin-left: 0.25rem; font-size: 0.7rem;">{{ question_count }}</span>{% endif %}
+            </a>
             <button class="btn" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ node.id }}')">Copy ID</button>
         </div>
     </div>
@@ -136,32 +143,88 @@
     </div>
 
     <!-- Typed Relationships & Graph Edges -->
-    {% if node.edges or inbound_edges %}
     <div style="margin-bottom: 1.5rem;">
-        <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
-            Typed Relationships & Graph Edges
-        </h3>
-        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0;">
+                Typed Relationships & Graph Edges
+            </h3>
+            <span class="badge">{{ (inbound_edges|length) + (node.edges|length) }} Links</span>
+        </div>
+
+        {% if inbound_edges or node.edges %}
+        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
             {% for in_edge in inbound_edges %}
-            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="mono" style="color: var(--green);">&larr; [{{ in_edge.relation }}]</span>
-                <a href="/node/{{ in_edge.from_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ in_edge.from_id }}</a>
-                <span style="color: var(--text-muted);">("{{ in_edge.from_title }}")</span>
+            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="mono" style="color: var(--green);">&larr; [{{ in_edge.relation }}]</span>
+                    <a href="/node/{{ in_edge.from_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ in_edge.from_id }}</a>
+                    <span style="color: var(--text-muted);">("{{ in_edge.from_title }}")</span>
+                </div>
+                <span class="badge" style="font-size: 0.7rem;">Inbound</span>
             </div>
             {% endfor %}
 
             {% for out_edge in node.edges %}
-            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="mono" style="color: var(--accent);">&rarr; [{{ out_edge.relation }}]</span>
-                <a href="/node/{{ out_edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
-                {% if out_edge.note %}
-                <span style="color: var(--text-muted);">({{ out_edge.note }})</span>
-                {% endif %}
+            <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span class="mono" style="color: var(--accent);">&rarr; [{{ out_edge.relation }}]</span>
+                    <a href="/node/{{ out_edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
+                    {% if out_edge.note %}
+                    <span style="color: var(--text-muted);">({{ out_edge.note }})</span>
+                    {% endif %}
+                </div>
+                <form action="/node/{{ node.id }}/unlink" method="POST" style="margin: 0;">
+                    <input type="hidden" name="target_id" value="{{ out_edge.to_id }}">
+                    <input type="hidden" name="relation" value="{{ out_edge.relation }}">
+                    <button type="submit" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);" title="Remove this relationship edge">&times; Unlink</button>
+                </form>
             </div>
             {% endfor %}
         </div>
+        {% else %}
+        <div style="background-color: var(--bg-color); border: 1px dashed var(--border-color); border-radius: 4px; padding: 0.75rem; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; text-align: center;">
+            No relationships linked yet. Use the form below to connect this node to another.
+        </div>
+        {% endif %}
+
+        <!-- Add New Relationship Edge Form -->
+        <div style="background-color: rgba(26, 34, 48, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
+            <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
+                + Link to Another Node
+            </div>
+            <form action="/node/{{ node.id }}/link" method="POST" style="display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr auto; gap: 0.75rem; align-items: center;">
+                <div>
+                    <input type="text" name="target_id" list="available-targets-list" placeholder="Target Node (ID or Title)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                    <datalist id="available-targets-list">
+                        {% for target in available_targets %}
+                        <option value="{{ target.id }}">{{ target.id }} — {{ target.title }} ({{ target.type }})</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div>
+                    <input type="text" name="relation" list="node-relations-list" placeholder="Relation (e.g. addresses)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                    <datalist id="node-relations-list">
+                        <option value="addresses">addresses</option>
+                        <option value="derived_from">derived_from</option>
+                        <option value="questions">questions</option>
+                        <option value="reframes">reframes</option>
+                        <option value="sibling">sibling</option>
+                        <option value="inspires">inspires</option>
+                        <option value="blocks">blocks</option>
+                        <option value="relates_to">relates_to</option>
+                        <option value="requires">requires</option>
+                        <option value="illustrates">illustrates</option>
+                    </datalist>
+                </div>
+                <div>
+                    <input type="text" name="note" placeholder="Optional context note..." style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                </div>
+                <div>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.8rem; white-space: nowrap;">+ Add Link</button>
+                </div>
+            </form>
+        </div>
     </div>
-    {% endif %}
 
     <!-- Custom Attributes -->
     {% if node.attrs %}

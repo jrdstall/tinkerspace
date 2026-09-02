@@ -108,3 +108,17 @@ def test_actlib_06_empirical_templates_require_advance_kill_criteria():
 
     heilmeier = load_template("heilmeier-screening.v1.yaml")
     assert "success_exams" in heilmeier["deliverable_schema"]["required_sections"]
+
+
+def test_actlib_07_prior_art_and_questionstorm_templates():
+    """ACTLIB-07: Prior-art survey and questionstorm inquiry templates are present and valid."""
+    prior = load_template("prior-art-survey.v1.yaml")
+    assert prior["id"] == "prior-art-survey@1"
+    assert prior["advances"] == "novel"
+    assert "freedom_to_operate_assessment" in prior["deliverable_schema"]["required_sections"]
+
+    qstorm = load_template("questionstorm.v1.yaml")
+    assert qstorm["id"] == "questionstorm@1"
+    assert "why_root_inquiries" in qstorm["deliverable_schema"]["required_sections"]
+    assert "what_if_divergent_reframes" in qstorm["deliverable_schema"]["required_sections"]
+

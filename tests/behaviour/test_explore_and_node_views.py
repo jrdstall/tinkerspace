@@ -8,6 +8,7 @@ from pathlib import Path
 from starlette.testclient import TestClient
 
 from iw.contracts.models import Author, AuthorKind, Edge, Node, QueryFilters
+from iw.core.events import FileEventLog
 from iw.core.index import InMemoryIndex
 from iw.core.store import MarkdownStore
 from iw.web.app import create_app
@@ -158,3 +159,127 @@ def test_explore_04_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path:
     assert res_fri.status_code == 200
     assert "&larr; [addresses]" in res_fri.text
     assert "IDEA-A01" in res_fri.text
+
+
+def test_explore_05_node_link_and_unlink_post_triage(tmp_path: Path):
+    """EXPLORE-05: Node detail view supports post-triage relationship creation and removal."""
+    event_log = FileEventLog(tmp_path / "events.jsonl")
+    store = MarkdownStore(vault_dir=tmp_path, event_log=event_log)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    for n in _sample_nodes():
+        store.write_node(n, author=author)
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    # 1. Verify available targets in GET view
+    res_view = client.get("/node/IDEA-A01")
+    assert res_view.status_code == 200
+    assert "+ Link to Another Node" in res_view.text
+    assert "available-targets-list" in res_view.text
+    assert "AST-A01" in res_view.text
+
+    # 2. Add relationship link from IDEA-A01 -> AST-A01
+    res_link = client.post(
+        "/node/IDEA-A01/link",
+        data={
+            "target_id": "AST-A01 — Rigol 4-channel Digital Oscilloscope (asset)",
+            "relation": "requires",
+            "note": "Required for power consumption benchmarking",
+        },
+        follow_redirects=True,
+    )
+    assert res_link.status_code == 200
+    assert "&rarr; [requires]" in res_link.text
+    assert "AST-A01" in res_link.text
+
+    # Verify persisted in store
+    node_idea = store.get_node("IDEA-A01")
+    assert node_idea is not None
+    assert any(e.to_id == "AST-A01" and e.relation == "requires" for e in node_idea.edges)
+
+    # Verify event logged
+    events = event_log.read_events()
+    created_events = [e for e in events if e.kind == "edge_created"]
+    assert len(created_events) == 1
+    assert created_events[0].subject_id == "IDEA-A01"
+    assert created_events[0].payload.get("to_id") == "AST-A01"
+
+    # 3. Unlink relationship
+    res_unlink = client.post(
+        "/node/IDEA-A01/unlink",
+        data={
+            "target_id": "AST-A01",
+            "relation": "requires",
+        },
+        follow_redirects=True,
+    )
+    assert res_unlink.status_code == 200
+
+    # Verify removed from store
+    node_idea_after = store.get_node("IDEA-A01")
+    assert node_idea_after is not None
+    assert not any(e.to_id == "AST-A01" for e in node_idea_after.edges)
+
+    # Verify unlink event logged
+    events_after = event_log.read_events()
+    removed_events = [e for e in events_after if e.kind == "edge_removed"]
+    assert len(removed_events) == 1
+    assert removed_events[0].subject_id == "IDEA-A01"
+    assert removed_events[0].payload.get("to_id") == "AST-A01"
+
+
+def test_explore_06_subquestions_excluded_from_explore_and_search(tmp_path: Path):
+    """EXPLORE-06: Questionstorm sub-questions are excluded from explore catalog and search."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    for n in _sample_nodes():
+        store.write_node(n, author=author)
+
+    # Add 1 top-level macro question (should appear in Explore)
+    top_question = Node(
+        id="QUE-A01",
+        type="question",
+        title="Why do bike computers drain batteries so rapidly in winter?",
+        created=datetime.now(timezone.utc),
+        domain="cycling",
+        tags=["power"],
+        state="held_open",
+        author=author,
+        body="Macro question driving cold-weather display inquiries.",
+    )
+    store.write_node(top_question, author=author)
+
+    # Add 2 questionstorm sub-questions (should NOT appear in Explore)
+    sub_q1 = Node(
+        id="QUE-A02",
+        type="question",
+        title="What if we eliminate LCD backlights entirely?",
+        created=datetime.now(timezone.utc),
+        domain="cycling",
+        tags=["questionstorm"],
+        state="held_open",
+        author=author,
+        body="",
+        attrs={"subject_id": "IDEA-A01", "is_subquestion": True, "form": "open", "move": "what_if"},
+    )
+    store.write_node(sub_q1, author=author)
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    # 1. Base explore page shows 4 corpus nodes (FRI-A01, IDEA-A01, AST-A01, and top QUE-A01)
+    # but does NOT show QUE-A02
+    res = client.get("/")
+    assert res.status_code == 200
+    assert "Showing <strong>4</strong> of <strong>4</strong>" in res.text
+    assert "QUE-A01" in res.text
+    assert "QUE-A02" not in res.text
+
+    # 2. Searching for "backlights" (which is in sub-question QUE-A02) returns 0 corpus results
+    res_search = client.get("/?q=backlights")
+    assert res_search.status_code == 200
+    assert "QUE-A02" not in res_search.text
+    assert "Showing <strong>0</strong> of <strong>4</strong>" in res_search.text
+
+

@@ -4,6 +4,7 @@ Layer 4 Web surface module. Depends on iw.contracts, iw.domain.questionstorm, an
 Governed by Vision §12 and QGRAPH-01 through QGRAPH-06.
 """
 
+import json
 from typing import Any
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
@@ -11,6 +12,7 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Node
 from iw.contracts.store import StoreProtocol
+from iw.domain.questionstorm.graph import generate_mermaid_graph
 from iw.domain.questionstorm.models import BERGER_MOVES, QUESTION_RELATIONS
 from iw.domain.questionstorm.moves import apply_berger_move
 from iw.domain.questionstorm.service import QuestionstormService
@@ -35,6 +37,29 @@ def _enrich_question(q: Node) -> dict[str, Any]:
     }
 
 
+def _build_graph_context(
+    request: Request, subject: Node, question_nodes: list[Node], store: StoreProtocol,
+) -> dict[str, Any]:
+    enriched = [_enrich_question(q) for q in question_nodes]
+    selected_move = request.query_params.get("move", "why")
+    is_added = request.query_params.get("added") == "1"
+    suggested_stem = "" if is_added else apply_berger_move(selected_move, subject.title)
+    all_stems = {k: apply_berger_move(k, subject.title) for k in BERGER_MOVES.keys()}
+    mermaid_code = generate_mermaid_graph(subject, question_nodes)
+    return {
+        "request": request, "subject": subject,
+        "open_questions": [q for q in enriched if q["form"] == "open"],
+        "closed_questions": [q for q in enriched if q["form"] == "closed"],
+        "total_questions": len(question_nodes), "berger_moves": BERGER_MOVES,
+        "berger_stems_json": json.dumps(all_stems),
+        "mermaid_code": mermaid_code,
+        "relations": [r for r in QUESTION_RELATIONS if r != "questions"],
+        "selected_move": selected_move, "suggested_stem": suggested_stem,
+        "just_added": is_added, "inbox_count": len(store.list_inbox()),
+        "drop_count": len(store.list_dropped_files()),
+    }
+
+
 async def question_graph_view(request: Request, templates: Jinja2Templates) -> Response:
     """Render the visual Question Graph DAG surface for a subject node."""
     store: StoreProtocol = request.app.state.store
@@ -46,31 +71,9 @@ async def question_graph_view(request: Request, templates: Jinja2Templates) -> R
 
     service = QuestionstormService(store=store)
     question_nodes = service.resolve_subject_questions(subject_id)
-    enriched = [_enrich_question(q) for q in question_nodes]
+    ctx = _build_graph_context(request, subject, question_nodes, store)
+    return templates.TemplateResponse(request=request, name="question_graph.html", context=ctx)
 
-    open_questions = [q for q in enriched if q["form"] == "open"]
-    closed_questions = [q for q in enriched if q["form"] == "closed"]
-
-    selected_move = request.query_params.get("move", "why")
-    suggested_stem = apply_berger_move(selected_move, subject.title)
-
-    return templates.TemplateResponse(
-        request=request,
-        name="question_graph.html",
-        context={
-            "request": request,
-            "subject": subject,
-            "open_questions": open_questions,
-            "closed_questions": closed_questions,
-            "total_questions": len(question_nodes),
-            "berger_moves": BERGER_MOVES,
-            "relations": [r for r in QUESTION_RELATIONS if r != "questions"],
-            "selected_move": selected_move,
-            "suggested_stem": suggested_stem,
-            "inbox_count": len(store.list_inbox()),
-            "drop_count": len(store.list_dropped_files()),
-        },
-    )
 
 
 async def question_create_action(request: Request) -> Response:
@@ -94,7 +97,7 @@ async def question_create_action(request: Request) -> Response:
             relation=relation, author=author,
         )
 
-    return RedirectResponse(url=f"/question-graph/{subject_id}", status_code=303)
+    return RedirectResponse(url=f"/question-graph/{subject_id}?added=1", status_code=303)
 
 
 async def question_transform_action(request: Request) -> Response:

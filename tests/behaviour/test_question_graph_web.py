@@ -179,3 +179,20 @@ def test_qgraph_06_orphan_and_connected_questions_visible(tmp_path: Path):
     response = client.get(f"/question-graph/{subject_id}")
     assert response.status_code == 200
     assert "Standalone orphan question with no peer links" in response.text
+
+
+def test_qgraph_07_mermaid_visual_graph_rendering(tmp_path: Path):
+    """QGRAPH-07: Mermaid visual DAG diagram is generated with color-coded nodes and edge links."""
+    store, _, subject_id = _setup_graph_fixture(tmp_path)
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    response = client.get(f"/question-graph/{subject_id}")
+    assert response.status_code == 200
+    assert "class=\"mermaid\"" in response.text
+    assert "graph TD" in response.text
+    assert "SUB[\"💡" in response.text
+    assert "QUE_A01" in response.text
+    assert "QUE_A02" in response.text
+    assert "narrows" in response.text
+

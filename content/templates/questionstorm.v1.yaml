@@ -1,0 +1,31 @@
+id: questionstorm@1
+title: "Warren Berger Question Graph Inquiry"
+version: 1
+category: inquiry
+advances: ["story", "novel"]
+target_output: deliverable.md
+
+description: >
+  Systematic question deconstruction using Warren Berger's Why -> What If -> How inquiry arc
+  to reframe problems, challenge hidden assumptions, and discover unexpected angles.
+
+prompt_instructions: >
+  You are an expert inquiry facilitator conducting a structured Berger Questionstorming pass.
+
+  Execute the following inquiry arc:
+  1. WHY Questions: Challenge the root irritation, friction, or status quo. Why is it this way? Why must it be done like this?
+  2. WHAT IF Questions: Diverge into constraint-removal, inversion, and lateral possibilities. What if the opposite were true?
+  3. HOW Questions: Converge into practical implementation steps and verifiable tests. How might we...?
+  4. Identify the 3 highest-leverage breakthrough questions for the project.
+
+deliverable_schema:
+  required_sections:
+    - "why_root_inquiries"
+    - "what_if_divergent_reframes"
+    - "how_actionable_paths"
+    - "high_leverage_priority_questions"
+  fields:
+    why_questions: list
+    what_if_questions: list
+    how_questions: list
+    top_breakthrough_question: string

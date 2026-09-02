@@ -57,21 +57,15 @@ class PlannerService:
         )
 
     def list_activity_catalog(self) -> list[ActivityCatalogItem]:
-        items: list[ActivityCatalogItem] = [
-            ActivityCatalogItem(
-                id="freeform@1",
-                title="Freeform / Custom Task",
-                category="custom",
-                description="Open-ended task defined on the spot with custom instructions.",
-                advances="varies",
-            )
-        ]
+        items: list[ActivityCatalogItem] = []
+        seen: set[str] = set()
         if self.templates_dir.exists():
             for p in sorted(self.templates_dir.glob("*.yaml")):
                 try:
                     with open(p, "r", encoding="utf-8") as f:
                         data = yaml.safe_load(f)
-                    if isinstance(data, dict) and "id" in data:
+                    if isinstance(data, dict) and "id" in data and data["id"] not in seen:
+                        seen.add(data["id"])
                         items.append(
                             ActivityCatalogItem(
                                 id=data["id"],
@@ -84,6 +78,8 @@ class PlannerService:
                         )
                 except Exception:
                     continue
+        if "freeform@1" not in seen:
+            items.insert(0, ActivityCatalogItem(id="freeform@1", title="Freeform / Custom Task", category="custom", description="Open-ended task with custom instructions.", advances="varies"))
         return items
 
     def build_custom_plan(
@@ -93,40 +89,47 @@ class PlannerService:
         target_cml: int = 5,
         rationale: str = "Custom human-authored maturation plan",
     ) -> MaturationPlan:
-        reindexed_steps: list[PlanStep] = []
-        for idx, s in enumerate(steps):
-            reindexed_steps.append(
+        reindexed: list[PlanStep] = []
+        for i, s in enumerate(steps):
+            valid_deps = [d for d in s.depends_on if d < i]
+            reindexed.append(
                 PlanStep(
-                    step_index=idx,
-                    title=s.title,
-                    activity_id=s.activity_id,
-                    target_score=s.target_score,
-                    assignee_kind=s.assignee_kind,
-                    size=s.size,
-                    estimate_hours=s.estimate_hours,
-                    depends_on=[d for d in s.depends_on if d < idx],
-                    reason=s.reason,
+                    step_index=i, title=s.title, activity_id=s.activity_id,
+                    target_score=s.target_score, assignee_kind=s.assignee_kind,
+                    size=s.size, estimate_hours=s.estimate_hours,
+                    depends_on=valid_deps, reason=s.reason,
                 )
             )
-        return MaturationPlan(
-            subject_id=subject_id,
-            current_cml=1,
-            target_cml=target_cml,
-            current_scores={},
-            steps=reindexed_steps,
-            rationale=rationale,
-        )
+        return MaturationPlan(subject_id=subject_id, current_cml=1, target_cml=target_cml, current_scores={}, steps=reindexed, rationale=rationale)
+
+    def _resolve_guide(self, activity_id: str, custom_reason: str) -> str:
+        if custom_reason and custom_reason != "Custom human-authored step" and not custom_reason.startswith("Advances "):
+            return custom_reason
+        if self.templates_dir.exists():
+            for p in self.templates_dir.glob("*.yaml"):
+                try:
+                    with open(p, "r", encoding="utf-8") as f:
+                        data = yaml.safe_load(f)
+                    if isinstance(data, dict) and data.get("id") == activity_id:
+                        instr = data.get("prompt_instructions", "").strip()
+                        if instr:
+                            return f"{custom_reason}\n\n{instr}" if custom_reason else instr
+                except Exception:
+                    continue
+        return custom_reason
 
     def _allocate_ids(self, step_count: int) -> tuple[str, list[str]]:
         existing_wfls = scan_vault_workflows(self.vault_dir)
         wfl_id = allocate_next_id("WFL", [w.id for w in existing_wfls])
         existing_units = scan_vault_units(self.vault_dir)
         existing_uow_ids = [u.id for u in existing_units]
-        uow_ids: list[str] = []
+        uow_ids = [allocate_next_id("UOW", existing_uow_ids + [f"UOW-TEMP-{i}"]) for i in range(step_count)]
+        # Re-allocate cleanly sequentially
+        allocated: list[str] = []
         for _ in range(step_count):
-            new_uow_id = allocate_next_id("UOW", existing_uow_ids + uow_ids)
-            uow_ids.append(new_uow_id)
-        return wfl_id, uow_ids
+            uid = allocate_next_id("UOW", existing_uow_ids + allocated)
+            allocated.append(uid)
+        return wfl_id, allocated
 
     def _create_units(
         self,
@@ -141,6 +144,7 @@ class PlannerService:
             dep_uow_ids = [uow_ids[d] for d in step.depends_on if d < len(uow_ids)]
             dependencies[uow_id] = dep_uow_ids
             initial_state = UnitState.BLOCKED if dep_uow_ids else UnitState.READY
+            guide = self._resolve_guide(step.activity_id, step.reason)
             unit = UnitOfWork(
                 id=uow_id,
                 title=step.title,
@@ -151,7 +155,7 @@ class PlannerService:
                 assignee={"kind": step.assignee_kind.value},
                 estimate={"my_time": f"{step.estimate_hours}h", "size": step.size},
                 template=step.activity_id,
-                action_guide=step.reason,
+                action_guide=guide,
             )
             units.append(unit)
         return dependencies, units

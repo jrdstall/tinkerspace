@@ -15,34 +15,37 @@
 
 {% if item %}
 <div class="card" style="border-color: var(--accent);">
-    <div style="margin-bottom: 1.25rem;">
-        <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Raw Captured Thought</span>
-        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; margin-top: 0.5rem; font-size: 1.05rem; line-height: 1.5; color: var(--text-main); white-space: pre-wrap;">{{ item.raw_text }}</div>
-    </div>
-
     <form id="triage-form" action="/triage/accept" method="POST">
         <input type="hidden" name="item_id" value="{{ item.id }}">
         
         <div style="margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <label for="triage-body" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Captured Thought & Note Body (Editable)</label>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">Markdown supported</span>
+            </div>
+            <textarea id="triage-body" name="body" rows="4" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; font-size: 1rem; line-height: 1.5; color: var(--text-main); font-family: inherit; resize: vertical;" placeholder="Edit thought or add context..." required>{{ item.raw_text }}</textarea>
+        </div>
+
+        <div style="margin-bottom: 1.25rem;">
             <span style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">1. Select Node Type</span>
             <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
-                <label class="btn type-btn active" id="btn-friction">
+                <label class="btn type-btn active" id="btn-friction" onclick="selectType('friction')">
                     <input type="radio" name="node_type" value="friction" checked style="display: none;">
                     <strong>[1]</strong> Friction <span class="mono" style="opacity: 0.7;">(f)</span>
                 </label>
-                <label class="btn type-btn" id="btn-observation">
+                <label class="btn type-btn" id="btn-observation" onclick="selectType('observation')">
                     <input type="radio" name="node_type" value="observation" style="display: none;">
                     <strong>[2]</strong> Observation <span class="mono" style="opacity: 0.7;">(o)</span>
                 </label>
-                <label class="btn type-btn" id="btn-idea">
+                <label class="btn type-btn" id="btn-idea" onclick="selectType('idea')">
                     <input type="radio" name="node_type" value="idea" style="display: none;">
                     <strong>[3]</strong> Idea <span class="mono" style="opacity: 0.7;">(i)</span>
                 </label>
-                <label class="btn type-btn" id="btn-question">
+                <label class="btn type-btn" id="btn-question" onclick="selectType('question')">
                     <input type="radio" name="node_type" value="question" style="display: none;">
                     <strong>[4]</strong> Question <span class="mono" style="opacity: 0.7;">(q)</span>
                 </label>
-                <label class="btn type-btn" id="btn-asset">
+                <label class="btn type-btn" id="btn-asset" onclick="selectType('asset')">
                     <input type="radio" name="node_type" value="asset" style="display: none;">
                     <strong>[5]</strong> Asset <span class="mono" style="opacity: 0.7;">(a)</span>
                 </label>
@@ -66,13 +69,31 @@
 
         <div style="margin-bottom: 1.25rem;">
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Candidate Edge Link (Optional)</label>
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 1rem;">
-                <input type="text" name="edge_target" placeholder="Target Node ID (e.g. FRI-A01)" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-                <input type="text" name="edge_rel" placeholder="Relation (e.g. addresses, derives_from)" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+            <div style="display: grid; grid-template-columns: 1.5fr 1.5fr; gap: 1rem;">
+                <div>
+                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Search or select Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <datalist id="existing-nodes-list">
+                        {% for n in existing_nodes %}
+                        <option value="{{ n.id }}">{{ n.id }} — {{ n.title }} ({{ n.type }})</option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div>
+                    <input type="text" name="edge_rel" id="edge-rel-input" list="edge-rel-list" placeholder="Relation (e.g. addresses, derives_from, questions)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <datalist id="edge-rel-list">
+                        <option value="addresses">addresses</option>
+                        <option value="derived_from">derived_from</option>
+                        <option value="questions">questions</option>
+                        <option value="reframes">reframes</option>
+                        <option value="sibling">sibling</option>
+                        <option value="inspires">inspires</option>
+                        <option value="blocks">blocks</option>
+                        <option value="relates_to">relates_to</option>
+                        <option value="requires">requires</option>
+                    </datalist>
+                </div>
             </div>
         </div>
-
-        <textarea name="body" style="display: none;">{{ item.raw_text }}</textarea>
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
@@ -98,8 +119,14 @@
         }
     }
 
+    document.querySelectorAll('input[name="node_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            selectType(this.value);
+        });
+    });
+
     document.addEventListener('keydown', function(e) {
-        const inInput = ['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName);
+        const inInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
         
         if (e.key === 'Escape') {
             window.location.href = '/';
@@ -131,11 +158,14 @@
         } else if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
             e.preventDefault();
             document.getElementById('triage-form').submit();
+        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.activeElement.tagName === 'TEXTAREA') {
+            e.preventDefault();
+            document.getElementById('triage-form').submit();
         }
     });
 </script>
 <style>
-    .type-btn.active {
+    .type-btn:has(input:checked), .type-btn.active {
         border-color: var(--accent);
         color: var(--accent);
         background-color: rgba(88, 166, 255, 0.15);

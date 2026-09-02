@@ -17,6 +17,7 @@ async def triage_view(request: Request, templates: Jinja2Templates) -> Response:
     """Render rapid keyboard triage view."""
     store: StoreProtocol = request.app.state.store
     inbox_items = store.list_inbox()
+    existing_nodes = store.list_nodes()
     skip = int(request.query_params.get("skip", 0))
     current_index = min(skip, max(0, len(inbox_items) - 1)) if inbox_items else 0
     active_item = inbox_items[current_index] if inbox_items else None
@@ -30,6 +31,7 @@ async def triage_view(request: Request, templates: Jinja2Templates) -> Response:
             "total_items": len(inbox_items),
             "inbox_count": len(inbox_items),
             "drop_count": len(store.list_dropped_files()),
+            "existing_nodes": existing_nodes,
         },
     )
 
@@ -44,7 +46,8 @@ async def triage_accept_view(request: Request) -> Response:
     domain = str(form.get("domain", "general")).strip()
     tags = [t.strip() for t in str(form.get("tags", "")).split(",") if t.strip()]
     body = str(form.get("body", "")).strip()
-    edge_target = str(form.get("edge_target", "")).strip().upper()
+    raw_target = str(form.get("edge_target", "")).strip()
+    edge_target = raw_target.split()[0].upper() if raw_target else ""
     edge_rel = str(form.get("edge_rel", "")).strip()
     now = datetime.now(timezone.utc)
     author = Author(kind=AuthorKind.HUMAN, courier="triage-surface")

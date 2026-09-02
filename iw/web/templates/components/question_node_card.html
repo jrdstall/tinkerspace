@@ -28,20 +28,26 @@
     </div>
     {% endif %}
 
-    <!-- Transform Form (QGRAPH-05) -->
-    <details style="margin-top: 0.25rem; font-size: 0.75rem;">
-        <summary style="cursor: pointer; color: var(--accent); font-weight: 500;">
-            {% if q.form == 'open' %}&#8644; Transform to Closed Question{% else %}&#8644; Transform to Open Question{% endif %}
-        </summary>
-        <form method="POST" action="/question-graph/transform" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-            <input type="hidden" name="question_id" value="{{ q.id }}">
-            <input type="hidden" name="subject_id" value="{{ subject.id }}">
-            <input type="text" name="new_text" required placeholder="Type opposite form question..." 
-                   style="background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
-            <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; align-self: flex-start;">
-                Save Transformation
-            </button>
-        </form>
-    </details>
+    <!-- Actions Row: Branch Follow-up and Transform Form (QGRAPH-05) -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <button type="button" onclick="branchFrom('{{ q.id }}', '{{ q.title|replace('\'', '\\\'') }}')" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">
+            ➕ Branch Follow-up
+        </button>
+
+        <details style="font-size: 0.75rem;">
+            <summary style="cursor: pointer; color: var(--text-muted); font-weight: 500;">
+                {% if q.form == 'open' %}&#8644; Transform to Closed{% else %}&#8644; Transform to Open{% endif %}
+            </summary>
+            <form method="POST" action="/question-graph/transform" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                <input type="hidden" name="question_id" value="{{ q.id }}">
+                <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                <input type="text" name="new_text" required placeholder="Type opposite form question..." 
+                       style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; align-self: flex-start;">
+                    Save Transformation
+                </button>
+            </form>
+        </details>
+    </div>
 
 </div>

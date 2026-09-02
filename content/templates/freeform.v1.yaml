@@ -1,0 +1,23 @@
+id: freeform@1
+title: "Freeform / Custom Task"
+version: 1
+category: custom
+advances: "any"
+target_output: deliverable.md
+
+description: >
+  Flexible, ad-hoc task with user-specified instructions and deliverable expectations.
+  Use for unique bench tests, code modifications, or one-off exploratory experiments.
+
+prompt_instructions: >
+  Execute the custom instructions provided for this unit of work.
+  Record all findings, data, code changes, or measurements clearly in deliverable.md.
+
+deliverable_schema:
+  required_sections:
+    - "task_objective_and_notes"
+    - "observations_and_findings"
+    - "next_actions"
+  fields:
+    summary: string
+    recommendation: string

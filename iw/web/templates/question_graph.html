@@ -2,6 +2,26 @@
 
 {% block title %}Question Graph · {{ subject.id }} · Tinkerspace{% endblock %}
 
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'dark',
+        securityLevel: 'loose',
+        themeVariables: {
+            darkMode: true,
+            background: '#0f141c',
+            primaryColor: '#16243b',
+            primaryBorderColor: '#388bfd',
+            primaryTextColor: '#e6edf3',
+            lineColor: '#58a6ff',
+            textColor: '#e6edf3'
+        }
+    });
+</script>
+{% endblock %}
+
 {% block content %}
 <div style="margin-bottom: 1.5rem;">
     <a href="/node/{{ subject.id }}" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
@@ -12,71 +32,186 @@
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
     <div>
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
-            <span class="badge" style="font-weight: 700;">QUESTION GRAPH</span>
+            <span class="badge" style="font-weight: 700; background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3);">QUESTION GRAPH</span>
             <span class="mono" style="font-size: 1.1rem; font-weight: 700; color: var(--accent);">{{ subject.id }}</span>
-            <span class="badge">{{ total_questions }} Questions Generated</span>
+            <span class="badge">{{ total_questions }} Question{% if total_questions != 1 %}s{% endif %} in Graph</span>
         </div>
         <h1 style="font-size: 1.35rem; font-weight: 600; color: var(--text-main);">
             {{ subject.title }}
         </h1>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+            Deconstruct this idea across Warren Berger's <strong>Why &rarr; What If &rarr; How</strong> inquiry arc.
+        </p>
+    </div>
+
+    <!-- View Mode Switcher -->
+    <div style="display: flex; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.25rem; gap: 0.25rem;">
+        <button type="button" id="tab-btn-graph" onclick="switchGraphMode('graph')" class="btn view-tab-btn active" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+            🌳 Visual Graph
+        </button>
+        <button type="button" id="tab-btn-split" onclick="switchGraphMode('split')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+            🔲 Split View
+        </button>
+        <button type="button" id="tab-btn-composer" onclick="switchGraphMode('composer')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+            ⚡ Composer & Cards
+        </button>
     </div>
 </div>
 
-<!-- Fast Question Creation & Berger Moves Banner (V§12, QGRAPH-05) -->
-<div class="card" style="padding: 1.25rem; margin-bottom: 1.5rem; border-top: 3px solid var(--accent);">
-    <h2 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.75rem;">
-        ⚡ Berger Questioning Moves & Rapid Generation
-    </h2>
+{% if just_added %}
+<div style="background: rgba(63, 185, 80, 0.15); border: 1px solid rgba(63, 185, 80, 0.4); color: #3fb950; padding: 0.6rem 1rem; border-radius: 6px; margin-bottom: 1.25rem; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+    <span>✓ Question added to the graph! Add another question or explore the visual tree below.</span>
+    <button onclick="this.parentElement.remove()" style="background: none; border: none; color: #3fb950; cursor: pointer; font-size: 1rem;">&times;</button>
+</div>
+{% endif %}
 
-    <!-- Move Selector Chips -->
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem;">
-        {% for m_key, m_label in berger_moves.items() %}
-        <a href="/question-graph/{{ subject.id }}?move={{ m_key }}" 
-           class="btn" style="{% if selected_move == m_key %}background: var(--accent); color: #000; font-weight: 700;{% endif %} font-size: 0.75rem; text-decoration: none;">
-            {{ m_label }}
-        </a>
-        {% endfor %}
+<!-- 1. Visual Inquiry Graph Section -->
+<div id="section-visual-graph" class="card" style="padding: 1.25rem; margin-bottom: 1.5rem; border-top: 3px solid #58a6ff;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+        <div>
+            <h2 style="font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin: 0;">
+                🌳 Inquiry Graph & Relationship DAG
+            </h2>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">
+                Visual mapping of problem reframing, question narrowing, and inquiry chains
+            </p>
+        </div>
+
+        <!-- Legend -->
+        <div style="display: flex; gap: 0.75rem; align-items: center; font-size: 0.75rem; flex-wrap: wrap;">
+            <span style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #1f293d; border: 1px solid #58a6ff; border-radius: 2px;"></span>
+                Subject
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #16243b; border: 1px solid #388bfd; border-radius: 2px;"></span>
+                Open Question
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; background: #1b2f24; border: 1px solid #3fb950; border-radius: 2px;"></span>
+                Closed / Test
+            </span>
+            <span style="display: flex; align-items: center; gap: 0.35rem;">
+                <span style="display: inline-block; width: 12px; height: 12px; border: 2px solid #f0883e; border-radius: 2px;"></span>
+                High Priority
+            </span>
+        </div>
     </div>
 
-    <!-- Quick Form -->
-    <form method="POST" action="/question-graph/create" style="display: flex; flex-direction: column; gap: 0.75rem;">
+    <!-- Mermaid Interactive Diagram Area -->
+    <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.5rem; overflow-x: auto; text-align: center; min-height: 220px; display: flex; justify-content: center; align-items: center;">
+        <pre class="mermaid" style="margin: 0; font-family: inherit;">
+{{ mermaid_code|safe }}
+        </pre>
+    </div>
+</div>
+
+<!-- 2. Fast Question Composer Section -->
+<div id="section-composer" class="card" style="padding: 1.25rem; margin-bottom: 1.5rem; border-top: 3px solid var(--accent);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+        <h2 style="font-size: 0.95rem; font-weight: 700; color: var(--text-main); margin: 0;">
+            ⚡ Berger Inquiry Stems & Question Composer
+        </h2>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">
+            Click a preset move to seed the prompt, or type your own:
+        </span>
+    </div>
+
+    <!-- Move Selector Chips -->
+    <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;">
+        {% for m_key, m_label in berger_moves.items() %}
+        <button type="button" 
+                id="move-btn-{{ m_key }}"
+                onclick="applyBergerMove('{{ m_key }}')" 
+                class="btn move-chip-btn {% if selected_move == m_key and not just_added %}active{% endif %}" 
+                style="font-size: 0.75rem; padding: 0.35rem 0.65rem;">
+            {{ m_label }}
+        </button>
+        {% endfor %}
+        <button type="button" onclick="clearQuestionText()" class="btn" style="font-size: 0.75rem; padding: 0.35rem 0.65rem; color: var(--text-muted);">
+            ✨ Blank Slate
+        </button>
+    </div>
+
+    <!-- Quick Question Composer Form -->
+    <form id="question-form-el" method="POST" action="/question-graph/create" style="display: flex; flex-direction: column; gap: 0.75rem;">
         <input type="hidden" name="subject_id" value="{{ subject.id }}">
-        <input type="hidden" name="move" value="{{ selected_move }}">
+        <input type="hidden" id="selected-move-input" name="move" value="{{ selected_move }}">
 
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <input type="text" name="text" value="{{ suggested_stem }}" required 
-                   placeholder="Type question here..." 
-                   style="flex: 1; min-width: 280px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.9rem;">
+        <div>
+            <textarea id="question-text" name="text" rows="3" required 
+                      placeholder="Type question here, or click a Berger move above to seed a prompt stem... (Press Ctrl+Enter to add)"
+                      style="width: 100%; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem 1rem; font-size: 0.95rem; font-family: inherit; resize: vertical; line-height: 1.45;">{{ suggested_stem }}</textarea>
+        </div>
 
-            <select name="form" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
-                <option value="open">Form: Open (Why / How)</option>
-                <option value="closed">Form: Closed (Yes / No / Decidable)</option>
-            </select>
+        <div style="display: flex; gap: 0.75rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+            <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+                <!-- Form Selector -->
+                <div>
+                    <select id="question-form-select" name="form" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+                        <option value="open" selected>Form: Open (Why / What If / How)</option>
+                        <option value="closed">Form: Closed (Decidable / Yes-No / Test)</option>
+                    </select>
+                </div>
 
-            <select name="importance" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; font-size: 0.85rem;">
-                <option value="high">Importance: High ⚡</option>
-                <option value="medium" selected>Importance: Medium</option>
-                <option value="low">Importance: Low</option>
-            </select>
+                <!-- Importance Selector -->
+                <div>
+                    <select name="importance" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+                        <option value="high">Importance: High ⚡</option>
+                        <option value="medium" selected>Importance: Medium</option>
+                        <option value="low">Importance: Low</option>
+                    </select>
+                </div>
 
-            <button type="submit" class="btn btn-primary" style="padding: 0.5rem 1.25rem; font-weight: 600;">
-                + Add Question
-            </button>
+                <!-- Parent Question Selector (Branching) -->
+                {% if open_questions or closed_questions %}
+                <div>
+                    <select id="question-parent-select" name="parent_id" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem; max-width: 240px;">
+                        <option value="">Branch From: Root (Subject)</option>
+                        {% for q in open_questions %}
+                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title[:30] }}...</option>
+                        {% endfor %}
+                        {% for q in closed_questions %}
+                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title[:30] }}...</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+                        <option value="reframes">Relation: reframes</option>
+                        <option value="narrows">Relation: narrows</option>
+                        <option value="broadens">Relation: broadens</option>
+                        <option value="presupposes">Relation: presupposes</option>
+                        <option value="sibling">Relation: sibling</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" onclick="clearQuestionText()" class="btn" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;">
+                    Clear
+                </button>
+                <button type="submit" class="btn btn-primary" style="padding: 0.45rem 1.25rem; font-weight: 600; font-size: 0.85rem;">
+                    + Add Question <span style="font-size: 0.75rem; opacity: 0.7; font-weight: 400; margin-left: 0.25rem;">(Ctrl+Enter)</span>
+                </button>
+            </div>
         </div>
     </form>
 </div>
 
-<!-- 2-Column Open vs Closed Visual Graph Grid (QGRAPH-02, QGRAPH-03, QGRAPH-04) -->
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: flex-start;">
+<!-- 3. 2-Column Cards Section -->
+<div id="section-cards" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: flex-start; margin-bottom: 1.5rem;">
 
     <!-- Left Column: Open Questions -->
-    <div class="card" style="background: rgba(26, 34, 48, 0.7); border-top: 3px solid #58a6ff; padding: 1rem;">
+    <div class="card" style="background: rgba(26, 34, 48, 0.7); border-top: 3px solid #58a6ff; padding: 1.25rem; margin-bottom: 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <div>
-                <h2 style="font-size: 1.05rem; font-weight: 700; color: #58a6ff;">🌌 Open Questions (Exploration Space)</h2>
-                <p style="font-size: 0.75rem; color: var(--text-muted);">Generative, divergent, unconstrained</p>
+                <h2 style="font-size: 1.05rem; font-weight: 700; color: #58a6ff; margin: 0;">🌌 Open Questions (Exploration Space)</h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Generative, divergent, Why & What-If reframes</p>
             </div>
-            <span class="badge">{{ open_questions|length }}</span>
+            <span class="badge" style="background: rgba(88,166,255,0.15); color: #58a6ff; border-color: rgba(88,166,255,0.3);">{{ open_questions|length }}</span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -84,18 +219,18 @@
                 {% include "components/question_node_card.html" %}
             {% else %}
                 <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; border: 1px dashed var(--border-color); border-radius: 6px;">
-                    No open questions yet. Use the Berger moves above to start.
+                    No open questions yet. Click a Berger move above to seed one.
                 </div>
             {% endfor %}
         </div>
     </div>
 
     <!-- Right Column: Closed Questions -->
-    <div class="card" style="background: rgba(26, 34, 48, 0.7); border-top: 3px solid #3fb950; padding: 1rem;">
+    <div class="card" style="background: rgba(26, 34, 48, 0.7); border-top: 3px solid #3fb950; padding: 1.25rem; margin-bottom: 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <div>
-                <h2 style="font-size: 1.05rem; font-weight: 700; color: #3fb950;">🎯 Closed Questions (Decidable Choices)</h2>
-                <p style="font-size: 0.75rem; color: var(--text-muted);">Concrete, bounded, testable</p>
+                <h2 style="font-size: 1.05rem; font-weight: 700; color: #3fb950; margin: 0;">🎯 Closed Questions (Decidable Choices)</h2>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0.2rem 0 0 0;">Concrete, bounded, testable hypotheses & gates</p>
             </div>
             <span class="badge badge-green">{{ closed_questions|length }}</span>
         </div>
@@ -105,7 +240,7 @@
                 {% include "components/question_node_card.html" %}
             {% else %}
                 <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.85rem; border: 1px dashed var(--border-color); border-radius: 6px;">
-                    No closed questions yet. Transform an open question to narrow it.
+                    No closed questions yet. Transform an open question or compose a testable question.
                 </div>
             {% endfor %}
         </div>
@@ -113,30 +248,159 @@
 
 </div>
 
-<!-- Quick Link Tool -->
-<div class="card" style="padding: 1rem; margin-top: 1.5rem;">
+<!-- 4. Quick Link Tool Section -->
+<div id="section-edge-linker" class="card" style="padding: 1.25rem;">
     <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
         🔗 Connect Questions (Edge Linker)
     </h3>
     <form method="POST" action="/question-graph/link" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
         <input type="hidden" name="subject_id" value="{{ subject.id }}">
 
-        <input type="text" name="from_id" placeholder="From (e.g. QUE-A01)" required class="mono"
-               style="width: 140px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.85rem;">
+        <input type="text" name="from_id" list="all-questions-list" placeholder="From Question (QUE-xxx)" required class="mono"
+               style="width: 220px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
 
-        <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.85rem;">
+        <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
             {% for r in relations %}
             <option value="{{ r }}">&rarr; {{ r }}</option>
             {% endfor %}
         </select>
 
-        <input type="text" name="to_id" placeholder="To (e.g. QUE-A02)" required class="mono"
-               style="width: 140px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.85rem;">
+        <input type="text" name="to_id" list="all-questions-list" placeholder="To Question (QUE-xxx)" required class="mono"
+               style="width: 220px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
 
-        <button type="submit" class="btn" style="font-size: 0.85rem;">
+        <datalist id="all-questions-list">
+            {% for q in open_questions %}
+            <option value="{{ q.id }}">{{ q.id }} — {{ q.title }}</option>
+            {% endfor %}
+            {% for q in closed_questions %}
+            <option value="{{ q.id }}">{{ q.id }} — {{ q.title }}</option>
+            {% endfor %}
+        </datalist>
+
+        <button type="submit" class="btn" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
             Connect Link
         </button>
     </form>
 </div>
 
+<script>
+const BERGER_STEMS = {{ berger_stems_json|safe }};
+
+function switchGraphMode(mode) {
+    const btnGraph = document.getElementById('tab-btn-graph');
+    const btnSplit = document.getElementById('tab-btn-split');
+    const btnComp = document.getElementById('tab-btn-composer');
+
+    const secGraph = document.getElementById('section-visual-graph');
+    const secComposer = document.getElementById('section-composer');
+    const secCards = document.getElementById('section-cards');
+    const secLinker = document.getElementById('section-edge-linker');
+
+    // Reset buttons
+    document.querySelectorAll('.view-tab-btn').forEach(b => b.classList.remove('active'));
+
+    if (mode === 'graph') {
+        btnGraph.classList.add('active');
+        secGraph.style.display = 'block';
+        secComposer.style.display = 'none';
+        secCards.style.display = 'none';
+        secLinker.style.display = 'block';
+    } else if (mode === 'composer') {
+        btnComp.classList.add('active');
+        secGraph.style.display = 'none';
+        secComposer.style.display = 'block';
+        secCards.style.display = 'grid';
+        secLinker.style.display = 'block';
+    } else { // split
+        btnSplit.classList.add('active');
+        secGraph.style.display = 'block';
+        secComposer.style.display = 'block';
+        secCards.style.display = 'grid';
+        secLinker.style.display = 'block';
+    }
+}
+
+function applyBergerMove(moveKey) {
+    // If in graph-only mode, switch to split or composer so textarea is visible
+    const secComposer = document.getElementById('section-composer');
+    if (secComposer.style.display === 'none') {
+        switchGraphMode('split');
+    }
+
+    const textarea = document.getElementById('question-text');
+    const moveInput = document.getElementById('selected-move-input');
+    const formSelect = document.getElementById('question-form-select');
+    
+    // Update active button highlight
+    document.querySelectorAll('.move-chip-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById('move-btn-' + moveKey);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // Update move and text
+    if (moveInput) moveInput.value = moveKey;
+    if (textarea && BERGER_STEMS[moveKey]) {
+        textarea.value = BERGER_STEMS[moveKey];
+        textarea.focus();
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+    }
+
+    // Auto set open vs closed
+    if (formSelect) {
+        if (moveKey === 'dissenter' || moveKey === 'open_closed') {
+            formSelect.value = 'closed';
+        } else {
+            formSelect.value = 'open';
+        }
+    }
+}
+
+function clearQuestionText() {
+    const secComposer = document.getElementById('section-composer');
+    if (secComposer.style.display === 'none') {
+        switchGraphMode('split');
+    }
+    const textarea = document.getElementById('question-text');
+    document.querySelectorAll('.move-chip-btn').forEach(btn => btn.classList.remove('active'));
+    if (textarea) {
+        textarea.value = '';
+        textarea.placeholder = 'Type your custom question here... (Press Ctrl+Enter to submit)';
+        textarea.focus();
+    }
+}
+
+function branchFrom(questionId, questionTitle) {
+    switchGraphMode('split');
+    const parentSelect = document.getElementById('question-parent-select');
+    if (parentSelect) {
+        parentSelect.value = questionId;
+    }
+    const textarea = document.getElementById('question-text');
+    if (textarea) {
+        textarea.focus();
+    }
+    document.getElementById('section-composer').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Support Ctrl+Enter inside the textarea to submit
+document.getElementById('question-text')?.addEventListener('keydown', function(e) {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('question-form-el')?.submit();
+    }
+});
+</script>
+
+<style>
+.view-tab-btn.active {
+    background: var(--accent) !important;
+    color: #0f141c !important;
+    font-weight: 700 !important;
+}
+.move-chip-btn.active {
+    background: var(--accent) !important;
+    color: #0f141c !important;
+    font-weight: 700 !important;
+    border-color: var(--accent) !important;
+}
+</style>
 {% endblock %}

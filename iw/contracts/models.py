@@ -147,6 +147,8 @@ class QueryFilters:
     tag: str | None = None
     state: str | None = None
     min_cml: int | None = None
+    include_subquestions: bool = False
+
 
 
 @dataclass(frozen=True)

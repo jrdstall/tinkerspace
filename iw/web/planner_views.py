@@ -75,6 +75,16 @@ async def planner_instantiate_action(request: Request) -> Response:
     return RedirectResponse(url=f"/workflow/{wfl.id}", status_code=303)
 
 
+def _parse_step_deps(raw: str, max_idx: int) -> list[int]:
+    deps: list[int] = []
+    for d in str(raw).split(","):
+        if d.strip().isdigit():
+            val = int(d.strip()) - 1
+            if 0 <= val < max_idx:
+                deps.append(val)
+    return deps
+
+
 def _parse_custom_steps(form: dict) -> list[PlanStep]:
     titles = form.getlist("step_title") if hasattr(form, "getlist") else []
     activities = form.getlist("step_activity") if hasattr(form, "getlist") else []
@@ -82,6 +92,7 @@ def _parse_custom_steps(form: dict) -> list[PlanStep]:
     estimates = form.getlist("step_estimate") if hasattr(form, "getlist") else []
     targets = form.getlist("step_target_score") if hasattr(form, "getlist") else []
     deps_raw = form.getlist("step_depends_on") if hasattr(form, "getlist") else []
+    instructions = form.getlist("step_instructions") if hasattr(form, "getlist") else []
 
     steps: list[PlanStep] = []
     for idx, title in enumerate(titles):
@@ -92,26 +103,15 @@ def _parse_custom_steps(form: dict) -> list[PlanStep]:
         ass_kind = AuthorKind.HUMAN if ass_str == "human" else AuthorKind.AGENT
         est_val = float(estimates[idx]) if idx < len(estimates) and estimates[idx] else 1.0
         tgt = targets[idx] if idx < len(targets) else "works"
-
-        dep_list: list[int] = []
-        if idx < len(deps_raw) and deps_raw[idx]:
-            for d in str(deps_raw[idx]).split(","):
-                if d.strip().isdigit():
-                    val = int(d.strip()) - 1
-                    if 0 <= val < idx:
-                        dep_list.append(val)
+        custom_inst = instructions[idx].strip() if idx < len(instructions) and instructions[idx].strip() else "Custom human-authored step"
+        dep_raw = deps_raw[idx] if idx < len(deps_raw) else ""
 
         steps.append(
             PlanStep(
-                step_index=idx,
-                title=title.strip(),
-                activity_id=act,
-                target_score=tgt,
-                assignee_kind=ass_kind,
-                size="medium" if est_val > 1.0 else "small",
-                estimate_hours=est_val,
-                depends_on=dep_list,
-                reason="Custom human-authored step",
+                step_index=idx, title=title.strip(), activity_id=act,
+                target_score=tgt, assignee_kind=ass_kind,
+                size="medium" if est_val > 1.0 else "small", estimate_hours=est_val,
+                depends_on=_parse_step_deps(dep_raw, idx), reason=custom_inst,
             )
         )
     return steps

@@ -18,7 +18,7 @@ from iw.domain.scout.service import ScoutService
 from iw.web.helpers import extract_facets, resolve_inbound_edges
 from iw.web import (
     association_views, board_views, intake_views, maturity_views,
-    planner_views, question_views, scout_views, triage_views, workflow_views,
+    node_views, planner_views, question_views, scout_views, triage_views, workflow_views,
 )
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -36,11 +36,12 @@ async def index_view(request: Request) -> Response:
     store: StoreProtocol = request.app.state.store
     store.sync_refresh()
     all_nodes = store.list_nodes()
+    corpus_nodes = [n for n in all_nodes if not (n.attrs.get("is_subquestion") is True or (n.type == "question" and bool(n.attrs.get("subject_id"))))]
     q, n_type = request.query_params.get("q", "").strip(), request.query_params.get("type", "").strip()
     domain, tag = request.query_params.get("domain", "").strip(), request.query_params.get("tag", "").strip()
     state, sort_by = request.query_params.get("state", "").strip(), request.query_params.get("sort", "touched").strip()
     filters = QueryFilters(type=n_type or None, domain=domain or None, tag=tag or None, state=state or None)
-    filtered = InMemoryIndex(all_nodes).filter_and_search(filters, query_text=q or None, sort_by=sort_by)
+    filtered = InMemoryIndex(corpus_nodes).filter_and_search(filters, query_text=q or None, sort_by=sort_by)
 
     scout = ScoutService(store.vault_dir / "meta" / "scout_interests.json")
     offers = scout.get_stale_offers()
@@ -48,27 +49,11 @@ async def index_view(request: Request) -> Response:
     return templates.TemplateResponse(
         request=request, name="index.html",
         context={
-            "request": request, "nodes": filtered, "total_nodes": len(all_nodes),
+            "request": request, "nodes": filtered, "total_nodes": len(corpus_nodes),
             "attention_items": store.list_needs_attention(), "inbox_count": len(store.list_inbox()),
-            "drop_count": len(store.list_dropped_files()), "facets": extract_facets(all_nodes),
+            "drop_count": len(store.list_dropped_files()), "facets": extract_facets(corpus_nodes),
             "offers": offers, "q": q, "current_type": n_type, "current_domain": domain,
             "current_tag": tag, "current_state": state, "current_sort": sort_by,
-        },
-    )
-
-
-async def node_detail_view(request: Request) -> Response:
-    store: StoreProtocol = request.app.state.store
-    node_id = request.path_params.get("node_id", "").strip().upper()
-    node = store.get_node(node_id)
-    if node is None:
-        return HTMLResponse(f"<h1>404 Not Found</h1><p>Node '{node_id}' does not exist.</p>", status_code=404)
-    all_nodes = store.list_nodes()
-    return templates.TemplateResponse(
-        request=request, name="node.html",
-        context={
-            "request": request, "node": node, "inbound_edges": resolve_inbound_edges(all_nodes, node_id),
-            "inbox_count": len(store.list_inbox()), "drop_count": len(store.list_dropped_files()),
         },
     )
 
@@ -98,6 +83,7 @@ async def vault_file_view(request: Request) -> Response:
     return FileResponse(target)
 
 
+async def _view_node(r: Request) -> Response: return await node_views.node_detail_view(r, templates)
 async def _view_maturity(r: Request) -> Response: return await maturity_views.maturity_view(r, templates)
 async def _view_assoc(r: Request) -> Response: return await association_views.association_deck_view(r, templates)
 async def _view_board(r: Request) -> Response: return await board_views.board_view(r, templates)
@@ -112,7 +98,9 @@ async def _view_intake(r: Request) -> Response: return await intake_views.intake
 def _get_core_routes() -> list[Route]:
     return [
         Route("/", endpoint=index_view, methods=["GET"]),
-        Route("/node/{node_id}", endpoint=node_detail_view, methods=["GET"]),
+        Route("/node/{node_id}", endpoint=_view_node, methods=["GET"]),
+        Route("/node/{node_id}/link", endpoint=node_views.node_link_action, methods=["POST"]),
+        Route("/node/{node_id}/unlink", endpoint=node_views.node_unlink_action, methods=["POST"]),
         Route("/vault-file/{filepath:path}", endpoint=vault_file_view, methods=["GET"]),
         Route("/capture", endpoint=capture_view, methods=["POST"]),
         Route("/maturity", endpoint=_view_maturity, methods=["GET"]),
@@ -145,6 +133,7 @@ def _get_feature_routes() -> list[Route]:
         Route("/board/skip", endpoint=board_views.board_skip_view, methods=["POST"]),
         Route("/board/reset", endpoint=board_views.board_reset_view, methods=["POST"]),
         Route("/board/refresh", endpoint=board_views.board_refresh_view, methods=["POST", "GET"]),
+        Route("/board/action_guide", endpoint=board_views.board_edit_action_guide_view, methods=["POST"]),
         Route("/triage", endpoint=_view_triage, methods=["GET"]),
         Route("/triage/accept", endpoint=triage_views.triage_accept_view, methods=["POST"]),
         Route("/triage/discard", endpoint=triage_views.triage_discard_view, methods=["POST"]),

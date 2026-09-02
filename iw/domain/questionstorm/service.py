@@ -61,7 +61,7 @@ class QuestionstormService:
         node = Node(
             id=qid, type="question", title=text.strip(), created=now, domain=domain, tags=tags,
             state="held_open", author=auth, last_touched=now, body="",
-            attrs={"form": clean_form, "importance": clean_imp, "move": move, "subject_id": subject_id.upper()},
+            attrs={"form": clean_form, "importance": clean_imp, "move": move, "subject_id": subject_id.upper(), "is_subquestion": True},
             edges=edges,
         )
         self.store.write_node(node, author=auth)

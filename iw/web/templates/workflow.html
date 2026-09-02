@@ -73,12 +73,24 @@
 
         <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">{{ step.title }}</h3>
 
-        {% if step.action_guide %}
         <div style="background-color: rgba(88, 166, 255, 0.08); border-left: 3px solid var(--accent); padding: 0.75rem; border-radius: 4px; margin: 0.75rem 0; font-size: 0.85rem; line-height: 1.4;">
-            <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.25rem; font-size: 0.75rem; letter-spacing: 0.5px;">📋 ACTION GUIDE</div>
-            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: var(--text-main);">{{ step.action_guide }}</pre>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <span style="font-weight: 600; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.5px;">📋 ACTION GUIDE / PROMPT</span>
+                <button type="button" onclick="toggleEditPrompt('{{ step.id }}')" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.7rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">✏️ Edit Prompt</button>
+            </div>
+            <div id="prompt-view-{{ step.id }}">
+                <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: var(--text-main);">{{ step.action_guide or 'No specific action guide defined.' }}</pre>
+            </div>
+            <form id="prompt-edit-{{ step.id }}" action="/board/action_guide" method="POST" style="display: none; margin-top: 0.5rem;">
+                <input type="hidden" name="unit_id" value="{{ step.id }}">
+                <input type="hidden" name="return_url" value="/workflow/{{ workflow.id }}">
+                <textarea name="action_guide" rows="5" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); font-family: inherit; font-size: 0.85rem; border-radius: 4px; padding: 0.5rem; margin-bottom: 0.5rem; resize: vertical;">{{ step.action_guide }}</textarea>
+                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                    <button type="button" onclick="toggleEditPrompt('{{ step.id }}')" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">💾 Save Prompt</button>
+                </div>
+            </form>
         </div>
-        {% endif %}
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
             <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
@@ -139,4 +151,18 @@
     {% endif %}
     {% endfor %}
 </div>
+<script>
+function toggleEditPrompt(unitId) {
+    const viewDiv = document.getElementById('prompt-view-' + unitId);
+    const editForm = document.getElementById('prompt-edit-' + unitId);
+    if (!viewDiv || !editForm) return;
+    if (editForm.style.display === 'none' || editForm.style.display === '') {
+        editForm.style.display = 'block';
+        viewDiv.style.display = 'none';
+    } else {
+        editForm.style.display = 'none';
+        viewDiv.style.display = 'block';
+    }
+}
+</script>
 {% endblock %}

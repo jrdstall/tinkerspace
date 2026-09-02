@@ -14,3 +14,5 @@ ACTLIB-03  The convergent screening template (`convergent-screening@1`) requires
 ACTLIB-04  The trade study template (`trade-study@1`) specifies weighted evaluation criteria, normalized option scoring, a sensitivity pass over the criteria weights, and a definitive recommendation.
 ACTLIB-05  The point design (`point-design@1`) and parts-and-skills survey (`parts-and-skills-survey@1`) templates require costing in parts, hours, schedule, and currency, cross-referencing owned assets (`AST-xxx`).
 ACTLIB-06  Discovery-driven and empirical templates (`assumption-audit@1`, `experiment-design@1`, `prototype-and-measure@1`, `heilmeier-screening@1`) require stating explicit test parameters, measurable metrics, and advance kill criteria.
+ACTLIB-07  The prior-art survey template (`prior-art-survey@1`) and questionstorm template (`questionstorm@1`) define adversarial patent search and Berger inquiry arc instructions.
+

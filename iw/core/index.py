@@ -26,10 +26,11 @@ class InMemoryIndex(IndexProtocol):
     def search(self, text: str) -> list[NodeSummary]:
         """Perform full-text search across node titles, tags, and bodies."""
         q = text.strip().lower()
+        corpus = [n for n in self._nodes if not (n.attrs.get("is_subquestion") is True or (n.type == "question" and bool(n.attrs.get("subject_id"))))]
         if not q:
-            return [self._to_summary(n) for n in self._nodes]
+            return [self._to_summary(n) for n in corpus]
 
-        results = [n for n in self._nodes if self._matches_text(n, q)]
+        results = [n for n in corpus if self._matches_text(n, q)]
         return [self._to_summary(n) for n in results]
 
     def filter_and_search(
@@ -50,6 +51,9 @@ class InMemoryIndex(IndexProtocol):
         """Apply structured filters to a node list."""
         out: list[Node] = []
         for n in nodes:
+            if not filters.include_subquestions:
+                if n.attrs.get("is_subquestion") is True or (n.type == "question" and bool(n.attrs.get("subject_id"))):
+                    continue
             if filters.type and n.type.lower() != filters.type.lower():
                 continue
             if filters.domain and n.domain.lower() != filters.domain.lower():

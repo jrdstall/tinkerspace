@@ -155,3 +155,21 @@ async def board_refresh_view(request: Request) -> Response:
             runtime.refresh_workflow_states(wfl.id, author=author)
 
     return RedirectResponse(url="/board", status_code=303)
+
+
+async def board_edit_action_guide_view(request: Request) -> Response:
+    """Update the action guide / prompt instructions of a unit of work."""
+    store: StoreProtocol = request.app.state.store
+    form_data = await request.form()
+    unit_id = str(form_data.get("unit_id", "")).strip().upper()
+    action_guide = str(form_data.get("action_guide", "")).strip()
+    return_url = str(form_data.get("return_url", "/board")).strip() or "/board"
+
+    unit = store.get_unit(unit_id)
+    if unit:
+        unit.action_guide = action_guide
+        author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+        store.write_unit(unit, author=author)
+
+    return RedirectResponse(url=return_url, status_code=303)
+
