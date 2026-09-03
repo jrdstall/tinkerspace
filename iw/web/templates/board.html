@@ -34,56 +34,69 @@
         {% if ready_units %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for u in ready_units %}
-                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <span class="badge mono">{{ u.id }}</span>
-                        <span class="badge" style="font-size: 0.7rem;">{{ u.activity }}</span>
+                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Top row: ID, Activity, Duration -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge mono" style="font-weight: 700;">{{ u.id }}</span>
+                        <div style="display: flex; gap: 0.35rem; align-items: center;">
+                            <span class="badge" style="font-size: 0.7rem;">{{ u.activity }}</span>
+                            {% if u.estimate.get('my_time') %}
+                            <span class="badge" style="font-size: 0.7rem; color: var(--text-muted);">{{ u.estimate.get('my_time') }}</span>
+                            {% endif %}
+                        </div>
                     </div>
                     
-                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ u.title }}</h3>
+                    <!-- Title -->
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin: 0; line-height: 1.35; color: var(--text-main);">{{ u.title }}</h3>
 
-                    {% if u.subject_ids %}
-                    <div style="margin-bottom: 0.75rem; font-size: 0.8rem; color: var(--text-muted);">
-                        Subjects: 
-                        {% for sub in u.subject_ids %}
-                        <a href="/node/{{ sub }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ sub }}</a>{% if not loop.last %}, {% endif %}
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-
-                    <div style="background-color: rgba(88, 166, 255, 0.08); border-left: 3px solid var(--accent); padding: 0.75rem; border-radius: 4px; margin-bottom: 1rem; font-size: 0.85rem; line-height: 1.4;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                            <span style="font-weight: 600; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.5px;">📋 ACTION GUIDE / PROMPT</span>
-                            <button type="button" onclick="toggleEditPrompt('{{ u.id }}')" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.7rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">✏️ Edit</button>
+                    <!-- Subject & Assignee metadata -->
+                    <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.35rem;">
+                        {% if u.subject_ids %}
+                        <div>
+                            Subject: 
+                            {% for sub in u.subject_ids %}
+                            <a href="/node/{{ sub }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ sub }}</a>{% if not loop.last %}, {% endif %}
+                            {% endfor %}
                         </div>
-                        <div id="prompt-view-{{ u.id }}">
-                            <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: var(--text-main);">{{ u.action_guide or 'No specific action guide defined.' }}</pre>
-                        </div>
-                        <form id="prompt-edit-{{ u.id }}" action="/board/action_guide" method="POST" style="display: none; margin-top: 0.5rem;">
-                            <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <input type="hidden" name="return_url" value="/board">
-                            <textarea name="action_guide" rows="4" style="width: 100%; background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-main); font-family: inherit; font-size: 0.85rem; border-radius: 4px; padding: 0.4rem; margin-bottom: 0.4rem; resize: vertical;">{{ u.action_guide }}</textarea>
-                            <div style="display: flex; gap: 0.4rem; justify-content: flex-end;">
-                                <button type="button" onclick="toggleEditPrompt('{{ u.id }}')" class="btn" style="font-size: 0.75rem; padding: 0.15rem 0.4rem;">Cancel</button>
-                                <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.15rem 0.5rem;">💾 Save</button>
-                            </div>
-                        </form>
+                        {% endif %}
+                        <div>Assignee: <span style="color: var(--text-main);">{{ u.assignee.get('kind', 'agent') }}</span></div>
                     </div>
 
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+                    <!-- Compact Prompt / Action Guide Buttons -->
+                    <div style="display: flex; gap: 0.4rem; align-items: center; padding: 0.35rem 0.5rem; background: rgba(88, 166, 255, 0.05); border: 1px dashed rgba(88, 166, 255, 0.3); border-radius: 4px;">
+                        <button type="button" 
+                                onclick="openPromptModal('{{ u.id }}', '{{ u.title|replace('\'', '\\\'') }}')" 
+                                class="btn" 
+                                style="flex: 1; font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--accent); border-color: rgba(88,166,255,0.4); display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
+                            <span>✏️ View / Edit Prompt</span>
+                        </button>
+                        <button type="button" 
+                                onclick="copyPromptText('{{ u.id }}', this)" 
+                                class="btn" 
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--text-muted);" 
+                                title="Copy prompt to clipboard">
+                            <span>📋 Copy</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden prompt template for modal & copy -->
+                    <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+
+                    <!-- Bottom Controls: Park, Skip, Dispatch -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
                         <div style="display: flex; gap: 0.35rem;">
                             <form action="/board/park" method="POST" style="display: inline;">
                                 <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                <button type="submit" class="btn" style="font-size: 0.75rem;" title="Hold / park unit">⏸️ Park</button>
+                                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.45rem;" title="Hold / park unit">⏸️ Park</button>
                             </form>
                             <form action="/board/skip" method="POST" style="display: inline;">
                                 <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                <button type="submit" class="btn" style="font-size: 0.75rem;" title="Skip unit">⏭️ Skip</button>
+                                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.45rem;" title="Skip unit">⏭️ Skip</button>
                             </form>
                         </div>
                         <form action="/board/dispatch" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;">🚀 Dispatch</button>
+                            <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; font-weight: 600;">🚀 Dispatch</button>
                         </form>
                     </div>
                 </div>
@@ -106,30 +119,57 @@
         {% if dispatched_units %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for u in dispatched_units %}
-                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <span class="badge mono">{{ u.id }}</span>
+                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <!-- Top row: ID, Status Badge -->
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge mono" style="font-weight: 700;">{{ u.id }}</span>
                         <span class="badge badge-green" style="font-size: 0.7rem;">Dispatched</span>
                     </div>
-                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ u.title }}</h3>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">
-                        <div>Assignee: <span style="color: var(--text-main);">{{ u.assignee.get('kind', 'unassigned') }} / {{ u.assignee.get('name', '') }}</span></div>
-                        <div class="mono" style="font-size: 0.75rem; margin-top: 0.25rem;">work/{{ u.id }}/</div>
+
+                    <!-- Title -->
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin: 0; line-height: 1.35; color: var(--text-main);">{{ u.title }}</h3>
+
+                    <!-- Assignee & Folder -->
+                    <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.35rem;">
+                        <div>Assignee: <span style="color: var(--text-main);">{{ u.assignee.get('kind', 'agent') }}</span></div>
+                        <div class="mono" style="font-size: 0.7rem;">work/{{ u.id }}/</div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+
+                    <!-- Compact Prompt Controls -->
+                    <div style="display: flex; gap: 0.4rem; align-items: center; padding: 0.35rem 0.5rem; background: rgba(88, 166, 255, 0.05); border: 1px dashed rgba(88, 166, 255, 0.3); border-radius: 4px;">
+                        <button type="button" 
+                                onclick="openPromptModal('{{ u.id }}', '{{ u.title|replace('\'', '\\\'') }}')" 
+                                class="btn" 
+                                style="flex: 1; font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--accent); border-color: rgba(88,166,255,0.4); display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
+                            <span>✏️ View / Edit Prompt</span>
+                        </button>
+                        <button type="button" 
+                                onclick="copyPromptText('{{ u.id }}', this)" 
+                                class="btn" 
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--text-muted);" 
+                                title="Copy prompt to clipboard">
+                            <span>📋 Copy</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden prompt template for modal & copy -->
+                    <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+
+                    <!-- Bottom Controls: Park, Cancel, Attach Result -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
                         <div style="display: flex; gap: 0.35rem;">
                             <form action="/board/park" method="POST" style="display: inline;">
                                 <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                <button type="submit" class="btn" style="font-size: 0.75rem;">⏸️ Park</button>
+                                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.45rem;" title="Hold / park unit">⏸️ Park</button>
                             </form>
                             <form action="/board/reset" method="POST" style="display: inline;">
                                 <input type="hidden" name="unit_id" value="{{ u.id }}">
-                                <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel</button>
+                                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.45rem;" title="Cancel dispatch">↺ Cancel</button>
                             </form>
                         </div>
                         <form action="/board/collect" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;" title="Parse deliverable and ingest artifacts">📥 Attach Result</button>
+                            <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; font-weight: 600;" title="Parse deliverable and ingest artifacts">📥 Collect / Complete</button>
                         </form>
                     </div>
                 </div>
@@ -152,21 +192,42 @@
         {% if returned_units %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for u in returned_units %}
-                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
-                        <span class="badge mono">{{ u.id }}</span>
+                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span class="badge mono" style="font-weight: 700;">{{ u.id }}</span>
                         <span class="badge" style="color: var(--orange); border-color: rgba(210,153,34,0.3); font-size: 0.7rem;">Returned</span>
                     </div>
-                    <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ u.title }}</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem;">Outputs delivered to <span class="mono">work/{{ u.id }}/</span>.</p>
-                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin: 0; line-height: 1.35; color: var(--text-main);">{{ u.title }}</h3>
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0;">Outputs delivered to <span class="mono">work/{{ u.id }}/</span></p>
+                    
+                    <!-- Compact Prompt Controls -->
+                    <div style="display: flex; gap: 0.4rem; align-items: center; padding: 0.35rem 0.5rem; background: rgba(88, 166, 255, 0.05); border: 1px dashed rgba(88, 166, 255, 0.3); border-radius: 4px;">
+                        <button type="button" 
+                                onclick="openPromptModal('{{ u.id }}', '{{ u.title|replace('\'', '\\\'') }}')" 
+                                class="btn" 
+                                style="flex: 1; font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--accent); border-color: rgba(88,166,255,0.4); display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
+                            <span>✏️ View / Edit Prompt</span>
+                        </button>
+                        <button type="button" 
+                                onclick="copyPromptText('{{ u.id }}', this)" 
+                                class="btn" 
+                                style="font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--text-muted);" 
+                                title="Copy prompt to clipboard">
+                            <span>📋 Copy</span>
+                        </button>
+                    </div>
+
+                    <!-- Hidden prompt template for modal & copy -->
+                    <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
                         <form action="/board/reset" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Rework</button>
+                            <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.45rem;">↺ Rework</button>
                         </form>
                         <form action="/board/collect" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;" title="Accept and ingest results">📥 Attach Result</button>
+                            <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.75rem; font-weight: 600;" title="Accept and ingest results">📥 Collect / Complete</button>
                         </form>
                     </div>
                 </div>
@@ -189,16 +250,16 @@
         {% if parked_units %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for u in parked_units %}
-                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+                <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.9rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
                         <span class="badge mono">{{ u.id }}</span>
                         <span class="badge" style="font-size: 0.7rem;">Parked</span>
                     </div>
-                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem;">{{ u.title }}</h3>
-                    <div style="display: flex; justify-content: flex-end; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
+                    <h3 style="font-size: 0.95rem; font-weight: 600; margin: 0; line-height: 1.35;">{{ u.title }}</h3>
+                    <div style="display: flex; justify-content: flex-end; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
                         <form action="/board/reset" method="POST" style="display: inline;">
                             <input type="hidden" name="unit_id" value="{{ u.id }}">
-                            <button type="submit" class="btn" style="font-size: 0.75rem;">▶️ Resume (Ready)</button>
+                            <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">▶️ Resume (Ready)</button>
                         </form>
                     </div>
                 </div>
@@ -210,18 +271,131 @@
     </div>
 
 </div>
+
+<!-- Reusable Fullscreen Prompt Overlay Modal -->
+<div id="prompt-modal-backdrop" 
+     onclick="handleModalBackdropClick(event)"
+     style="display: none; position: fixed; inset: 0; background: rgba(10, 14, 20, 0.82); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1.5rem;">
+    
+    <div class="card" 
+         id="prompt-modal-container"
+         style="width: 100%; max-width: 880px; max-height: 92vh; display: flex; flex-direction: column; background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); overflow: hidden; padding: 0;">
+        
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: rgba(22, 27, 34, 0.95);">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px;">ACTION GUIDE & PROMPT</span>
+                    <span id="modal-unit-badge" class="badge mono" style="font-size: 0.8rem; font-weight: 700;">UOW-A01</span>
+                </div>
+                <h2 id="modal-unit-title" style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin: 0;">
+                    Prior-Art & Patent Landscape Survey
+                </h2>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" id="modal-copy-btn" onclick="copyModalPrompt(this)" class="btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; display: flex; align-items: center; gap: 0.3rem;">
+                    <span>📋 Copy Prompt</span>
+                </button>
+                <button type="button" onclick="closePromptModal()" class="btn" style="padding: 0.3rem 0.6rem; font-size: 1.1rem; line-height: 1; color: var(--text-muted);" title="Close (Esc)">&times;</button>
+            </div>
+        </div>
+
+        <!-- Modal Form & Textarea Body -->
+        <form id="modal-prompt-form" action="/board/action_guide" method="POST" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0;">
+            <input type="hidden" id="modal-unit-id-input" name="unit_id" value="">
+            <input type="hidden" name="return_url" value="/board">
+
+            <div style="padding: 1rem 1.25rem; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <textarea id="modal-prompt-textarea" 
+                          name="action_guide" 
+                          rows="18" 
+                          required
+                          style="width: 100%; height: 56vh; background: #0d1117; color: #e6edf3; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.875rem; line-height: 1.5; border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-top: 1px solid var(--border-color); background: rgba(22, 27, 34, 0.95);">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">
+                    💡 Press <kbd style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.1rem 0.3rem; border-radius: 3px;">Esc</kbd> to exit, <kbd style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.1rem 0.3rem; border-radius: 3px;">Ctrl+Enter</kbd> to save
+                </span>
+                <div style="display: flex; gap: 0.6rem; align-items: center;">
+                    <button type="button" onclick="closePromptModal()" class="btn" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 1.25rem; font-weight: 600;">💾 Save Prompt</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-function toggleEditPrompt(unitId) {
-    const viewDiv = document.getElementById('prompt-view-' + unitId);
-    const editForm = document.getElementById('prompt-edit-' + unitId);
-    if (!viewDiv || !editForm) return;
-    if (editForm.style.display === 'none' || editForm.style.display === '') {
-        editForm.style.display = 'block';
-        viewDiv.style.display = 'none';
-    } else {
-        editForm.style.display = 'none';
-        viewDiv.style.display = 'block';
+function openPromptModal(unitId, unitTitle) {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    const badge = document.getElementById('modal-unit-badge');
+    const title = document.getElementById('modal-unit-title');
+    const input = document.getElementById('modal-unit-id-input');
+    const textarea = document.getElementById('modal-prompt-textarea');
+    const template = document.getElementById('prompt-data-' + unitId);
+
+    if (!backdrop || !textarea) return;
+
+    badge.innerText = unitId;
+    title.innerText = unitTitle || unitId;
+    input.value = unitId;
+    textarea.value = template ? template.innerHTML.trim() : '';
+
+    backdrop.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    textarea.focus();
+}
+
+function closePromptModal() {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    if (backdrop) {
+        backdrop.style.display = 'none';
+        document.body.style.overflow = '';
     }
 }
+
+function handleModalBackdropClick(event) {
+    if (event.target.id === 'prompt-modal-backdrop') {
+        closePromptModal();
+    }
+}
+
+function copyModalPrompt(btn) {
+    const textarea = document.getElementById('modal-prompt-textarea');
+    if (textarea) {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>✓ Copied!</span>';
+            setTimeout(() => { btn.innerHTML = original; }, 1800);
+        });
+    }
+}
+
+function copyPromptText(unitId, btn) {
+    const template = document.getElementById('prompt-data-' + unitId);
+    if (template) {
+        navigator.clipboard.writeText(template.innerHTML.trim()).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>✓ Copied!</span>';
+            setTimeout(() => { btn.innerHTML = original; }, 1800);
+        });
+    }
+}
+
+// Global hotkeys: Esc to close modal, Ctrl+Enter to submit
+document.addEventListener('keydown', function(e) {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    if (!backdrop || backdrop.style.display !== 'flex') return;
+
+    if (e.key === 'Escape') {
+        closePromptModal();
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('modal-prompt-form')?.submit();
+    }
+});
 </script>
 {% endblock %}

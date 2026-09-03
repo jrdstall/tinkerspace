@@ -31,37 +31,36 @@
     {% endif %}
 </div>
 
-<!-- Visual DAG Workflow Pipeline -->
-<h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 1rem;">Workflow Execution Graph (DAG)</h2>
-
-<div style="display: flex; flex-direction: column; gap: 1.25rem;">
+<div style="display: flex; flex-direction: column; gap: 1.5rem; max-width: 800px; margin: 0 auto;">
     {% for step in steps %}
-    <div class="card step-card" style="
-        margin-bottom: 0;
-        {% if step.state == 'ready' %}border-left: 4px solid var(--green);
-        {% elif step.state == 'dispatched' %}border-left: 4px solid var(--accent);
-        {% elif step.state == 'returned' %}border-left: 4px solid var(--orange);
-        {% elif step.state == 'accepted' %}border-left: 4px solid #8b949e; opacity: 0.85;
-        {% elif step.state == 'blocked' %}border-left: 4px solid #484f58; opacity: 0.6; border-style: dashed;
-        {% else %}border-left: 4px solid var(--border-color);{% endif %}
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-            <div>
+    <div class="card" style="padding: 1.25rem; border-left: 4px solid {% if step.state == 'ready' %}var(--green){% elif step.state == 'dispatched' %}var(--accent){% elif step.state == 'returned' %}var(--orange){% elif step.state == 'accepted' %}var(--border-color){% else %}var(--text-muted){% endif %};">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem;">
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <span class="badge mono">{{ step.id }}</span>
-                {% if step.state == 'ready' %}<span class="badge badge-green">Ready</span>
-                {% elif step.state == 'dispatched' %}<span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.3);">In Progress</span>
-                {% elif step.state == 'returned' %}<span class="badge" style="color: var(--orange); border-color: rgba(210,153,34,0.3);">Returned</span>
-                {% elif step.state == 'accepted' %}<span class="badge" style="color: #8b949e;">Accepted</span>
-                {% elif step.state == 'blocked' %}<span class="badge" style="color: #8b949e;">Blocked</span>
-                {% elif step.state == 'skipped' %}<span class="badge">Skipped</span>
-                {% else %}<span class="badge">{{ step.state }}</span>{% endif %}
-                <span class="badge" style="font-size: 0.7rem;">{{ step.activity }}</span>
+                <span class="badge" style="font-size: 0.75rem;">{{ step.activity }}</span>
             </div>
             
-            <!-- Step Dependency Flow Indicators -->
-            <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
+            <div>
+                {% if step.state == 'ready' %}
+                <span class="badge badge-green">Ready</span>
+                {% elif step.state == 'dispatched' %}
+                <span class="badge" style="background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3);">In Progress</span>
+                {% elif step.state == 'returned' %}
+                <span class="badge" style="color: var(--orange); border-color: rgba(210,153,34,0.3);">Returned</span>
+                {% elif step.state == 'accepted' %}
+                <span class="badge" style="color: var(--text-muted);">Accepted</span>
+                {% elif step.state == 'parked' %}
+                <span class="badge" style="color: var(--text-muted);">Parked</span>
+                {% else %}
+                <span class="badge" style="color: var(--text-muted); opacity: 0.6;">Blocked</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">
+            <div>
                 {% if step.predecessors %}
-                <span>Depends on: <strong>{{ step.predecessors|join(', ') }}</strong></span>
+                Depends on: <strong>{{ step.predecessors|join(', ') }}</strong>
                 {% else %}
                 <span style="color: var(--green);">Root Step</span>
                 {% endif %}
@@ -73,24 +72,26 @@
 
         <h3 style="font-size: 1.05rem; font-weight: 600; margin-bottom: 0.5rem;">{{ step.title }}</h3>
 
-        <div style="background-color: rgba(88, 166, 255, 0.08); border-left: 3px solid var(--accent); padding: 0.75rem; border-radius: 4px; margin: 0.75rem 0; font-size: 0.85rem; line-height: 1.4;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                <span style="font-weight: 600; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.5px;">📋 ACTION GUIDE / PROMPT</span>
-                <button type="button" onclick="toggleEditPrompt('{{ step.id }}')" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.7rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">✏️ Edit Prompt</button>
-            </div>
-            <div id="prompt-view-{{ step.id }}">
-                <pre style="white-space: pre-wrap; font-family: inherit; margin: 0; color: var(--text-main);">{{ step.action_guide or 'No specific action guide defined.' }}</pre>
-            </div>
-            <form id="prompt-edit-{{ step.id }}" action="/board/action_guide" method="POST" style="display: none; margin-top: 0.5rem;">
-                <input type="hidden" name="unit_id" value="{{ step.id }}">
-                <input type="hidden" name="return_url" value="/workflow/{{ workflow.id }}">
-                <textarea name="action_guide" rows="5" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); color: var(--text-main); font-family: inherit; font-size: 0.85rem; border-radius: 4px; padding: 0.5rem; margin-bottom: 0.5rem; resize: vertical;">{{ step.action_guide }}</textarea>
-                <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                    <button type="button" onclick="toggleEditPrompt('{{ step.id }}')" class="btn" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">Cancel</button>
-                    <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">💾 Save Prompt</button>
-                </div>
-            </form>
+        <!-- Compact Prompt Controls Bar -->
+        <div style="display: flex; gap: 0.4rem; align-items: center; padding: 0.4rem 0.6rem; background: rgba(88, 166, 255, 0.05); border: 1px dashed rgba(88, 166, 255, 0.3); border-radius: 4px; margin: 0.5rem 0;">
+            <span style="font-weight: 600; color: var(--accent); font-size: 0.75rem; letter-spacing: 0.5px; margin-right: 0.4rem;">📋 ACTION GUIDE</span>
+            <button type="button" 
+                    onclick="openPromptModal('{{ step.id }}', '{{ step.title|replace('\'', '\\\'') }}')" 
+                    class="btn" 
+                    style="flex: 1; font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--accent); border-color: rgba(88,166,255,0.4); display: flex; justify-content: center; align-items: center; gap: 0.3rem;">
+                <span>✏️ View / Edit Prompt</span>
+            </button>
+            <button type="button" 
+                    onclick="copyPromptText('{{ step.id }}', this)" 
+                    class="btn" 
+                    style="font-size: 0.75rem; padding: 0.25rem 0.5rem; color: var(--text-muted);" 
+                    title="Copy prompt to clipboard">
+                <span>📋 Copy</span>
+            </button>
         </div>
+
+        <!-- Hidden prompt template -->
+        <template id="prompt-data-{{ step.id }}">{{ step.action_guide or 'No specific action guide defined.' }}</template>
 
         <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color);">
             <div class="mono" style="font-size: 0.75rem; color: var(--text-muted);">
@@ -112,6 +113,10 @@
                     <button type="submit" class="btn btn-primary" style="font-size: 0.8rem;">🚀 Dispatch</button>
                 </form>
                 {% elif step.state == 'dispatched' %}
+                <form action="/board/park" method="POST" style="display: inline;">
+                    <input type="hidden" name="unit_id" value="{{ step.id }}">
+                    <button type="submit" class="btn" style="font-size: 0.75rem;">⏸️ Park</button>
+                </form>
                 <form action="/board/reset" method="POST" style="display: inline;">
                     <input type="hidden" name="unit_id" value="{{ step.id }}">
                     <button type="submit" class="btn" style="font-size: 0.75rem;">↺ Cancel</button>
@@ -151,18 +156,130 @@
     {% endif %}
     {% endfor %}
 </div>
+
+<!-- Reusable Fullscreen Prompt Overlay Modal -->
+<div id="prompt-modal-backdrop" 
+     onclick="handleModalBackdropClick(event)"
+     style="display: none; position: fixed; inset: 0; background: rgba(10, 14, 20, 0.82); backdrop-filter: blur(4px); z-index: 9999; justify-content: center; align-items: center; padding: 1.5rem;">
+    
+    <div class="card" 
+         id="prompt-modal-container"
+         style="width: 100%; max-width: 880px; max-height: 92vh; display: flex; flex-direction: column; background: #161b22; border: 1px solid var(--border-color); border-radius: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); overflow: hidden; padding: 0;">
+        
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); background: rgba(22, 27, 34, 0.95);">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                    <span style="font-size: 0.75rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px;">ACTION GUIDE & PROMPT</span>
+                    <span id="modal-unit-badge" class="badge mono" style="font-size: 0.8rem; font-weight: 700;">UOW-A01</span>
+                </div>
+                <h2 id="modal-unit-title" style="font-size: 1.05rem; font-weight: 600; color: var(--text-main); margin: 0;">
+                    Step Prompt
+                </h2>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                <button type="button" id="modal-copy-btn" onclick="copyModalPrompt(this)" class="btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; display: flex; align-items: center; gap: 0.3rem;">
+                    <span>📋 Copy Prompt</span>
+                </button>
+                <button type="button" onclick="closePromptModal()" class="btn" style="padding: 0.3rem 0.6rem; font-size: 1.1rem; line-height: 1; color: var(--text-muted);" title="Close (Esc)">&times;</button>
+            </div>
+        </div>
+
+        <!-- Modal Form & Textarea Body -->
+        <form id="modal-prompt-form" action="/board/action_guide" method="POST" style="display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 0;">
+            <input type="hidden" id="modal-unit-id-input" name="unit_id" value="">
+            <input type="hidden" name="return_url" value="/workflow/{{ workflow.id }}">
+
+            <div style="padding: 1rem 1.25rem; flex: 1; display: flex; flex-direction: column; min-height: 0;">
+                <textarea id="modal-prompt-textarea" 
+                          name="action_guide" 
+                          rows="18" 
+                          required
+                          style="width: 100%; height: 56vh; background: #0d1117; color: #e6edf3; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 0.875rem; line-height: 1.5; border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem; resize: vertical; box-sizing: border-box;"></textarea>
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-top: 1px solid var(--border-color); background: rgba(22, 27, 34, 0.95);">
+                <span style="font-size: 0.75rem; color: var(--text-muted);">
+                    💡 Press <kbd style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.1rem 0.3rem; border-radius: 3px;">Esc</kbd> to exit, <kbd style="background: var(--bg-color); border: 1px solid var(--border-color); padding: 0.1rem 0.3rem; border-radius: 3px;">Ctrl+Enter</kbd> to save
+                </span>
+                <div style="display: flex; gap: 0.6rem; align-items: center;">
+                    <button type="button" onclick="closePromptModal()" class="btn" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.4rem 1.25rem; font-weight: 600;">💾 Save Prompt</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-function toggleEditPrompt(unitId) {
-    const viewDiv = document.getElementById('prompt-view-' + unitId);
-    const editForm = document.getElementById('prompt-edit-' + unitId);
-    if (!viewDiv || !editForm) return;
-    if (editForm.style.display === 'none' || editForm.style.display === '') {
-        editForm.style.display = 'block';
-        viewDiv.style.display = 'none';
-    } else {
-        editForm.style.display = 'none';
-        viewDiv.style.display = 'block';
+function openPromptModal(unitId, unitTitle) {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    const badge = document.getElementById('modal-unit-badge');
+    const title = document.getElementById('modal-unit-title');
+    const input = document.getElementById('modal-unit-id-input');
+    const textarea = document.getElementById('modal-prompt-textarea');
+    const template = document.getElementById('prompt-data-' + unitId);
+
+    if (!backdrop || !textarea) return;
+
+    badge.innerText = unitId;
+    title.innerText = unitTitle || unitId;
+    input.value = unitId;
+    textarea.value = template ? template.innerHTML.trim() : '';
+
+    backdrop.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+    textarea.focus();
+}
+
+function closePromptModal() {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    if (backdrop) {
+        backdrop.style.display = 'none';
+        document.body.style.overflow = '';
     }
 }
+
+function handleModalBackdropClick(event) {
+    if (event.target.id === 'prompt-modal-backdrop') {
+        closePromptModal();
+    }
+}
+
+function copyModalPrompt(btn) {
+    const textarea = document.getElementById('modal-prompt-textarea');
+    if (textarea) {
+        navigator.clipboard.writeText(textarea.value).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>✓ Copied!</span>';
+            setTimeout(() => { btn.innerHTML = original; }, 1800);
+        });
+    }
+}
+
+function copyPromptText(unitId, btn) {
+    const template = document.getElementById('prompt-data-' + unitId);
+    if (template) {
+        navigator.clipboard.writeText(template.innerHTML.trim()).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>✓ Copied!</span>';
+            setTimeout(() => { btn.innerHTML = original; }, 1800);
+        });
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    const backdrop = document.getElementById('prompt-modal-backdrop');
+    if (!backdrop || backdrop.style.display !== 'flex') return;
+
+    if (e.key === 'Escape') {
+        closePromptModal();
+    } else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('modal-prompt-form')?.submit();
+    }
+});
 </script>
 {% endblock %}
