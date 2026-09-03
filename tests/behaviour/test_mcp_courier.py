@@ -138,3 +138,18 @@ def test_mcp_05_read_only_query_tools_do_not_modify_state(tmp_path: Path):
 
     # Verify zero event log entries added
     assert len(store.event_log.read_events()) == initial_events_count
+
+
+async def test_mcp_07_all_tools_have_non_empty_descriptions(tmp_path: Path):
+    """MCP-07: All tools exposed by create_mcp_server provide descriptive documentation."""
+    from iw.mcp.server import create_mcp_server
+
+    store = _setup_store_with_context(tmp_path)
+    server = create_mcp_server(store)
+    tools = await server.list_tools()
+
+    assert len(tools) >= 5
+    for t in tools:
+        assert t.description is not None
+        assert len(t.description.strip()) > 10, f"Tool '{t.name}' has empty or too short description"
+
