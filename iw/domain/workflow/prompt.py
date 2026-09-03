@@ -31,6 +31,8 @@ def _render_header_and_rules(unit_id: str, unit_title: str) -> list[str]:
         "- **Adversarial & Objective**: Do not act as a cheerleader. Stress-test assumptions, search for genuine blockers, and identify prior art or failure modes.",
         "- **Fact-Based & Verifiable**: Cite real patent numbers (USPTO/EPO/WIPO), commercial product models, component datasheets, or academic papers. Never fabricate citations.",
         "- **Cheap & Decisive**: Aim for high information gain per unit of effort.",
+        "- **Interactive Partnership & Clarifications**: Ask clarifying questions early or whenever ambiguity or trade-offs arise so Jared can steer the investigation.",
+        "- **Human Confirmation Gate (No Autonomous Mutation)**: Present your draft findings to Jared for review first. Only call mutating tools after Jared explicitly approves.",
         "",
     ]
 
@@ -91,22 +93,25 @@ def _render_deliverable_schema(unit_id: str, unit_title: str) -> list[str]:
 
 
 def _render_submission_instructions(unit_id: str) -> list[str]:
-    """Render explicit submission instructions for both MCP agents and interactive chat."""
+    """Render explicit submission instructions with human confirmation gate."""
     u_id = unit_id.upper()
     return [
-        "## 6. How to Submit Your Results",
+        "## 6. Submission Protocol & Human Confirmation Gate",
         "",
-        "### A. If You Have MCP Tool Access (Claude Desktop / Antigravity IDE):",
-        f"Once your analysis is complete, submit your work by calling the `submit_result` MCP tool:",
-        f"- `unit_id`: \"{u_id}\"",
-        "- `deliverable`: The full Markdown report string (including the metadata comment header block at the top).",
-        "- `model_name`: Your declared model identifier (e.g. 'claude-3-5-sonnet', 'claude-3-7-sonnet').",
-        "- `artifacts`: (Optional) list of companion files as `[{\"filename\": \"data.csv\", \"content\": \"...\"}]`.",
+        "### Step 1: Clarify and Present Draft for Review",
+        "- If you have questions or discover unexpected trade-offs, ask Jared in chat before proceeding.",
+        "- Once your analysis is ready, present the complete draft Markdown report (including the metadata header comment) directly in chat.",
+        "- Summarize your key discoveries, trade-offs, and proposed scores, and ask for Jared's review and confirmation.",
         "",
-        f"Calling `submit_result` automatically saves `deliverable.md` into `vault/work/{u_id}/` and moves the unit to `returned` state for Jared's review.",
+        "### Step 2: Submit Results (Requires Jared's Approval)",
+        "- **MCP Agent (Claude Desktop / Antigravity)**: Once Jared explicitly confirms ('looks good', 'approved', 'submit'), call the `submit_result` MCP tool:",
+        f'  - `unit_id`: "{u_id}"',
+        '  - `deliverable`: The full approved Markdown report string (with the metadata header comment).',
+        '  - `model_name`: Your declared model identifier (e.g. "claude-3-5-sonnet").',
+        '  - `artifacts`: (Optional) companion files as `[{"filename": "data.csv", "content": "..."}]`.',
+        f"  Calling `submit_result` will write `deliverable.md` into `vault/work/{u_id}/` and advance the task to `returned`.",
         "",
-        "### B. If You Are in an Interactive Chat (Web Claude / ChatGPT):",
-        f"Output the complete Markdown report (with the metadata header block) in your chat response. Jared will save it to `vault/work/{u_id}/deliverable.md` and click [Collect / Complete] on the Work Board.",
+        "- **Interactive Chat Session**: After Jared approves, he will copy the approved report into `vault/work/{u_id}/deliverable.md` and click [Collect / Complete] on the Work Board.",
     ]
 
 
