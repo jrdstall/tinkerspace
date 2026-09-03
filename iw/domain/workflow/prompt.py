@@ -53,13 +53,8 @@ def _render_subject_context(subject_node: Node | None) -> list[str]:
     ]
 
 
-def _render_instructions_and_schema(
-    unit_id: str,
-    unit_title: str,
-    task_instructions: str,
-    custom_notes: str | None,
-) -> list[str]:
-    """Render activity instructions, custom focus, and deliverable format schema."""
+def _render_instructions(task_instructions: str, custom_notes: str | None) -> list[str]:
+    """Render activity instructions and optional custom focus notes."""
     lines = [
         "## 3. Specific Task Instructions",
         task_instructions.strip() if task_instructions else "Execute the assigned research and analysis.",
@@ -67,11 +62,15 @@ def _render_instructions_and_schema(
     ]
     if custom_notes and custom_notes.strip() and custom_notes.strip() != task_instructions.strip():
         lines.extend(["## 4. Custom Focus & Constraints", custom_notes.strip(), ""])
+    return lines
 
+
+def _render_deliverable_schema(unit_id: str, unit_title: str) -> list[str]:
+    """Render required deliverable format and YAML/comment metadata header block."""
     header_template = build_deliverable_header_template(unit_id)
-    lines.extend([
+    return [
         "## 5. Required Deliverable Format & Schema",
-        "Author your final report in Markdown. You MUST include the following metadata comment header block at the top so Tinkerspace can automatically evaluate findings and advance concept maturity scores:",
+        "Author your final report in Markdown. You MUST include the following metadata comment header block at the very top of your deliverable report so Tinkerspace can automatically evaluate findings and advance concept maturity scores:",
         "",
         "```markdown",
         header_template,
@@ -87,8 +86,28 @@ def _render_instructions_and_schema(
         "## Recommendations & Next Steps",
         "...",
         "```",
-    ])
-    return lines
+        "",
+    ]
+
+
+def _render_submission_instructions(unit_id: str) -> list[str]:
+    """Render explicit submission instructions for both MCP agents and interactive chat."""
+    u_id = unit_id.upper()
+    return [
+        "## 6. How to Submit Your Results",
+        "",
+        "### A. If You Have MCP Tool Access (Claude Desktop / Antigravity IDE):",
+        f"Once your analysis is complete, submit your work by calling the `submit_result` MCP tool:",
+        f"- `unit_id`: \"{u_id}\"",
+        "- `deliverable`: The full Markdown report string (including the metadata comment header block at the top).",
+        "- `model_name`: Your declared model identifier (e.g. 'claude-3-5-sonnet', 'claude-3-7-sonnet').",
+        "- `artifacts`: (Optional) list of companion files as `[{\"filename\": \"data.csv\", \"content\": \"...\"}]`.",
+        "",
+        f"Calling `submit_result` automatically saves `deliverable.md` into `vault/work/{u_id}/` and moves the unit to `returned` state for Jared's review.",
+        "",
+        "### B. If You Are in an Interactive Chat (Web Claude / ChatGPT):",
+        f"Output the complete Markdown report (with the metadata header block) in your chat response. Jared will save it to `vault/work/{u_id}/deliverable.md` and click [Collect / Complete] on the Work Board.",
+    ]
 
 
 def compose_full_prompt(
@@ -104,5 +123,7 @@ def compose_full_prompt(
 
     lines = _render_header_and_rules(unit_id, unit_title)
     lines.extend(_render_subject_context(subject_node))
-    lines.extend(_render_instructions_and_schema(unit_id, unit_title, task_instructions, custom_notes))
+    lines.extend(_render_instructions(task_instructions, custom_notes))
+    lines.extend(_render_deliverable_schema(unit_id, unit_title))
+    lines.extend(_render_submission_instructions(unit_id))
     return "\n".join(lines)
