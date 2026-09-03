@@ -20,6 +20,22 @@ def validate_safe_filename(filename: str) -> str:
     return clean
 
 
+from iw.domain.workflow.prompt import compose_full_prompt
+
+
+def _get_subject_context(store: StoreProtocol, subject_ids: list[str]) -> tuple[list[dict[str, Any]], Node | None]:
+    """Retrieve structured dictionary and primary node for subject IDs."""
+    data: list[dict[str, Any]] = []
+    primary: Node | None = None
+    for sub_id in subject_ids:
+        node = store.get_node(sub_id)
+        if node:
+            if primary is None:
+                primary = node
+            data.append({"id": node.id, "type": node.type, "title": node.title, "body": node.body, "attrs": node.attrs})
+    return data, primary
+
+
 def read_unit_tool(store: StoreProtocol, unit_id: str) -> dict[str, Any]:
     """Fetch unit of work record, Action Guide, and subject node context for an agent (MCP-01)."""
     clean_id = unit_id.strip().upper()
@@ -35,20 +51,21 @@ def read_unit_tool(store: StoreProtocol, unit_id: str) -> dict[str, Any]:
         else []
     )
 
-    subject_data: list[dict[str, Any]] = []
-    for sub_id in unit.subject_ids:
-        node = store.get_node(sub_id)
-        if node:
-            subject_data.append(
-                {"id": node.id, "type": node.type, "title": node.title, "body": node.body, "attrs": node.attrs}
-            )
+    subject_data, primary_subject = _get_subject_context(store, unit.subject_ids)
+    full_prompt = compose_full_prompt(
+        unit_id=unit.id,
+        unit_title=unit.title,
+        task_instructions=unit.action_guide,
+        subject_node=primary_subject,
+    )
 
     return {
         "id": unit.id,
         "title": unit.title,
         "activity": unit.activity,
         "state": unit.state.value,
-        "action_guide": unit.action_guide,
+        "action_guide": full_prompt,
+        "prompt": full_prompt,
         "subject_nodes": subject_data,
         "input_files": input_files,
     }

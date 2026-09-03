@@ -103,28 +103,29 @@ class PlannerService:
         return MaturationPlan(subject_id=subject_id, current_cml=1, target_cml=target_cml, current_scores={}, steps=reindexed, rationale=rationale)
 
     def _resolve_guide(self, activity_id: str, custom_reason: str) -> str:
-        if custom_reason and custom_reason != "Custom human-authored step" and not custom_reason.startswith("Advances "):
-            return custom_reason
+        template_instr = ""
         if self.templates_dir.exists():
             for p in self.templates_dir.glob("*.yaml"):
                 try:
-                    with open(p, "r", encoding="utf-8") as f:
-                        data = yaml.safe_load(f)
+                    data = yaml.safe_load(p.read_text(encoding="utf-8"))
                     if isinstance(data, dict) and data.get("id") == activity_id:
-                        instr = data.get("prompt_instructions", "").strip()
-                        if instr:
-                            return f"{custom_reason}\n\n{instr}" if custom_reason else instr
+                        template_instr = str(data.get("prompt_instructions", "")).strip()
+                        break
                 except Exception:
                     continue
-        return custom_reason
+
+        is_boilerplate = (
+            not custom_reason or custom_reason == "Custom human-authored step"
+            or custom_reason.startswith("Advances ")
+        )
+        if is_boilerplate:
+            return template_instr or custom_reason
+        return f"Custom Focus: {custom_reason}\n\n---\n\nTemplate Guidance:\n{template_instr}" if template_instr else custom_reason
 
     def _allocate_ids(self, step_count: int) -> tuple[str, list[str]]:
         existing_wfls = scan_vault_workflows(self.vault_dir)
         wfl_id = allocate_next_id("WFL", [w.id for w in existing_wfls])
-        existing_units = scan_vault_units(self.vault_dir)
-        existing_uow_ids = [u.id for u in existing_units]
-        uow_ids = [allocate_next_id("UOW", existing_uow_ids + [f"UOW-TEMP-{i}"]) for i in range(step_count)]
-        # Re-allocate cleanly sequentially
+        existing_uow_ids = [u.id for u in scan_vault_units(self.vault_dir)]
         allocated: list[str] = []
         for _ in range(step_count):
             uid = allocate_next_id("UOW", existing_uow_ids + allocated)
