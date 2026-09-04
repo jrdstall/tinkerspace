@@ -58,6 +58,10 @@ class StoreProtocol(Protocol):
         """Remove a processed or discarded inbox item from disk."""
         ...
 
+    def delete_node(self, node_id: str, author: Author | None = None) -> bool:
+        """Permanently delete a node file from the vault and log an event."""
+        ...
+
     def list_dropped_files(self) -> list[Path]:
         """Scan and return all media or document files in the drop directory."""
         ...

@@ -24,3 +24,7 @@ class TriageProtocol(Protocol):
         """Delete an inbox item without converting."""
         ...
 
+    def return_to_inbox(self, node_id: str, author: Author) -> InboxItem | None:
+        """Undo triage: push node body/text back to inbox and delete the node."""
+        ...
+

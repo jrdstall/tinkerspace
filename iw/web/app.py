@@ -101,6 +101,7 @@ def _get_core_routes() -> list[Route]:
         Route("/node/{node_id}", endpoint=_view_node, methods=["GET"]),
         Route("/node/{node_id}/link", endpoint=node_views.node_link_action, methods=["POST"]),
         Route("/node/{node_id}/unlink", endpoint=node_views.node_unlink_action, methods=["POST"]),
+        Route("/node/{node_id}/return_to_triage", endpoint=triage_views.node_return_to_triage_view, methods=["POST"]),
         Route("/vault-file/{filepath:path}", endpoint=vault_file_view, methods=["GET"]),
         Route("/capture", endpoint=capture_view, methods=["POST"]),
         Route("/maturity", endpoint=_view_maturity, methods=["GET"]),

@@ -74,3 +74,13 @@ class TriageService(TriageProtocol):
     def discard_item(self, item_id: str) -> bool:
         """Delete an inbox item without converting."""
         return self.store.delete_inbox_item(item_id)
+
+    def return_to_inbox(self, node_id: str, author: Author) -> InboxItem | None:
+        """Undo triage: push node body/text back to inbox and delete the node."""
+        node = self.store.get_node(node_id)
+        if not node:
+            return None
+        raw_text = node.body.strip() if node.body and node.body.strip() else node.title
+        item = self.store.append_inbox(raw_text=raw_text, inlet="triage-undo")
+        self.store.delete_node(node_id, author=author)
+        return item

@@ -32,6 +32,11 @@
                 🧭 Question Graph {% if question_count %}<span class="badge" style="margin-left: 0.25rem; font-size: 0.7rem;">{{ question_count }}</span>{% endif %}
             </a>
             <button class="btn" style="font-size: 0.75rem;" onclick="navigator.clipboard.writeText('{{ node.id }}')">Copy ID</button>
+            <form action="/node/{{ node.id }}/return_to_triage" method="POST" style="display: inline;" onsubmit="return confirm('Return this node to the Inbox for re-triage? This will remove {{ node.id }} and place its text back into the triage inbox.');">
+                <button type="submit" class="btn" style="font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);" title="Remove node and send text back to Inbox for re-triage">
+                    ↩️ Send Back to Triage
+                </button>
+            </form>
         </div>
     </div>
 

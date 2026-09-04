@@ -13,6 +13,21 @@
     {% endif %}
 </div>
 
+{% if request.query_params.get('created') %}
+<div class="card" style="background: rgba(46, 160, 67, 0.15); border: 1px solid var(--green); padding: 0.75rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <span style="color: var(--green); font-weight: 700;">✓ Triaged {{ request.query_params.get('created') }}</span>
+        <span class="badge" style="margin-left: 0.5rem; font-size: 0.75rem;">{{ request.query_params.get('type') }}</span>
+        <span style="color: var(--text-muted); margin-left: 0.75rem; font-size: 0.85rem;">Showing next item from inbox.</span>
+    </div>
+    <form action="/node/{{ request.query_params.get('created') }}/return_to_triage" method="POST" style="margin: 0;">
+        <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: #f85149; border-color: rgba(248,81,73,0.4);" title="Undo and put this item back into triage inbox">
+            ↩️ Undo / Re-triage {{ request.query_params.get('created') }}
+        </button>
+    </form>
+</div>
+{% endif %}
+
 {% if item %}
 <div class="card" style="border-color: var(--accent);">
     <form id="triage-form" action="/triage/accept" method="POST">
@@ -125,11 +140,30 @@
         });
     });
 
+    let canSubmit = false;
+    setTimeout(() => { canSubmit = true; }, 400);
+
+    function submitTriage() {
+        if (!canSubmit) return;
+        const form = document.getElementById('triage-form');
+        if (form) {
+            canSubmit = false;
+            form.submit();
+        }
+    }
+
     document.addEventListener('keydown', function(e) {
         const inInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
         
         if (e.key === 'Escape') {
             window.location.href = '/';
+            return;
+        }
+
+        // Ctrl+Enter or Cmd+Enter submits from anywhere
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            submitTriage();
             return;
         }
 
@@ -153,14 +187,8 @@
             }
             if (e.key === 'Enter') {
                 e.preventDefault();
-                document.getElementById('triage-form').submit();
+                submitTriage();
             }
-        } else if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT') {
-            e.preventDefault();
-            document.getElementById('triage-form').submit();
-        } else if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && document.activeElement.tagName === 'TEXTAREA') {
-            e.preventDefault();
-            document.getElementById('triage-form').submit();
         }
     });
 </script>

@@ -138,6 +138,20 @@ class MarkdownStore(StoreProtocol):
         """Remove a processed or discarded inbox item from disk."""
         return self.inbox_manager.delete_item(item_id)
 
+    def delete_node(self, node_id: str, author: Author | None = None) -> bool:
+        """Permanently delete a node file from the vault and commit/log."""
+        clean_id = node_id.strip().upper()
+        target = find_file_by_id(self.vault_dir, clean_id)
+        if not target or not target.exists():
+            return False
+        target.unlink()
+        auth = author or Author(kind=AuthorKind.HUMAN, courier="store")
+        if self.git_committer and hasattr(self.git_committer, "commit_file"):
+            self.git_committer.commit_file(target, f"delete {clean_id}: removed node", auth)
+        if self.event_log:
+            self.event_log.append("node_deleted", clean_id, auth, {"path": str(target)})
+        return True
+
     def list_dropped_files(self) -> list[Path]:
         """Scan and return all media or document files in the drop directory."""
         return self.intake_manager.list_dropped_files()

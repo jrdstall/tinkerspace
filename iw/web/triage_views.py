@@ -54,8 +54,8 @@ async def triage_accept_view(request: Request) -> Response:
 
     edges = [Edge(from_id="", to_id=edge_target, relation=edge_rel, created=now, author=author)] if edge_target and edge_rel else []
     node = Node(id="", type=node_type, title=title, created=now, domain=domain, tags=tags, state="active", edges=edges, body=body)
-    TriageService(store).triage_item(item_id=item_id, node=node, author=author)
-    return RedirectResponse(url="/triage", status_code=303)
+    saved_node = TriageService(store).triage_item(item_id=item_id, node=node, author=author)
+    return RedirectResponse(url=f"/triage?created={saved_node.id}&type={saved_node.type}", status_code=303)
 
 
 async def triage_discard_view(request: Request) -> Response:
@@ -72,3 +72,13 @@ async def triage_defer_view(request: Request) -> Response:
     """Defer raw inbox item to next pass."""
     skip = int(request.query_params.get("skip", 0)) + 1
     return RedirectResponse(url=f"/triage?skip={skip}", status_code=303)
+
+
+async def node_return_to_triage_view(request: Request) -> Response:
+    """Return a triaged node back to the raw inbox and delete the node."""
+    store: StoreProtocol = request.app.state.store
+    node_id = str(request.path_params.get("node_id", "")).strip().upper()
+    author = Author(kind=AuthorKind.HUMAN, courier="triage-surface")
+    if node_id:
+        TriageService(store).return_to_inbox(node_id, author)
+    return RedirectResponse(url="/triage", status_code=303)
