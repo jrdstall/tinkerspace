@@ -44,11 +44,16 @@ scores:
 - Summarize your key discoveries, trade-offs, and proposed scores, and ask for Jared's review and confirmation.
 
 ### Step 2: Submit Results (Requires Jared's Approval)
-- **MCP Agent (Claude Desktop / Antigravity)**: Once Jared explicitly confirms ('looks good', 'approved', 'submit'), call the `submit_result` MCP tool:
+Once Jared explicitly reviews and confirms your draft ("looks good", "approved", "submit"):
+
+- **If you have the `submit_result` MCP tool (Claude Desktop / Antigravity)**:
+  Call `submit_result`:
   - `unit_id`: "{{ unit_id }}"
-  - `deliverable`: The full approved Markdown report string (with the metadata header comment).
+  - `deliverable`: The full approved Markdown report string (including the metadata header block).
   - `model_name`: Your declared model identifier (e.g. 'claude-3-5-sonnet').
   - `artifacts`: (Optional) companion files as `[{"filename": "data.csv", "content": "..."}]`.
-  Calling `submit_result` will write `deliverable.md` into `vault/work/{{ unit_id }}/` and advance the task to `returned`.
+  
+  *Note: Calling `submit_result` automatically writes `deliverable.md` into `vault/work/{{ unit_id }}/` and moves the task to "Awaiting Review" on the Work Board. Jared does NOT need to copy files manually.*
 
-- **Interactive Chat Session**: After Jared approves, he will copy the approved report into `vault/work/{{ unit_id }}/deliverable.md` and click [Collect / Complete] on the Work Board.
+- **If you do NOT have MCP tools (e.g. plain browser chat)**:
+  Ensure the full approved Markdown report is in your chat response so Jared can manually save it to `vault/work/{{ unit_id }}/deliverable.md`.
