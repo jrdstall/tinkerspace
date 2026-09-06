@@ -9,26 +9,15 @@ from pathlib import Path
 from typing import Any
 
 from iw.contracts.event_log import EventLogProtocol
-from iw.contracts.models import (
-    AttentionItem,
-    Author,
-    AuthorKind,
-    InboxItem,
-    Node,
-    UnitOfWork,
-)
+from iw.contracts.models import AttentionItem, Author, AuthorKind, InboxItem, Node, UnitOfWork
 from iw.contracts.store import StoreProtocol
 from iw.core.frontmatter import merge_frontmatter
 from iw.core.ids import allocate_next_id
 from iw.core.inbox import InboxManager
 from iw.core.intake import IntakeManager
 from iw.core.io import (
-    atomic_write_markdown,
-    build_node_path,
-    find_file_by_id,
-    parse_vault_file,
-    read_raw_frontmatter_and_body,
-    scan_vault_markdown_files,
+    atomic_write_markdown, build_node_path, find_file_by_id,
+    parse_vault_file, read_raw_frontmatter_and_body, scan_vault_markdown_files,
 )
 from iw.core.units import atomic_write_unit_yaml, read_unit_yaml, scan_vault_units
 
@@ -130,13 +119,26 @@ class MarkdownStore(StoreProtocol):
     def append_inbox(self, raw_text: str, inlet: str = "quick-capture", source_filename: str | None = None) -> InboxItem:
         """Append a raw captured thought to the store inbox."""
         item = self.inbox_manager.append_item(raw_text, inlet, source_filename)
+        auth = Author(AuthorKind.HUMAN, courier=inlet)
         if self.event_log:
-            self.event_log.append("inbox_captured", item.id, Author(AuthorKind.HUMAN, inlet), {"text": item.raw_text})
+            self.event_log.append("inbox_captured", item.id, auth, {"text": item.raw_text})
+        if self.git_committer and hasattr(self.git_committer, "commit_file"):
+            target = self.vault_dir / "inbox" / (item.source_filename or f"{item.id}.md")
+            if target.exists():
+                self.git_committer.commit_file(target, f"capture {item.id}: quick thought", auth)
         return item
 
-    def delete_inbox_item(self, item_id: str) -> bool:
-        """Remove a processed or discarded inbox item from disk."""
-        return self.inbox_manager.delete_item(item_id)
+    def delete_inbox_item(self, item_id: str, author: Author | None = None) -> bool:
+        """Remove a processed or discarded inbox item from disk and commit."""
+        target_path = self.inbox_manager.find_item_path(item_id)
+        if not self.inbox_manager.delete_item(item_id):
+            return False
+        auth = author or Author(kind=AuthorKind.HUMAN, courier="inbox")
+        if self.event_log:
+            self.event_log.append("inbox_deleted", item_id, auth, {"path": str(target_path)} if target_path else {})
+        if self.git_committer and target_path and hasattr(self.git_committer, "commit_file"):
+            self.git_committer.commit_file(target_path, f"discard {item_id}: inbox item removed", auth)
+        return True
 
     def delete_node(self, node_id: str, author: Author | None = None) -> bool:
         """Permanently delete a node file from the vault and commit/log."""
@@ -146,10 +148,10 @@ class MarkdownStore(StoreProtocol):
             return False
         target.unlink()
         auth = author or Author(kind=AuthorKind.HUMAN, courier="store")
-        if self.git_committer and hasattr(self.git_committer, "commit_file"):
-            self.git_committer.commit_file(target, f"delete {clean_id}: removed node", auth)
         if self.event_log:
             self.event_log.append("node_deleted", clean_id, auth, {"path": str(target)})
+        if self.git_committer and hasattr(self.git_committer, "commit_file"):
+            self.git_committer.commit_file(target, f"delete {clean_id}: removed node", auth)
         return True
 
     def list_dropped_files(self) -> list[Path]:

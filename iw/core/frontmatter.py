@@ -109,7 +109,7 @@ def build_node_from_frontmatter(data: dict[str, Any], body: str) -> Node:
         title=str(data.get("title", "")),
         created=created_dt,
         domain=str(data.get("domain", "")),
-        tags=list(data.get("tags", [])),
+        tags=[str(t).strip().lstrip("#").strip() for t in data.get("tags", []) if str(t).strip().lstrip("#").strip()],
         state=str(data.get("state", "active")),
         author=parse_author(data.get("author")),
         last_touched=touched_dt,
@@ -162,7 +162,7 @@ def merge_frontmatter(
     created_str = node.created.isoformat() if node.created else str(existing.get("created") or now.isoformat())
     out["created"] = created_str
     out["domain"] = node.domain
-    out["tags"] = node.tags
+    out["tags"] = [str(t).strip().lstrip("#").strip() for t in node.tags if str(t).strip().lstrip("#").strip()]
     out["state"] = node.state
     out["last_touched"] = node.last_touched.isoformat() if node.last_touched else now.isoformat()
     out["author"] = serialize_author(author)
@@ -179,6 +179,8 @@ def merge_frontmatter(
 
     if node.edges:
         out["edges"] = [serialize_edge(e) for e in node.edges]
+    elif "edges" in out:
+        del out["edges"]
 
     return out
 

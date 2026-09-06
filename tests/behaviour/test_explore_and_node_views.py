@@ -139,6 +139,31 @@ def test_explore_03_web_explore_search_and_filter_views(tmp_path: Path):
     assert res_fri.status_code == 200
     assert "FRI-A01" in res_fri.text
     assert "AST-A01" not in res_fri.text
+
+    # 5. Domain dropdown presence and filtering
+    assert 'id="domain-select"' in res_all.text
+    assert 'name="domain"' in res_all.text
+    assert '<option value="" selected>All Domains</option>' in res_all.text
+    assert '<option value="cycling" >cycling</option>' in res_all.text or '<option value="cycling">cycling</option>' in res_all.text
+    assert '<option value="hardware" >hardware</option>' in res_all.text or '<option value="hardware">hardware</option>' in res_all.text
+
+    # Filter by domain=hardware
+    res_domain_hw = client.get("/?domain=hardware")
+    assert res_domain_hw.status_code == 200
+    assert "AST-A01" in res_domain_hw.text
+    assert "IDEA-A01" not in res_domain_hw.text
+    assert "FRI-A01" not in res_domain_hw.text
+    assert '<option value="hardware" selected>hardware</option>' in res_domain_hw.text
+    assert 'href="/" class="btn"' in res_domain_hw.text  # Clear button rendered
+
+    # Filter by domain=cycling
+    res_domain_cy = client.get("/?domain=cycling")
+    assert res_domain_cy.status_code == 200
+    assert "IDEA-A01" in res_domain_cy.text
+    assert "FRI-A01" in res_domain_cy.text
+    assert "AST-A01" not in res_domain_cy.text
+    assert '<option value="cycling" selected>cycling</option>' in res_domain_cy.text
+
     assert "node-tile" in res_all.text
     assert "setTypeFilter" in res_all.text
     assert "setStateFilter" in res_all.text
@@ -185,9 +210,11 @@ def test_explore_05_node_link_and_unlink_post_triage(tmp_path: Path):
     # 1. Verify available targets in GET view
     res_view = client.get("/node/IDEA-A01")
     assert res_view.status_code == 200
-    assert "+ Link to Another Node" in res_view.text
+    assert "Add Link" in res_view.text
     assert "available-targets-list" in res_view.text
     assert "AST-A01" in res_view.text
+    add_link_sec = res_view.text[res_view.text.find("Add Link"):]
+    assert add_link_sec.find('name="relation"') < add_link_sec.find('name="target_id"')
 
     # 2. Add relationship link from IDEA-A01 -> AST-A01
     res_link = client.post(
@@ -336,6 +363,121 @@ def test_explore_07_node_back_link_navigation(tmp_path: Path):
     )
     assert res_link.status_code == 303
     assert res_link.headers["location"] == "/node/FRI-A01?from=IDEA-A01"
+
+
+def test_explore_08_node_detail_editing_and_personal_ux(tmp_path: Path):
+    """EXPLORE-08: Node detail view supports in-place editing of core attributes and personal UX labels."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    t0 = datetime(2026, 8, 20, 12, 0, tzinfo=timezone.utc)
+    t1 = datetime(2026, 8, 25, 12, 0, tzinfo=timezone.utc)
+    t2 = datetime(2026, 8, 30, 12, 0, tzinfo=timezone.utc)
+    for n in _sample_nodes():
+        if n.id == "IDEA-A01":
+            n.last_touched = t1
+        store.write_node(n, author=author)
+    store.write_node(
+        Node(
+            id="IDEA-A00",
+            type="idea",
+            title="Earlier Idea Solar Cells",
+            created=t0,
+            last_touched=t0,
+            domain="energy",
+            tags=["energy"],
+            state="active",
+            author=author,
+        ),
+        author=author,
+    )
+    store.write_node(
+        Node(
+            id="IDEA-A02",
+            type="idea",
+            title="Later Idea Head-Up Display",
+            created=t2,
+            last_touched=t2,
+            domain="cycling",
+            tags=["cycling"],
+            state="active",
+            author=author,
+        ),
+        author=author,
+    )
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    # 1. Verify personal labels, single-line datalist, and adjacent idea buttons on GET
+    res_view = client.get("/node/IDEA-A01")
+    assert res_view.status_code == 200
+    assert "Jared" in res_view.text
+    assert "human (web-ui)" not in res_view.text
+    assert "My Idea" in res_view.text
+    assert "Note Prose (Markdown Body)" not in res_view.text
+    assert "Links" in res_view.text
+    assert "Typed Relationships &amp; Graph Edges" not in res_view.text
+    assert "Add Link" in res_view.text
+    assert "+ Link to Another Node" not in res_view.text
+    assert 'value="AST-A01 — Rigol 4-channel Digital Oscilloscope (asset)"></option>' in res_view.text
+    # Adjacent idea buttons by title
+    assert "&larr; Prev: Later Idea Head-Up Display" in res_view.text
+    assert "Next: Earlier Idea Solar Cells &rarr;" in res_view.text
+    assert 'href="/node/IDEA-A02"' in res_view.text
+    assert 'href="/node/IDEA-A00"' in res_view.text
+
+    # 2. Edit the idea node via POST /node/{node_id}/edit with leading '#' on tags and keywords
+    res_edit = client.post(
+        "/node/IDEA-A01/edit",
+        data={
+            "title": "Sunlight-readable BLE number puck v2",
+            "domain": "hardware",
+            "tags": "#cycling, #display, ble",
+            "keywords": "#transflective, ultralow-power, #eink",
+            "state": "parked",
+            "worth_to_me": "high",
+            "worth_to_others": "medium",
+            "body": "Updated prose: Transflective display optimized for 100hr battery life.",
+        },
+        follow_redirects=True,
+    )
+    assert res_edit.status_code == 200
+    assert "Sunlight-readable BLE number puck v2" in res_edit.text
+    assert "Domain: <strong style=\"color: var(--text-main);\">hardware</strong>" in res_edit.text
+    assert "🔑 transflective" in res_edit.text
+    assert "🔑 ultralow-power" in res_edit.text
+    assert "🔑 #transflective" not in res_edit.text
+    assert "#cycling" in res_edit.text
+    assert "##cycling" not in res_edit.text
+    assert "Updated prose: Transflective display optimized for 100hr battery life." in res_edit.text
+
+    # 3. Verify disk persistence without caching
+    updated_node = store.get_node("IDEA-A01")
+    assert updated_node is not None
+    assert updated_node.title == "Sunlight-readable BLE number puck v2"
+    assert updated_node.domain == "hardware"
+    assert updated_node.state == "parked"
+    assert updated_node.tags == ["cycling", "display", "ble"]
+    assert updated_node.attrs.get("keywords") == ["transflective", "ultralow-power", "eink"]
+    assert updated_node.attrs.get("worth_to_me") == "high"
+    assert updated_node.attrs.get("worth_to_others") == "medium"
+    assert "Transflective display optimized for 100hr battery life." in updated_node.body
+
+    # 4. Verify search matches newly added keyword
+    res_search = client.get("/?q=transflective")
+    assert res_search.status_code == 200
+    assert "IDEA-A01" in res_search.text
+
+    # 5. Unlinking last edge removes edges key from frontmatter
+    res_unlink = client.post(
+        "/node/IDEA-A01/unlink",
+        data={"target_id": "FRI-A01", "relation": "addresses"},
+        follow_redirects=True,
+    )
+    assert res_unlink.status_code == 200
+    node_no_edges = store.get_node("IDEA-A01")
+    assert node_no_edges is not None
+    assert len(node_no_edges.edges) == 0
 
 
 

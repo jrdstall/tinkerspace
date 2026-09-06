@@ -55,7 +55,7 @@ class TriageService(TriageProtocol):
             title=node.title.strip(),
             created=node.created,
             domain=node.domain.strip() if node.domain else "general",
-            tags=[t.strip() for t in node.tags if t.strip()],
+            tags=[t.strip().lstrip("#").strip() for t in node.tags if t.strip().lstrip("#").strip()],
             state=node.state if node.state else "active",
             edges=edges,
             body=node.body,
@@ -63,7 +63,7 @@ class TriageService(TriageProtocol):
         )
 
         saved = self.store.write_node(node_to_save, author)
-        self.store.delete_inbox_item(item_id)
+        self.store.delete_inbox_item(item_id, author=author)
         return saved
 
     def defer_item(self, item_id: str) -> None:

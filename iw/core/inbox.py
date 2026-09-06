@@ -45,13 +45,13 @@ class InboxManager:
         """Append a raw captured thought to the store inbox."""
         self.inbox_dir.mkdir(parents=True, exist_ok=True)
         now = datetime.now(timezone.utc)
-        clean_text = raw_text.strip()
+        clean_text = raw_text.replace("\r\n", "\n").replace("\r", "\n").strip()
         uid = uuid.uuid4().hex[:4].upper()
         now_str = now.strftime("%Y%m%d-%H%M%S")
         item_id = f"INB-{now_str}-{uid}"
 
         target_file = self.inbox_dir / f"{item_id}.md"
-        target_file.write_text(clean_text + "\n", encoding="utf-8")
+        target_file.write_text(clean_text + "\n", encoding="utf-8", newline="\n")
 
         return InboxItem(
             id=item_id,
@@ -60,6 +60,18 @@ class InboxManager:
             inlet=inlet,
             source_filename=target_file.name,
         )
+
+    def find_item_path(self, item_id: str) -> Path | None:
+        """Find the file path corresponding to an inbox item ID."""
+        if not self.inbox_dir.exists():
+            return None
+        if item_id.startswith("line-"):
+            quick_file = self.inbox_dir / "quick.txt"
+            return quick_file if quick_file.exists() else None
+        for path in self.inbox_dir.iterdir():
+            if path.is_file() and (path.stem == item_id or path.name == item_id):
+                return path
+        return None
 
     def delete_item(self, item_id: str) -> bool:
         """Remove a processed or discarded inbox item from disk."""
@@ -83,7 +95,9 @@ class InboxManager:
         items: list[InboxItem] = []
         try:
             mtime = datetime.fromtimestamp(quick_file.stat().st_mtime, timezone.utc)
-            lines = quick_file.read_text(encoding="utf-8").splitlines()
+            raw = quick_file.read_bytes()
+            clean = raw.replace(b"\r\r\n", b"\n").replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            lines = clean.decode("utf-8").splitlines()
             for idx, line in enumerate(lines):
                 line_clean = line.strip()
                 if line_clean:
@@ -104,7 +118,9 @@ class InboxManager:
         """Parse a standalone file into an InboxItem."""
         try:
             mtime = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
-            text = path.read_text(encoding="utf-8").strip()
+            raw = path.read_bytes()
+            clean = raw.replace(b"\r\r\n", b"\n").replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            text = clean.decode("utf-8").strip()
             if not text:
                 return None
             return InboxItem(
@@ -124,11 +140,13 @@ class InboxManager:
             return False
         try:
             target_idx = int(line_id.replace("line-", ""))
-            lines = quick_file.read_text(encoding="utf-8").splitlines()
+            raw = quick_file.read_bytes()
+            clean = raw.replace(b"\r\r\n", b"\n").replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+            lines = clean.decode("utf-8").splitlines()
             valid_lines = [l for l in lines if l.strip()]
             if 0 <= target_idx < len(valid_lines):
                 valid_lines.pop(target_idx)
-                quick_file.write_text("\n".join(valid_lines) + ("\n" if valid_lines else ""), encoding="utf-8")
+                quick_file.write_text("\n".join(valid_lines) + ("\n" if valid_lines else ""), encoding="utf-8", newline="\n")
                 return True
         except Exception:
             pass

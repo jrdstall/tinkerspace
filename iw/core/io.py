@@ -13,10 +13,17 @@ from iw.contracts.models import AttentionItem, Node
 from iw.core.frontmatter import parse_node_from_text, slugify_title
 
 
+def read_vault_text(path: Path) -> str:
+    """Read UTF-8 text from vault file normalizing CRLF and Windows double-CR artifacts."""
+    raw = path.read_bytes()
+    clean = raw.replace(b"\r\r\n", b"\n").replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return clean.decode("utf-8")
+
+
 def read_raw_frontmatter_and_body(path: Path) -> tuple[dict[str, Any], str]:
     """Extract raw YAML dictionary and prose body from a markdown file."""
     try:
-        text = path.read_text(encoding="utf-8")
+        text = read_vault_text(path)
     except Exception:
         return {}, ""
 
@@ -40,10 +47,11 @@ def atomic_write_markdown(
     """Write frontmatter and body to a temporary file then atomically replace target."""
     target.parent.mkdir(parents=True, exist_ok=True)
     fm_yaml = yaml.safe_dump(fm_data, sort_keys=False, allow_unicode=True)
-    content = f"---\n{fm_yaml}---\n{body}"
+    clean_body = body.replace("\r\n", "\n").replace("\r", "\n")
+    content = f"---\n{fm_yaml}---\n{clean_body}"
     temp_path = target.with_name(f".{target.name}.tmp")
     try:
-        with open(temp_path, "w", encoding="utf-8") as f:
+        with open(temp_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
             f.flush()
             os.fsync(f.fileno())
@@ -80,7 +88,7 @@ def parse_vault_file(path: Path) -> tuple[Node | None, AttentionItem | None]:
         return None, AttentionItem(str(path), "Sync conflict file", now)
 
     try:
-        text = path.read_text(encoding="utf-8")
+        text = read_vault_text(path)
     except Exception as err:
         now = datetime.now(timezone.utc)
         return None, AttentionItem(str(path), f"Read error: {err}", now)

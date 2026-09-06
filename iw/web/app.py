@@ -66,7 +66,7 @@ async def index_view(request: Request) -> Response:
 async def capture_view(request: Request) -> Response:
     store: StoreProtocol = request.app.state.store
     form_data = await request.form()
-    raw_text = str(form_data.get("raw_text", "")).strip()
+    raw_text = str(form_data.get("raw_text", "")).replace("\r\n", "\n").replace("\r", "\n").strip()
     stem = str(form_data.get("stem", "")).strip()
     full_text = f"{stem} {raw_text}".strip() if stem and not raw_text.startswith(stem) else raw_text
     if not full_text:
@@ -104,6 +104,7 @@ def _get_core_routes() -> list[Route]:
     return [
         Route("/", endpoint=index_view, methods=["GET"]),
         Route("/node/{node_id}", endpoint=_view_node, methods=["GET"]),
+        Route("/node/{node_id}/edit", endpoint=node_views.node_edit_action, methods=["POST"]),
         Route("/node/{node_id}/link", endpoint=node_views.node_link_action, methods=["POST"]),
         Route("/node/{node_id}/unlink", endpoint=node_views.node_unlink_action, methods=["POST"]),
         Route("/node/{node_id}/return_to_triage", endpoint=triage_views.node_return_to_triage_view, methods=["POST"]),

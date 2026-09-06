@@ -85,12 +85,19 @@ class InMemoryIndex(IndexProtocol):
         )
 
     def _matches_text(self, node: Node, q: str) -> bool:
-        """Check if query text appears in node ID, title, body, domain, or tags."""
+        """Check if query text appears in node ID, title, body, domain, tags, or keywords."""
         if q in node.id.lower() or q in node.title.lower() or q in node.domain.lower():
             return True
         if q in node.body.lower():
             return True
-        return any(q in t.lower() for t in node.tags)
+        if any(q in t.lower() for t in node.tags):
+            return True
+        keywords = node.attrs.get("keywords", [])
+        if isinstance(keywords, list):
+            return any(q in str(k).lower() for k in keywords)
+        if isinstance(keywords, str):
+            return q in keywords.lower()
+        return False
 
     def _to_summary(self, node: Node) -> NodeSummary:
         """Project full Node into lightweight NodeSummary."""

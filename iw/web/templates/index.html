@@ -36,7 +36,7 @@
         <div style="display: flex; gap: 0.75rem;">
             <input type="text" name="q" value="{{ q }}" placeholder="Search title, ID, tags, or content..." style="flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem;">
             <button type="submit" class="btn btn-primary">Search</button>
-            {% if q or current_type or current_state or current_sort != 'touched' %}
+            {% if q or current_type or current_state or current_domain or current_sort != 'touched' %}
             <a href="/" class="btn" style="text-decoration: none; display: flex; align-items: center;">Clear</a>
             {% endif %}
         </div>
@@ -67,7 +67,20 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <label for="domain-select" style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Domain:</label>
+                    <select id="domain-select" name="domain" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit; font-size: 0.85rem;">
+                        <option value="" {% if not current_domain %}selected{% endif %}>All Domains</option>
+                        {% for d in facets.domains %}
+                        <option value="{{ d }}" {% if current_domain == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                        {% if current_domain and current_domain not in facets.domains %}
+                        <option value="{{ current_domain }}" selected>{{ current_domain }}</option>
+                        {% endif %}
+                    </select>
+                </div>
+
                 <div style="display: flex; gap: 0.4rem; align-items: center;">
                     <label for="sort-select" style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Sort:</label>
                     <select id="sort-select" name="sort" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit; font-size: 0.85rem;">

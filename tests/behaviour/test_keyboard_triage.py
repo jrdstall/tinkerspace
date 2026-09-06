@@ -133,6 +133,19 @@ def test_triage_04_web_triage_flow_and_empty_state(tmp_path: Path):
     assert res_item.status_code == 200
     assert "Keyboard Triage Pass" in res_item.text
     assert "Chain cleaning takes too long" in res_item.text
+    assert 'formaction="/triage/discard" formnovalidate' in res_item.text
+    assert 'formaction="/triage/defer" formnovalidate' in res_item.text
+
+    # Defer item without title or filled fields
+    res_defer = client.post("/triage/defer", data={"item_id": item.id, "skip": "0"}, follow_redirects=False)
+    assert res_defer.status_code == 303
+    assert res_defer.headers["location"] == "/triage?skip=1"
+
+    # Discard item without title or filled fields
+    item_junk = store.append_inbox("Junk item to discard")
+    res_discard = client.post("/triage/discard", data={"item_id": item_junk.id, "title": ""}, follow_redirects=False)
+    assert res_discard.status_code == 303
+    assert not any(it.id == item_junk.id for it in store.list_inbox())
 
     # 4. Accept item via form POST
     res_accept = client.post(
@@ -184,7 +197,7 @@ def test_triage_05_web_triage_editable_body_and_node_datalist(tmp_path: Path):
     # GET triage view - verify editable textarea and datalist options
     res_get = client.get("/triage")
     assert res_get.status_code == 200
-    assert "Captured Thought &amp; Note Body (Editable)" in res_get.text or "Captured Thought & Note Body (Editable)" in res_get.text
+    assert "My Thought" in res_get.text
     assert "FRI-A01" in res_get.text
     assert "existing-nodes-list" in res_get.text
     assert res_get.text.find('name="edge_rel"') < res_get.text.find('name="edge_target"')
@@ -212,4 +225,49 @@ def test_triage_05_web_triage_editable_body_and_node_datalist(tmp_path: Path):
     assert len(saved_idea.edges) == 1
     assert saved_idea.edges[0].to_id == "FRI-A01"
     assert saved_idea.edges[0].relation == "addresses"
+
+
+def test_triage_06_keywords_edge_note_worth_and_banner_link(tmp_path: Path):
+    """TRIAGE-06: Triage captures keywords, edge context note, worth ratings, and banner links to node."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    app = create_app(store=store)
+    client = TestClient(app)
+    author = Author(kind=AuthorKind.HUMAN, courier="test")
+
+    fri = Node(id="FRI-A01", type="friction", title="Battery dies quickly", created=datetime.now(timezone.utc), domain="iot", tags=["battery"])
+    store.write_node(fri, author=author)
+
+    item = store.append_inbox("Solar powered energy harvester beacon")
+
+    res_post = client.post(
+        "/triage/accept",
+        data={
+            "item_id": item.id,
+            "node_type": "idea",
+            "title": "Solar Powered BLE Beacon",
+            "domain": "iot",
+            "tags": "#solar, #ble",
+            "keywords": "#harvester, ambient, #low-power",
+            "worth_to_me": "high",
+            "worth_to_others": "low",
+            "body": "Harvest ambient light to run BLE beacon without battery changes.",
+            "edge_target": "FRI-A01 — Battery dies quickly (friction)",
+            "edge_rel": "addresses",
+            "edge_note": "Direct energy harvesting solves frequent battery replacement",
+        },
+        follow_redirects=True,
+    )
+    assert res_post.status_code == 200
+    assert 'href="/node/IDEA-A01?from=triage"' in res_post.text
+    assert "✓ Triaged IDEA-A01" in res_post.text
+
+    saved = store.get_node("IDEA-A01")
+    assert saved is not None
+    assert saved.tags == ["solar", "ble"]
+    assert saved.attrs.get("keywords") == ["harvester", "ambient", "low-power"]
+    assert saved.attrs.get("worth_to_me") == "high"
+    assert saved.attrs.get("worth_to_others") == "low"
+    assert len(saved.edges) == 1
+    assert saved.edges[0].to_id == "FRI-A01"
+    assert saved.edges[0].note == "Direct energy harvesting solves frequent battery replacement"
 

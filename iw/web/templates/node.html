@@ -3,10 +3,22 @@
 {% block title %}{{ node.id }} · {{ node.title }} · Tinkerspace{% endblock %}
 
 {% block content %}
-<div style="margin-bottom: 1rem;">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
     <a href="{{ back_url }}" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
         &larr; Back to {{ back_label }}
     </a>
+    <div style="display: flex; gap: 0.5rem; align-items: center;">
+        {% if prev_node %}
+        <a href="/node/{{ prev_node.id }}{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" class="btn" style="text-decoration: none; font-size: 0.75rem;" title="{{ prev_node.id }}: {{ prev_node.title }}">
+            &larr; Prev: {{ prev_node.title|truncate(28) }}
+        </a>
+        {% endif %}
+        {% if next_node %}
+        <a href="/node/{{ next_node.id }}{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" class="btn" style="text-decoration: none; font-size: 0.75rem;" title="{{ next_node.id }}: {{ next_node.title }}">
+            Next: {{ next_node.title|truncate(28) }} &rarr;
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="card">
@@ -25,6 +37,7 @@
             {% endif %}
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+            <button type="button" class="btn" onclick="toggleEditMode()" id="edit-toggle-btn" style="font-size: 0.75rem;">✏️ Edit Note</button>
             {% if node.type == 'idea' %}
             <a href="/ideas/{{ node.id }}/plan" class="btn btn-primary" style="font-size: 0.75rem; text-decoration: none;">🎯 Plan Maturation</a>
             {% endif %}
@@ -40,6 +53,79 @@
         </div>
     </div>
 
+    <!-- Edit Panel (toggled via button or ?edit=true) -->
+    <div id="node-edit-panel" style="display: none; background: rgba(26, 34, 48, 0.7); border: 1px solid var(--accent); border-radius: 6px; padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.1rem; font-weight: 600; color: var(--accent);">✏️ Edit Note Attributes & Content</h2>
+            <button type="button" class="btn" onclick="toggleEditMode()" style="font-size: 0.75rem;">✕ Close</button>
+        </div>
+        <form action="/node/{{ node.id }}/edit{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" id="node-edit-form">
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Title</label>
+                    <input type="text" name="title" value="{{ node.title }}" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Domain</label>
+                    <input type="text" name="domain" value="{{ node.domain }}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">State</label>
+                    <select name="state" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                        <option value="active" {% if node.state == 'active' %}selected{% endif %}>Active</option>
+                        <option value="parked" {% if node.state == 'parked' %}selected{% endif %}>Parked</option>
+                        <option value="have" {% if node.state == 'have' %}selected{% endif %}>Have</option>
+                        <option value="retired" {% if node.state == 'retired' %}selected{% endif %}>Retired</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
+                    <input type="text" name="tags" value="{{ tags_display }}" placeholder="e.g. hardware, display, ble" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Keywords (comma-separated)</label>
+                    <input type="text" name="keywords" value="{{ keywords_display }}" placeholder="e.g. eink, sunlight, low-power" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                </div>
+            </div>
+
+            {% if node.type == 'idea' %}
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color);">
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Worth to Me</label>
+                    <select name="worth_to_me" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem; color: var(--text-main); font-family: inherit;">
+                        <option value="high" {% if node.attrs.get('worth_to_me') == 'high' %}selected{% endif %}>High (❤️ Passion)</option>
+                        <option value="medium" {% if node.attrs.get('worth_to_me') in ['medium', 'med'] or not node.attrs.get('worth_to_me') %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if node.attrs.get('worth_to_me') == 'low' %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Worth to Others</label>
+                    <select name="worth_to_others" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem; color: var(--text-main); font-family: inherit;">
+                        <option value="high" {% if node.attrs.get('worth_to_others') == 'high' %}selected{% endif %}>High (🌍 Market/Impact)</option>
+                        <option value="medium" {% if node.attrs.get('worth_to_others') in ['medium', 'med'] %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if node.attrs.get('worth_to_others') == 'low' or not node.attrs.get('worth_to_others') %}selected{% endif %}>Low</option>
+                    </select>
+                </div>
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom: 1.25rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">
+                    {% if node.type == 'idea' %}My Idea{% elif node.type == 'friction' %}My Friction{% elif node.type == 'observation' %}My Observation{% elif node.type == 'question' %}My Question{% elif node.type == 'asset' %}My Asset{% else %}My {{ node.type|capitalize }}{% endif %} (Markdown Body)
+                </label>
+                <textarea name="body" rows="8" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; font-size: 0.95rem; line-height: 1.5; color: var(--text-main); font-family: inherit; resize: vertical;">{{ node.body }}</textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                <button type="button" class="btn" onclick="toggleEditMode()">Cancel</button>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+
     <h1 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; color: var(--text-main);">
         {{ node.title }}
     </h1>
@@ -52,7 +138,11 @@
             Author: 
             <strong style="color: var(--text-main);">
                 {% if node.author %}
-                    {{ node.author.kind.value }} ({{ node.author.declared_model or node.author.courier }})
+                    {% if node.author.kind.value == 'human' %}
+                        Jared
+                    {% else %}
+                        {{ node.author.declared_model or node.author.courier or node.author.kind.value }}
+                    {% endif %}
                 {% else %}
                     external / manual
                 {% endif %}
@@ -68,10 +158,13 @@
         {% endif %}
     </div>
 
-    {% if node.tags %}
-    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem;">
+    {% if node.tags or keywords_list %}
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center;">
         {% for tag in node.tags %}
         <a href="/?tag={{ tag }}" class="badge" style="text-decoration: none;">#{{ tag }}</a>
+        {% endfor %}
+        {% for kw in keywords_list %}
+        <span class="badge" style="background: rgba(88,166,255,0.1); color: var(--accent); border-color: rgba(88,166,255,0.3);">🔑 {{ kw }}</span>
         {% endfor %}
     </div>
     {% endif %}
@@ -137,19 +230,19 @@
     </div>
     {% endif %}
 
-    <!-- Note Prose Body -->
+    <!-- Note Body -->
     <div style="margin-bottom: 1.5rem;">
         <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
-            Note Prose (Markdown Body)
+            {% if node.type == 'idea' %}My Idea{% elif node.type == 'friction' %}My Friction{% elif node.type == 'observation' %}My Observation{% elif node.type == 'question' %}My Question{% elif node.type == 'asset' %}My Asset{% else %}My {{ node.type|capitalize }}{% endif %}
         </h3>
         <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">{{- (node.body|trim) if node.body else '*(No body text provided)*' -}}</div>
     </div>
 
-    <!-- Typed Relationships & Graph Edges -->
+    <!-- Links -->
     <div style="margin-bottom: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0;">
-                Typed Relationships & Graph Edges
+                Links
             </h3>
             <span class="badge">{{ (inbound_edges|length) + (node.edges|length) }} Links</span>
         </div>
@@ -190,20 +283,12 @@
         </div>
         {% endif %}
 
-        <!-- Add New Relationship Edge Form -->
+        <!-- Add Link Form -->
         <div style="background-color: rgba(26, 34, 48, 0.5); border: 1px solid var(--border-color); border-radius: 6px; padding: 1rem;">
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
-                + Link to Another Node
+                Add Link
             </div>
-            <form action="/node/{{ node.id }}/link{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr auto; gap: 0.75rem; align-items: center;">
-                <div>
-                    <input type="text" name="target_id" list="available-targets-list" placeholder="Target Node (ID or Title)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
-                    <datalist id="available-targets-list">
-                        {% for target in available_targets %}
-                        <option value="{{ target.id }}">{{ target.id }} — {{ target.title }} ({{ target.type }})</option>
-                        {% endfor %}
-                    </datalist>
-                </div>
+            <form action="/node/{{ node.id }}/link{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="display: grid; grid-template-columns: 1.2fr 1.5fr 1.5fr auto; gap: 0.75rem; align-items: center;">
                 <div>
                     <input type="text" name="relation" list="node-relations-list" placeholder="Relation (e.g. addresses)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
                     <datalist id="node-relations-list">
@@ -220,6 +305,14 @@
                     </datalist>
                 </div>
                 <div>
+                    <input type="text" name="target_id" list="available-targets-list" placeholder="Target Node (ID or Title)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                    <datalist id="available-targets-list">
+                        {% for target in available_targets %}
+                        <option value="{{ target.id }} — {{ target.title }} ({{ target.type }})"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div>
                     <input type="text" name="note" placeholder="Optional context note..." style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
                 </div>
                 <div>
@@ -233,7 +326,7 @@
     {% if node.attrs %}
     {% set custom_keys = [] %}
     {% for k in node.attrs.keys() %}
-        {% if k not in ['cml', 'scores', 'worth_to_me', 'worth_to_others'] %}
+        {% if k not in ['cml', 'scores', 'worth_to_me', 'worth_to_others', 'keywords'] %}
             {% set _ = custom_keys.append(k) %}
         {% endif %}
     {% endfor %}
@@ -254,4 +347,23 @@
     {% endif %}
     {% endif %}
 </div>
+
+<script>
+    function toggleEditMode() {
+        const panel = document.getElementById('node-edit-panel');
+        if (!panel) return;
+        const isVisible = panel.style.display !== 'none';
+        panel.style.display = isVisible ? 'none' : 'block';
+        const btn = document.getElementById('edit-toggle-btn');
+        if (btn) btn.textContent = isVisible ? '✏️ Edit Note' : '✕ Cancel Edit';
+        if (!isVisible) {
+            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    {% if request.query_params.get('edit') %}
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleEditMode();
+    });
+    {% endif %}
+</script>
 {% endblock %}

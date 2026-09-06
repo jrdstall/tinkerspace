@@ -54,7 +54,7 @@ class StoreProtocol(Protocol):
         """Append a raw captured thought to the store inbox."""
         ...
 
-    def delete_inbox_item(self, item_id: str) -> bool:
+    def delete_inbox_item(self, item_id: str, author: Author | None = None) -> bool:
         """Remove a processed or discarded inbox item from disk."""
         ...
 

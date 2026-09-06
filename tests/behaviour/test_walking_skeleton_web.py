@@ -72,7 +72,7 @@ def test_node_detail_view_renders_frontmatter_and_prose(tmp_path: Path):
     assert response.status_code == 200
     assert "FRI-A02" in response.text
     assert "Saddle causes numbness after 2 hours" in response.text
-    assert "human (manual)" in response.text
+    assert "Jared" in response.text
     assert "Pressure point seems located right on the perineal cut-out edge." in response.text
 
 

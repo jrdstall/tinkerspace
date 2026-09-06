@@ -16,9 +16,11 @@
 {% if request.query_params.get('created') %}
 <div class="card" style="background: rgba(46, 160, 67, 0.15); border: 1px solid var(--green); padding: 0.75rem 1.25rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
     <div>
-        <span style="color: var(--green); font-weight: 700;">✓ Triaged {{ request.query_params.get('created') }}</span>
+        <a href="/node/{{ request.query_params.get('created') }}?from=triage" style="color: var(--green); font-weight: 700; text-decoration: none; font-size: 0.95rem;">
+            ✓ Triaged {{ request.query_params.get('created') }} &rarr;
+        </a>
         <span class="badge" style="margin-left: 0.5rem; font-size: 0.75rem;">{{ request.query_params.get('type') }}</span>
-        <span style="color: var(--text-muted); margin-left: 0.75rem; font-size: 0.85rem;">Showing next item from inbox.</span>
+        <span style="color: var(--text-muted); margin-left: 0.75rem; font-size: 0.85rem;">Showing next item from inbox. Click ID to view/edit.</span>
     </div>
     <form action="/node/{{ request.query_params.get('created') }}/return_to_triage" method="POST" style="margin: 0;">
         <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.6rem; color: #f85149; border-color: rgba(248,81,73,0.4);" title="Undo and put this item back into triage inbox">
@@ -32,10 +34,11 @@
 <div class="card" style="border-color: var(--accent);">
     <form id="triage-form" action="/triage/accept" method="POST">
         <input type="hidden" name="item_id" value="{{ item.id }}">
+        <input type="hidden" name="skip" value="{{ current_index }}">
         
         <div style="margin-bottom: 1.25rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
-                <label for="triage-body" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Captured Thought & Note Body (Editable)</label>
+                <label for="triage-body" style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">My Thought</label>
                 <span style="font-size: 0.75rem; color: var(--text-muted);">Markdown supported</span>
             </div>
             <textarea id="triage-body" name="body" rows="4" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; font-size: 1rem; line-height: 1.5; color: var(--text-main); font-family: inherit; resize: vertical;" placeholder="Edit thought or add context..." required>{{ item.raw_text }}</textarea>
@@ -67,7 +70,27 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+        <!-- Idea Worth Row (visible when Idea is selected) -->
+        <div id="idea-worth-row" style="display: none; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem; background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; border: 1px solid var(--border-color);">
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Worth to Me</label>
+                <select name="worth_to_me" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem; color: var(--text-main); font-family: inherit;">
+                    <option value="high">High (❤️ Passion)</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Worth to Others</label>
+                <select name="worth_to_others" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem; color: var(--text-main); font-family: inherit;">
+                    <option value="high">High (🌍 Market/Impact)</option>
+                    <option value="medium">Medium</option>
+                    <option value="low" selected>Low</option>
+                </select>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr 1.5fr; gap: 0.75rem; margin-bottom: 1.25rem;">
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Title</label>
                 <input type="text" id="triage-title" name="title" value="" placeholder="Short, memorable title (e.g. Kitchen eInk Display)..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;" required>
@@ -80,13 +103,17 @@
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
                 <input type="text" name="tags" placeholder="hardware, triage" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
             </div>
+            <div>
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Keywords (comma-separated)</label>
+                <input type="text" name="keywords" placeholder="eink, low-power" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+            </div>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
-            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Candidate Edge Link (Optional)</label>
-            <div style="display: grid; grid-template-columns: 1.5fr 1.5fr; gap: 1rem;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Add Link</label>
+            <div style="display: grid; grid-template-columns: 1.2fr 1.5fr 1.5fr; gap: 0.75rem;">
                 <div>
-                    <input type="text" name="edge_rel" id="edge-rel-input" list="edge-rel-list" placeholder="Relation (e.g. addresses, derives_from, questions)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <input type="text" name="edge_rel" id="edge-rel-input" list="edge-rel-list" placeholder="Relation (e.g. addresses)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
                     <datalist id="edge-rel-list">
                         <option value="addresses">addresses</option>
                         <option value="derived_from">derived_from</option>
@@ -100,20 +127,23 @@
                     </datalist>
                 </div>
                 <div>
-                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Search or select Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
                     <datalist id="existing-nodes-list">
                         {% for n in existing_nodes %}
-                        <option value="{{ n.id }}">{{ n.id }} — {{ n.title }} ({{ n.type }})</option>
+                        <option value="{{ n.id }} — {{ n.title }} ({{ n.type }})"></option>
                         {% endfor %}
                     </datalist>
+                </div>
+                <div>
+                    <input type="text" name="edge_note" id="edge-note-input" placeholder="Optional context note..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
                 </div>
             </div>
         </div>
 
         <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
             <div style="display: flex; gap: 0.5rem;">
-                <button type="submit" formaction="/triage/discard" class="btn" style="color: #f85149; border-color: rgba(248,81,73,0.3);">[x] Discard</button>
-                <button type="submit" formaction="/triage/defer" class="btn">[d] Defer</button>
+                <button type="submit" formaction="/triage/discard" formnovalidate class="btn" style="color: #f85149; border-color: rgba(248,81,73,0.3);">[x] Discard</button>
+                <button type="submit" formaction="/triage/defer" formnovalidate class="btn">[d] Defer</button>
             </div>
             <div style="display: flex; gap: 0.5rem; align-items: center;">
                 <a href="/" class="btn">[Esc] Exit</a>
@@ -131,6 +161,10 @@
             input.checked = true;
             const label = document.getElementById(`btn-${typeName}`);
             if (label) label.classList.add('active');
+        }
+        const worthRow = document.getElementById('idea-worth-row');
+        if (worthRow) {
+            worthRow.style.display = (typeName === 'idea') ? 'grid' : 'none';
         }
     }
 

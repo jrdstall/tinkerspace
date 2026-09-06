@@ -38,12 +38,35 @@ class GitCommitter:
                 if len(line) > 3:
                     rel_path = line[3:].strip().strip('"')
                     full_path = self.vault_dir / rel_path
-                    if full_path.is_file():
+                    if full_path.is_file() or "D" in line[:2]:
                         uncommitted.append(full_path)
             return uncommitted
         except (OSError, subprocess.SubprocessError):
             return []
 
+    def _is_tracked_in_git(self, rel_path: Path) -> bool:
+        """Check whether a relative path is tracked in the git index."""
+        res = subprocess.run(
+            ["git", "ls-files", "--error-unmatch", str(rel_path)],
+            cwd=str(self.vault_dir),
+            capture_output=True,
+            check=False,
+        )
+        return res.returncode == 0
+
+    def _build_stage_args(self, file_path: Path) -> list[str]:
+        """Build git add arguments including the target file and any event logs."""
+        try:
+            rel_path = file_path.relative_to(self.vault_dir)
+        except ValueError:
+            rel_path = file_path
+        add_args = ["git", "add"]
+        if file_path.exists() or self._is_tracked_in_git(rel_path):
+            add_args.append(str(rel_path))
+        for evt in ("events.jsonl", "system/events.jsonl"):
+            if str(rel_path) != evt and (self.vault_dir / evt).exists():
+                add_args.append(evt)
+        return add_args
 
     def commit_file(
         self,
@@ -51,33 +74,22 @@ class GitCommitter:
         commit_message: str,
         author: Author,
     ) -> bool:
-        """Stage and commit a single modified or created file in the vault."""
+        """Stage and commit a single modified, deleted, or created file in the vault."""
         if not self.is_git_repo():
             return False
-
-        try:
-            rel_path = file_path.relative_to(self.vault_dir)
-        except ValueError:
-            rel_path = file_path
-
+        add_args = self._build_stage_args(file_path)
+        if len(add_args) == 2:
+            return False
         author_str = self._format_git_author(author)
         try:
             add_res = subprocess.run(
-                ["git", "add", str(rel_path)],
-                cwd=str(self.vault_dir),
-                capture_output=True,
-                text=True,
-                check=False,
+                add_args, cwd=str(self.vault_dir), capture_output=True, text=True, check=False
             )
             if add_res.returncode != 0:
                 return False
-
             commit_res = subprocess.run(
                 ["git", "commit", "-m", commit_message, f"--author={author_str}"],
-                cwd=str(self.vault_dir),
-                capture_output=True,
-                text=True,
-                check=False,
+                cwd=str(self.vault_dir), capture_output=True, text=True, check=False,
             )
             return commit_res.returncode == 0
         except (OSError, subprocess.SubprocessError):

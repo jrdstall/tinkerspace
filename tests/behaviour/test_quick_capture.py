@@ -95,3 +95,46 @@ def test_capture_04_delete_inbox_item_removes_file_from_disk(tmp_path: Path):
 
     assert deleted is True
     assert len(store.list_inbox()) == 0
+
+
+def test_capture_05_crlf_and_blank_lines_preserved_without_line_multiplication(tmp_path: Path):
+    """CAPTURE-05: Multi-line captures with blank lines preserve single blank line without Windows CRLF multiplication."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    # 1. Post thought containing single blank line formatted as Windows CRLF (\r\n\r\n)
+    client.post(
+        "/capture",
+        data={"raw_text": "Paragraph one.\r\n\r\nParagraph two with details."},
+        follow_redirects=True,
+    )
+
+    items = store.list_inbox()
+    assert len(items) == 1
+    item = items[0]
+
+    # Verify parsed text in store has exact single blank line (2 newlines, not 4)
+    assert item.raw_text == "Paragraph one.\n\nParagraph two with details."
+    assert item.raw_text.splitlines() == ["Paragraph one.", "", "Paragraph two with details."]
+
+    # Verify file bytes on disk use clean Unix LF without \r\r\n doubling
+    inbox_files = list((tmp_path / "inbox").glob("*.md"))
+    assert len(inbox_files) == 1
+    raw_bytes = inbox_files[0].read_bytes()
+    assert b"\r\r\n" not in raw_bytes
+    assert b"\r\n" not in raw_bytes
+
+    # Verify triage page renders the textarea with exact single blank line
+    res_triage = client.get("/triage")
+    assert res_triage.status_code == 200
+    assert "Paragraph one.\n\nParagraph two with details." in res_triage.text
+    assert "Paragraph one.\n\n\n\nParagraph two" not in res_triage.text
+
+    # Verify historical file with \r\r\n is self-healing on read
+    historical_file = tmp_path / "inbox" / "INB-historical-test.md"
+    historical_file.write_bytes(b"Old thought header.\r\r\n\r\r\nOld thought body.\n")
+    reloaded_items = store.list_inbox()
+    hist_item = next(it for it in reloaded_items if it.id == "INB-historical-test")
+    assert hist_item.raw_text == "Old thought header.\n\nOld thought body."
+

@@ -4,6 +4,7 @@ Layer 4 Web surface component.
 """
 
 from datetime import datetime, timezone
+from typing import Any
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.templating import Jinja2Templates
@@ -42,18 +43,31 @@ async def triage_accept_view(request: Request) -> Response:
     form = await request.form()
     item_id = str(form.get("item_id", "")).strip()
     node_type = str(form.get("node_type", "friction")).strip()
-    body = str(form.get("body", "")).strip()
+    body = str(form.get("body", "")).replace("\r\n", "\n").replace("\r", "\n").strip()
     title = str(form.get("title", "")).strip() or body[:80]
     domain = str(form.get("domain", "general")).strip()
-    tags = [t.strip() for t in str(form.get("tags", "")).split(",") if t.strip()]
+    tags = [t.strip().lstrip("#").strip() for t in str(form.get("tags", "")).split(",") if t.strip().lstrip("#").strip()]
+    keywords = [k.strip().lstrip("#").strip() for k in str(form.get("keywords", "")).split(",") if k.strip().lstrip("#").strip()]
     raw_target = str(form.get("edge_target", "")).strip()
     edge_target = raw_target.split()[0].upper() if raw_target else ""
     edge_rel = str(form.get("edge_rel", "")).strip()
+    edge_note = str(form.get("edge_note", "")).strip()
     now = datetime.now(timezone.utc)
     author = Author(kind=AuthorKind.HUMAN, courier="triage-surface")
 
-    edges = [Edge(from_id="", to_id=edge_target, relation=edge_rel, created=now, author=author)] if edge_target and edge_rel else []
-    node = Node(id="", type=node_type, title=title, created=now, domain=domain, tags=tags, state="active", edges=edges, body=body)
+    edges = [Edge(from_id="", to_id=edge_target, relation=edge_rel, created=now, author=author, note=edge_note)] if edge_target and edge_rel else []
+    attrs: dict[str, Any] = {}
+    if keywords:
+        attrs["keywords"] = keywords
+    if node_type == "idea":
+        w_me = str(form.get("worth_to_me", "")).strip()
+        w_others = str(form.get("worth_to_others", "")).strip()
+        if w_me:
+            attrs["worth_to_me"] = w_me
+        if w_others:
+            attrs["worth_to_others"] = w_others
+
+    node = Node(id="", type=node_type, title=title, created=now, domain=domain, tags=tags, state="active", edges=edges, body=body, attrs=attrs)
     saved_node = TriageService(store).triage_item(item_id=item_id, node=node, author=author)
     return RedirectResponse(url=f"/triage?created={saved_node.id}&type={saved_node.type}", status_code=303)
 
@@ -70,7 +84,17 @@ async def triage_discard_view(request: Request) -> Response:
 
 async def triage_defer_view(request: Request) -> Response:
     """Defer raw inbox item to next pass."""
-    skip = int(request.query_params.get("skip", 0)) + 1
+    raw_skip = request.query_params.get("skip")
+    if raw_skip is None:
+        try:
+            form = await request.form()
+            raw_skip = form.get("skip", 0)
+        except Exception:
+            raw_skip = 0
+    try:
+        skip = int(raw_skip) + 1
+    except (ValueError, TypeError):
+        skip = 1
     return RedirectResponse(url=f"/triage?skip={skip}", status_code=303)
 
 

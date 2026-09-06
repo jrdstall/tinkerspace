@@ -20,6 +20,7 @@ Jared reads Python through a Java/C/C++ lens. Code must be explicit, typed, and 
 - **No Passthrough Args**: Spell out function parameters explicitly; avoid `*args` and `**kwargs`.
 - **Allowed Decorators Only**: `@property`, `@dataclass`, `@pytest.fixture`, and framework routing decorators.
 - **Size Limits**: Max 200 lines per file; max 40 lines per function; max 1 level of comprehension nesting.
+- **Tooling & Execution**: Always execute Python and tests via `uv run python` and `uv run pytest`. Never invoke bare `python` or `pytest` on Windows.
 
 ---
 
