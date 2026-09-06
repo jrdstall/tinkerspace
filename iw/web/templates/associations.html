@@ -50,14 +50,14 @@
     <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 0.75rem; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.75rem; margin-bottom: 1.25rem;">
         <div>
             <div style="font-size: 0.7rem; color: var(--text-muted);">PARENT A</div>
-            <a href="/node/{{ current_card.node_a_id }}" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+            <a href="/node/{{ current_card.node_a_id }}?from=associations" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
                 {{ current_card.node_a_id }}: {{ current_card.node_a_title }}
             </a>
         </div>
         <div style="font-size: 1.2rem; color: var(--text-muted); font-weight: 700;">&times;</div>
         <div>
             <div style="font-size: 0.7rem; color: var(--text-muted);">PARENT B</div>
-            <a href="/node/{{ current_card.node_b_id }}" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
+            <a href="/node/{{ current_card.node_b_id }}?from=associations" style="color: var(--accent); font-weight: 600; font-size: 0.85rem; text-decoration: none;">
                 {{ current_card.node_b_id }}: {{ current_card.node_b_title }}
             </a>
         </div>

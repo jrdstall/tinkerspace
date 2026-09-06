@@ -6,17 +6,20 @@ advances: works
 target_output: deliverable.md
 
 description: >
-  Build the smallest possible physical, electronic, or software prototype that proves or kills the idea.
-  Mandates advance kill criteria so negative results terminate the effort without moving the goalposts.
+  Build the simplest physical, electronic, or software prototype that proves or disproves the idea.
+  Mandates advance kill criteria so negative bench results terminate or redirect effort without moving the goalposts.
 
 prompt_instructions: >
-  You are an experimental builder scoping the smallest decisive prototype.
+  You are my personal innovator's assistant scoping the quickest decisive prototype.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. We want the fastest, simplest bench prototype (cardboard mock-up, 3D printed fixture, breadboard, or script spike) to test the core idea in action.
   
   Execute the following:
-  1. Define the Minimal Viable Proof (MVP) prototype: the simplest mock-up, breadboard, or script to test the core mechanism.
-  2. Specify the precise measurement protocol and calibration steps.
-  3. Define the advance kill threshold: what specific empirical observation or data point proves this mechanism cannot work.
-  4. Record the observed experimental results, data points, and resulting verdict (Advance to CML 5 vs. Kill/Park).
+  1. Define the simplest prototype build to test the core mechanism with minimum effort.
+  2. Specify how to test and measure performance using everyday tools or simple instrumentation.
+  3. Define the advance kill threshold: what specific observation means the mechanism is a dead end.
+  4. Record the observed results, lessons learned, and recommended next step (Advance to CML 5 vs. Pivot/Park).
 
 deliverable_schema:
   required_sections:

@@ -6,28 +6,35 @@ advances: ["story", "reach", "novel"]
 target_output: deliverable.md
 
 description: >
-  The famous DARPA 8-question screening catechism answered plainly without technical jargon.
-  Quick, decisive gate for new engineering and research initiatives.
+  The famous Heilmeier 8-question screening catechism answered plainly without jargon or corporate pretense.
+  Quick, decisive gate to sanity-check new maker and hardware projects, scaffolding personal motivation for Jared.
 
 prompt_instructions: >
-  You are an expert technical evaluator answering the DARPA Heilmeier Catechism.
-  Answer each question crisply and directly without filler.
-
-  1. What are you trying to do? Articulate your objectives using absolutely no jargon.
-  2. How is it done today, and what are the limits of current practice?
-  3. What is new in your approach and why do you think it will be successful?
-  4. Who cares? If you succeed, what difference will it make?
-  5. What are the risks?
-  6. How much will it cost?
-  7. How long will it take?
-  8. What are the mid-term and final "exams" to check for success?
+  You are my personal innovator's assistant answering the Heilmeier Catechism for this project.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project for fun and learning. Answer plainly without corporate buzzwords or enterprise pretense.
+  
+  Answer each question crisply and directly:
+  1. What are you trying to do? Articulate the goal plainly with zero jargon.
+  2. How is it done today, and what are the limits of existing solutions or DIY hacks?
+  3. What is new or fun in your approach, and why might it work?
+  4. Why build this? (Personal Value & Motivation):
+     - Do NOT pretend to speak for Jared. Only Jared knows his true personal motivation.
+     - Instead, suggest 2–3 potential angles for why this could be fun, satisfying, or useful to build based on the note.
+     - Explicitly format this section with a placeholder callout block for Jared to confirm, edit, or replace:
+       > 💡 **Jared's Take**: [Suggested angle, awaiting Jared's confirmation/edit]
+  5. What are the primary technical risks or snags?
+  6. How much will parts and materials cost?
+  7. How long will the build take in spare-time hours?
+  8. What are the quick mid-term check and final test "exams" to prove it works?
 
 deliverable_schema:
   required_sections:
     - "objectives_no_jargon"
     - "current_practice_and_limits"
     - "new_approach_and_rationale"
-    - "impact_and_stakeholders"
+    - "personal_value_and_impact"
     - "risks_and_mitigations"
     - "cost_and_schedule"
     - "success_exams"

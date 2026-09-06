@@ -4,8 +4,8 @@
 
 {% block content %}
 <div style="margin-bottom: 1rem;">
-    <a href="/" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
-        &larr; Back to Explore
+    <a href="{{ back_url }}" style="color: var(--accent); text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+        &larr; Back to {{ back_label }}
     </a>
 </div>
 
@@ -16,7 +16,7 @@
             <span class="mono" style="font-size: 1.25rem; font-weight: 700; color: var(--accent);">{{ node.id }}</span>
             <span class="badge {% if node.state in ['active', 'have'] %}badge-green{% endif %}">{{ node.state }}</span>
             {% if node.attrs.get('cml') %}
-            <span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}</span>
+            <span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}{% if node.attrs.get('cml')|cml_desc %} {{ node.attrs.get('cml')|cml_desc }}{% endif %}</span>
             {% endif %}
             {% if node.attrs.get('is_subquestion') and node.attrs.get('subject_id') %}
             <a href="/question-graph/{{ node.attrs.get('subject_id') }}" class="badge" style="background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3); text-decoration: none;">
@@ -107,7 +107,7 @@
         <div style="display: flex; gap: 2rem; flex-wrap: wrap; font-size: 0.9rem; align-items: center;">
             {% if node.attrs.get('cml') %}
             <div>
-                CML Level: <strong style="color: var(--accent); font-size: 1.1rem;">{{ node.attrs.get('cml') }}</strong>
+                CML Level: <strong style="color: var(--accent); font-size: 1.1rem;">{{ node.attrs.get('cml') }}</strong>{% if node.attrs.get('cml')|cml_desc %} <span style="color: var(--text-muted); font-size: 0.9rem;">— {{ node.attrs.get('cml')|cml_desc }}</span>{% endif %}
             </div>
             {% endif %}
             {% if node.attrs.get('scores') %}
@@ -142,9 +142,7 @@
         <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
             Note Prose (Markdown Body)
         </h3>
-        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">
-            {{ node.body if node.body else '*(No body text provided)*' }}
-        </div>
+        <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">{{- (node.body|trim) if node.body else '*(No body text provided)*' -}}</div>
     </div>
 
     <!-- Typed Relationships & Graph Edges -->
@@ -162,7 +160,7 @@
             <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="mono" style="color: var(--green);">&larr; [{{ in_edge.relation }}]</span>
-                    <a href="/node/{{ in_edge.from_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ in_edge.from_id }}</a>
+                    <a href="/node/{{ in_edge.from_id }}?from={{ node.id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ in_edge.from_id }}</a>
                     <span style="color: var(--text-muted);">("{{ in_edge.from_title }}")</span>
                 </div>
                 <span class="badge" style="font-size: 0.7rem;">Inbound</span>
@@ -173,12 +171,12 @@
             <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="mono" style="color: var(--accent);">&rarr; [{{ out_edge.relation }}]</span>
-                    <a href="/node/{{ out_edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
+                    <a href="/node/{{ out_edge.to_id }}?from={{ node.id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
                     {% if out_edge.note %}
                     <span style="color: var(--text-muted);">({{ out_edge.note }})</span>
                     {% endif %}
                 </div>
-                <form action="/node/{{ node.id }}/unlink" method="POST" style="margin: 0;">
+                <form action="/node/{{ node.id }}/unlink{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="margin: 0;">
                     <input type="hidden" name="target_id" value="{{ out_edge.to_id }}">
                     <input type="hidden" name="relation" value="{{ out_edge.relation }}">
                     <button type="submit" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);" title="Remove this relationship edge">&times; Unlink</button>
@@ -197,7 +195,7 @@
             <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">
                 + Link to Another Node
             </div>
-            <form action="/node/{{ node.id }}/link" method="POST" style="display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr auto; gap: 0.75rem; align-items: center;">
+            <form action="/node/{{ node.id }}/link{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="display: grid; grid-template-columns: 1.5fr 1.2fr 1.5fr auto; gap: 0.75rem; align-items: center;">
                 <div>
                     <input type="text" name="target_id" list="available-targets-list" placeholder="Target Node (ID or Title)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
                     <datalist id="available-targets-list">

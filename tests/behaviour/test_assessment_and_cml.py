@@ -20,10 +20,8 @@ from iw.contracts.models import Author, AuthorKind, Node
 from iw.core.events import FileEventLog
 from iw.core.store import MarkdownStore
 from iw.domain.assessor.cml import (
-    apply_assessment_to_node,
-    compute_cml,
-    identify_laggards,
-    recommend_activity_for_laggard,
+    apply_assessment_to_node, compute_cml, get_cml_description,
+    identify_laggards, recommend_activity_for_laggard,
 )
 from iw.web.app import create_app
 
@@ -50,12 +48,15 @@ def test_assess_02_cml_is_integer_minimum_of_maturity_scores():
     """ASSESS-02: An idea's CML is the integer minimum of its four maturity scores."""
     scores_1 = {"novel": 4, "works": 3, "reach": 2, "story": 5}
     assert compute_cml(scores_1) == 2
+    assert get_cml_description(2) == "Plausible (Initial Feasibility)"
 
     scores_2 = {"novel": 4, "works": 4, "reach": 4, "story": 4}
     assert compute_cml(scores_2) == 4
+    assert get_cml_description(4) == "Chosen (Point Design)"
 
     scores_3 = {"novel": 5, "works": 5, "reach": 5, "story": 5}
     assert compute_cml(scores_3) == 5
+    assert get_cml_description(5) == "Real (Working Prototype)"
 
 
 def test_assess_03_unassessed_idea_defaults_to_cml_1_without_scores():
@@ -189,6 +190,7 @@ def test_assess_08_concept_graphic_designated_and_rendered_on_node(tmp_path: Pat
     assert "Concept Graphic" in response.text
     assert "drop/cycling_ov1.png" in response.text
     assert "CML 3" in response.text
+    assert "Explored (Trade Space)" in response.text
     assert "PURSUE" in response.text
 
     media_resp = client.get("/vault-file/drop/cycling_ov1.png")

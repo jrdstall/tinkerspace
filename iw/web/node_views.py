@@ -4,6 +4,7 @@ Layer 4 Web surface module.
 """
 
 from datetime import datetime, timezone
+from urllib.parse import urlparse
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
 from starlette.templating import Jinja2Templates
@@ -25,6 +26,73 @@ def _count_questions(nodes: list[Node], subject_id: str) -> int:
     return count
 
 
+def _format_node_back_label(target: Node) -> str:
+    """Format human-friendly back button label for a node."""
+    title_part = f": {target.title}" if target.title else ""
+    if len(title_part) > 35:
+        title_part = title_part[:32] + "..."
+    return f"{target.type.capitalize()} ({target.id}{title_part})"
+
+
+def _resolve_from_param(from_param: str, current_node_id: str, store: StoreProtocol) -> tuple[str, str] | None:
+    """Resolve back link from 'from' query parameter."""
+    if not from_param:
+        return None
+    target = store.get_node(from_param.upper())
+    if target is not None and target.id != current_node_id:
+        return f"/node/{target.id}", _format_node_back_label(target)
+    known = {
+        "board": ("/board", "Work Board"),
+        "associations": ("/associations", "Association Deck"),
+        "triage": ("/triage", "Triage Inbox"),
+        "scout": ("/scout", "Technology Scout"),
+        "explore": ("/", "Explore"),
+    }
+    return known.get(from_param.lower())
+
+
+def _resolve_referer_target(referer: str, current_node_id: str, store: StoreProtocol, netloc: str) -> tuple[str, str] | None:
+    """Resolve back link from HTTP Referer header if on same origin."""
+    if not referer:
+        return None
+    try:
+        parsed = urlparse(referer)
+        if parsed.netloc and parsed.netloc != netloc:
+            return None
+        path = parsed.path
+        if path.startswith("/node/"):
+            ref_id = path.split("/node/")[1].split("/")[0].upper()
+            if ref_id and ref_id != current_node_id:
+                node = store.get_node(ref_id)
+                if node is not None:
+                    return f"/node/{node.id}", _format_node_back_label(node)
+        elif path.startswith("/question-graph/"):
+            sub_id = path.split("/question-graph/")[1].split("/")[0].upper()
+            return path, f"Question Graph ({sub_id})"
+        elif path.startswith("/workflow/"):
+            wfl_id = path.split("/workflow/")[1].split("/")[0].upper()
+            return path, f"Workflow ({wfl_id})"
+        routes = {"/board": "Work Board", "/associations": "Association Deck", "/triage": "Triage Inbox"}
+        if path in routes:
+            return path, routes[path]
+    except Exception:
+        pass
+    return None
+
+
+def _resolve_back_target(request: Request, current_node_id: str, store: StoreProtocol) -> tuple[str, str]:
+    """Resolve back navigation URL and label from query param or Referer header."""
+    from_param = request.query_params.get("from", "").strip()
+    result = _resolve_from_param(from_param, current_node_id, store)
+    if result is not None:
+        return result
+    referer = request.headers.get("referer", "").strip()
+    ref_result = _resolve_referer_target(referer, current_node_id, store, request.url.netloc)
+    if ref_result is not None:
+        return ref_result
+    return "/", "Explore"
+
+
 async def node_detail_view(request: Request, templates: Jinja2Templates) -> Response:
     """Render the node detail view with frontmatter, edges, and relationship editor."""
     store: StoreProtocol = request.app.state.store
@@ -37,7 +105,7 @@ async def node_detail_view(request: Request, templates: Jinja2Templates) -> Resp
     available_targets = [n for n in all_nodes if n.id != node_id]
     inbound = resolve_inbound_edges(all_nodes, node_id)
     q_count = _count_questions(all_nodes, node_id)
-
+    back_url, back_label = _resolve_back_target(request, node_id, store)
 
     return templates.TemplateResponse(
         request=request,
@@ -50,6 +118,8 @@ async def node_detail_view(request: Request, templates: Jinja2Templates) -> Resp
             "question_count": q_count,
             "inbox_count": len(store.list_inbox()),
             "drop_count": len(store.list_dropped_files()),
+            "back_url": back_url,
+            "back_label": back_label,
         },
     )
 
@@ -91,7 +161,9 @@ async def node_link_action(request: Request) -> Response:
                         payload={"from_id": node.id, "to_id": target_node.id, "relation": relation, "note": note},
                     )
 
-    return RedirectResponse(url=f"/node/{node_id}", status_code=303)
+    from_param = request.query_params.get("from", "").strip()
+    redirect_url = f"/node/{node_id}?from={from_param}" if from_param else f"/node/{node_id}"
+    return RedirectResponse(url=redirect_url, status_code=303)
 
 
 async def node_unlink_action(request: Request) -> Response:
@@ -120,4 +192,6 @@ async def node_unlink_action(request: Request) -> Response:
                     payload={"from_id": node.id, "to_id": target_id, "relation": relation},
                 )
 
-    return RedirectResponse(url=f"/node/{node_id}", status_code=303)
+    from_param = request.query_params.get("from", "").strip()
+    redirect_url = f"/node/{node_id}?from={from_param}" if from_param else f"/node/{node_id}"
+    return RedirectResponse(url=redirect_url, status_code=303)

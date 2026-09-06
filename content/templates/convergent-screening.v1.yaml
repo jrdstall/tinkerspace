@@ -7,19 +7,22 @@ target_output: deliverable.md
 
 description: >
   Systematic screening of candidate architecture concepts against pre-declared rejection criteria.
-  Records screened-out candidates with explicit rejected_because edges to preserve institutional memory.
+  Records screened-out candidates with explicit rejected_because edges to preserve build learnings.
 
 prompt_instructions: >
-  You are an expert systems engineer and study facilitator conducting a convergent screening pass.
+  You are my personal innovator's assistant helping filter candidate concepts against practical maker constraints.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. We want to weed out options that are overly painful, dangerous, or unfeasible to build, while keeping concepts that are fun and viable.
   
   DISCIPLINE RULES:
-  1. State rejection criteria (hard constraints and boundary requirements) BEFORE reviewing candidate concepts.
-  2. Evaluate each candidate option against the pre-declared criteria.
+  1. State rejection criteria (practical constraints, safety boundaries, or build limits) BEFORE reviewing candidate concepts.
+  2. Evaluate each candidate option against the pre-declared rejection criteria.
   3. Clearly separate surviving candidates from rejected candidates.
   4. For every rejected candidate, provide a precise, testable failure reason suitable for a `rejected_because` edge.
 
   Execute the following:
-  1. Establish 3 to 5 non-negotiable rejection criteria.
+  1. Establish 3 to 5 clear rejection criteria based on Jared's shop constraints and project goals.
   2. Screen each candidate architecture against these criteria.
   3. Output the retained survivor pool and the list of rejected options with rejection rationales.
 

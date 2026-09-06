@@ -29,106 +29,91 @@
 
 <!-- Search and Filter Controls -->
 <div class="card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
-    <form method="GET" action="/" style="display: flex; flex-direction: column; gap: 1rem;">
+    <form method="GET" action="/" id="explore-filter-form" style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <input type="hidden" name="type" id="filter-type-input" value="{{ current_type }}">
+        <input type="hidden" name="state" id="filter-state-input" value="{{ current_state }}">
+
         <div style="display: flex; gap: 0.75rem;">
-            <input type="text" name="q" value="{{ q }}" placeholder="Search title, body, tags, ID, or domain..." style="flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem;">
+            <input type="text" name="q" value="{{ q }}" placeholder="Search title, ID, tags, or content..." style="flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem;">
             <button type="submit" class="btn btn-primary">Search</button>
-            {% if q or current_type or current_domain or current_tag or current_state or current_sort != 'touched' %}
+            {% if q or current_type or current_state or current_sort != 'touched' %}
             <a href="/" class="btn" style="text-decoration: none; display: flex; align-items: center;">Clear</a>
             {% endif %}
         </div>
-        
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; font-size: 0.85rem;">
-            <div>
-                <label style="color: var(--text-muted); margin-right: 0.25rem;">Type:</label>
-                <select name="type" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <option value="">All Types</option>
-                    {% for t in facets.types %}
-                    <option value="{{ t }}" {% if current_type == t %}selected{% endif %}>{{ t|capitalize }}</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-            <div>
-                <label style="color: var(--text-muted); margin-right: 0.25rem;">Domain:</label>
-                <select name="domain" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <option value="">All Domains</option>
-                    {% for d in facets.domains %}
-                    <option value="{{ d }}" {% if current_domain == d %}selected{% endif %}>{{ d }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.85rem;">
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; width: 45px;">Type:</span>
+                    <button type="button" class="btn filter-btn {% if not current_type %}active{% endif %}" onclick="setTypeFilter('')">ALL</button>
+                    <button type="button" class="btn filter-btn {% if current_type == 'idea' %}active{% endif %}" onclick="setTypeFilter('idea')">IDEA</button>
+                    <button type="button" class="btn filter-btn {% if current_type == 'friction' %}active{% endif %}" onclick="setTypeFilter('friction')">FRI</button>
+                    <button type="button" class="btn filter-btn {% if current_type == 'question' %}active{% endif %}" onclick="setTypeFilter('question')">QUE</button>
+                    <button type="button" class="btn filter-btn {% if current_type == 'observation' %}active{% endif %}" onclick="setTypeFilter('observation')">OBS</button>
+                    <button type="button" class="btn filter-btn {% if current_type == 'asset' %}active{% endif %}" onclick="setTypeFilter('asset')">AST</button>
+                </div>
 
-            <div>
-                <label style="color: var(--text-muted); margin-right: 0.25rem;">State:</label>
-                <select name="state" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <option value="">All States</option>
+                <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap;">
+                    <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; width: 45px;">State:</span>
+                    <button type="button" class="btn filter-btn {% if not current_state %}active{% endif %}" onclick="setStateFilter('')">ALL</button>
+                    <button type="button" class="btn filter-btn {% if current_state == 'active' %}active{% endif %}" onclick="setStateFilter('active')">ACTIVE</button>
+                    <button type="button" class="btn filter-btn {% if current_state == 'parked' %}active{% endif %}" onclick="setStateFilter('parked')">PARKED</button>
+                    <button type="button" class="btn filter-btn {% if current_state == 'have' %}active{% endif %}" onclick="setStateFilter('have')">HAVE</button>
                     {% for s in facets.states %}
-                    <option value="{{ s }}" {% if current_state == s %}selected{% endif %}>{{ s }}</option>
+                        {% if s not in ['active', 'parked', 'have'] %}
+                        <button type="button" class="btn filter-btn {% if current_state == s %}active{% endif %}" onclick="setStateFilter('{{ s }}')">{{ s|upper }}</button>
+                        {% endif %}
                     {% endfor %}
-                </select>
+                </div>
             </div>
 
-            <div>
-                <label style="color: var(--text-muted); margin-right: 0.25rem;">Sort:</label>
-                <select name="sort" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <option value="touched" {% if current_sort == 'touched' %}selected{% endif %}>Last Touched</option>
-                    <option value="created" {% if current_sort == 'created' %}selected{% endif %}>Created</option>
-                    <option value="id" {% if current_sort == 'id' %}selected{% endif %}>Node ID</option>
-                    <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title</option>
-                </select>
-            </div>
-
-            <div style="margin-left: auto; color: var(--text-muted);">
-                Showing <strong>{{ nodes|length }}</strong> of <strong>{{ total_nodes }}</strong> nodes
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                    <label for="sort-select" style="color: var(--text-muted); font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Sort:</label>
+                    <select id="sort-select" name="sort" onchange="this.form.submit()" style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.5rem; color: var(--text-main); font-family: inherit; font-size: 0.85rem;">
+                        <option value="touched" {% if current_sort == 'touched' %}selected{% endif %}>Last Touched</option>
+                        <option value="created" {% if current_sort == 'created' %}selected{% endif %}>Created</option>
+                        <option value="id" {% if current_sort == 'id' %}selected{% endif %}>Node ID</option>
+                        <option value="title" {% if current_sort == 'title' %}selected{% endif %}>Title</option>
+                    </select>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">
+                    Showing <strong>{{ nodes|length }}</strong> of <strong>{{ total_nodes }}</strong> nodes
+                </div>
             </div>
         </div>
     </form>
 </div>
 
 {% if nodes %}
-    <div style="display: flex; flex-direction: column; gap: 1rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.85rem;">
         {% for node in nodes %}
-        <div class="card" style="margin-bottom: 0;">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
-                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
-                    <a href="/node/{{ node.id }}" class="mono" style="font-size: 1.1rem; font-weight: 700; color: var(--accent); text-decoration: none;">
-                        [{{ node.id }}]
-                    </a>
-                    <span class="badge">{{ node.type|upper }}</span>
-                    <span class="badge {% if node.state in ['active', 'have'] %}badge-green{% endif %}">{{ node.state }}</span>
+        <div class="card node-tile" onclick="window.location='/node/{{ node.id }}'" title="Domain: {{ node.domain }}{% if node.tags %} | Tags: {% for t in node.tags %}#{{ t }} {% endfor %}{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.35rem;">
+                    <span class="badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">{{ node.type }}</span>
                     {% if node.type == 'idea' and node.attrs.get('cml') %}
-                    <span class="badge" style="color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}</span>
+                    <span class="badge" style="font-size: 0.65rem; color: var(--accent); border-color: rgba(88,166,255,0.4);">CML {{ node.attrs.get('cml') }}</span>
                     {% endif %}
                 </div>
-                <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">
-                    Domain: <strong style="color: var(--text-main);">{{ node.domain }}</strong>
-                </div>
+                <a href="/node/{{ node.id }}" class="mono" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none;" onclick="event.stopPropagation();">
+                    {{ node.id }}
+                </a>
             </div>
 
-            <h2 style="font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem;">
-                <a href="/node/{{ node.id }}" style="color: var(--text-main); text-decoration: none;">{{ node.title }}</a>
-            </h2>
+            <div style="flex: 1; display: flex; align-items: center; margin: 0.6rem 0;">
+                <h3 style="font-size: 0.95rem; font-weight: 600; line-height: 1.35; margin: 0;">
+                    <a href="/node/{{ node.id }}" class="tile-title" onclick="event.stopPropagation();">{{ node.title }}</a>
+                </h3>
+            </div>
 
-            {% if node.body %}
-            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.75rem; white-space: pre-wrap;">{{ node.body[:200] }}{% if node.body|length > 200 %}...{% endif %}</p>
-            {% endif %}
-
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.5rem;">
-                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
-                    {% for tag in node.tags %}
-                    <a href="/?tag={{ tag }}" class="badge" style="font-size: 0.7rem; text-decoration: none;">#{{ tag }}</a>
-                    {% endfor %}
-                    {% if node.edges %}
-                    <span class="badge" style="font-size: 0.7rem; color: var(--accent);">{{ node.edges|length }} links</span>
-                    {% endif %}
-                </div>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    {% if node.author %}
-                    <span>Author: <strong style="color: var(--text-main);">{{ node.author.kind.value }}</strong></span>
-                    {% endif %}
-                    <span>Created: <span class="mono">{{ node.created.strftime('%Y-%m-%d') if node.created else 'N/A' }}</span></span>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.45rem;">
+                <span class="badge {% if node.state in ['active', 'have'] %}badge-green{% endif %}" style="font-size: 0.65rem; padding: 0.1rem 0.35rem;">
+                    {{ node.state }}
+                </span>
+                <span class="mono" style="font-size: 0.7rem; color: var(--text-muted);">
+                    {{ node.created.strftime('%Y-%m-%d') if node.created else 'N/A' }}
+                </span>
             </div>
         </div>
         {% endfor %}
@@ -142,4 +127,66 @@
         <a href="/" class="btn btn-primary">Reset Filters</a>
     </div>
 {% endif %}
+
+<script>
+    function setTypeFilter(val) {
+        document.getElementById('filter-type-input').value = val;
+        document.getElementById('explore-filter-form').submit();
+    }
+    function setStateFilter(val) {
+        document.getElementById('filter-state-input').value = val;
+        document.getElementById('explore-filter-form').submit();
+    }
+</script>
+
+<style>
+    .filter-btn {
+        padding: 0.2rem 0.55rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 4px;
+        letter-spacing: 0.3px;
+        background-color: var(--badge-bg);
+        border: 1px solid var(--border-color);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .filter-btn:hover {
+        border-color: var(--accent);
+        color: var(--text-main);
+    }
+    .filter-btn.active {
+        background-color: rgba(88, 166, 255, 0.2);
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 700;
+    }
+    .node-tile {
+        cursor: pointer;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 0.85rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 145px;
+        margin-bottom: 0;
+        transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .node-tile:hover {
+        border-color: var(--accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+    .node-tile .tile-title {
+        color: var(--text-main);
+        text-decoration: none;
+        transition: color 0.15s ease;
+    }
+    .node-tile:hover .tile-title {
+        color: var(--accent);
+    }
+</style>
 {% endblock %}

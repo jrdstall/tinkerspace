@@ -70,7 +70,7 @@
         <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Title</label>
-                <input type="text" id="triage-title" name="title" value="{{ item.raw_text[:80] }}" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;" required>
+                <input type="text" id="triage-title" name="title" value="" placeholder="Short, memorable title (e.g. Kitchen eInk Display)..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;" required>
             </div>
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Domain</label>
@@ -86,14 +86,6 @@
             <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Candidate Edge Link (Optional)</label>
             <div style="display: grid; grid-template-columns: 1.5fr 1.5fr; gap: 1rem;">
                 <div>
-                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Search or select Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <datalist id="existing-nodes-list">
-                        {% for n in existing_nodes %}
-                        <option value="{{ n.id }}">{{ n.id }} — {{ n.title }} ({{ n.type }})</option>
-                        {% endfor %}
-                    </datalist>
-                </div>
-                <div>
                     <input type="text" name="edge_rel" id="edge-rel-input" list="edge-rel-list" placeholder="Relation (e.g. addresses, derives_from, questions)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
                     <datalist id="edge-rel-list">
                         <option value="addresses">addresses</option>
@@ -105,6 +97,14 @@
                         <option value="blocks">blocks</option>
                         <option value="relates_to">relates_to</option>
                         <option value="requires">requires</option>
+                    </datalist>
+                </div>
+                <div>
+                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Search or select Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <datalist id="existing-nodes-list">
+                        {% for n in existing_nodes %}
+                        <option value="{{ n.id }}">{{ n.id }} — {{ n.title }} ({{ n.type }})</option>
+                        {% endfor %}
                     </datalist>
                 </div>
             </div>
@@ -147,6 +147,7 @@
         if (!canSubmit) return;
         const form = document.getElementById('triage-form');
         if (form) {
+            if (!form.reportValidity()) return;
             canSubmit = false;
             form.submit();
         }

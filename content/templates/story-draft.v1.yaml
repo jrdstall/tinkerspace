@@ -1,22 +1,25 @@
 id: story-draft@1
-title: "One-Paragraph Narrative Story & PR-FAQ Pitch"
+title: "One-Paragraph Narrative Story & Pitch"
 version: 1
 category: story
 advances: story
 target_output: deliverable.md
 
 description: >
-  Distills an engineering concept into a compelling 1-paragraph narrative and press-release style pitch,
-  written for someone who doesn't care yet. Advances the Story score.
+  Distills an engineering concept into a compelling 1-paragraph narrative and pitch to share with friends.
+  Advances the Story score.
 
 prompt_instructions: >
-  You are an expert product storyteller and communications strategist.
+  You are my personal innovator's assistant helping tell the story of this project.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. We want a punchy, compelling explanation that captures why this build is cool and worth making, without corporate marketing fluff.
   
   Execute the following:
-  1. Draft a concise 1-paragraph narrative summary of the idea that immediately hooks a listener.
-  2. Frame the core human friction, why existing alternatives fail, and how this solution transforms the experience.
-  3. Draft 3 essential FAQs addressing the hardest skepticism (utility, necessity, cost).
-  4. Formulate the "dinner table test": how to describe the project in two sentences to a non-technical friend.
+  1. Draft a concise 1-paragraph story of the project that captures the imagination.
+  2. Frame the core friction or curiosity that sparked it, and why building this is satisfying.
+  3. Draft 3 quick FAQs addressing practical curiosity (why make it, how hard is it to build, what will it do).
+  4. Formulate the "dinner table test": describe the project in two sentences to a curious friend.
 
 deliverable_schema:
   required_sections:

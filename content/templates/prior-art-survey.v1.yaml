@@ -1,38 +1,54 @@
 id: prior-art-survey@1
-title: "Prior-Art & Patent Landscape Survey"
+title: "Quick Prior-Art Survey"
 version: 1
 category: novelty
 advances: novel
 target_output: deliverable.md
 
 description: >
-  Thorough adversarial survey of global patents, commercial products, academic literature, and open source
-  projects to test idea novelty and identify freedom-to-operate boundaries.
+  Quick survey of maker projects, open-source builds, and commercial products to find existing 
+  solutions or starting points. Finding prior art helps learn from existing work and remix ideas 
+  for personal enjoyment; finding none validates novelty.
 
 prompt_instructions: >
-  You are an expert patent researcher and technology scout conducting an ADVERSARIAL NOVELTY SURVEY.
-  Do not act as a cheerleader. Actively attempt to refute the idea's novelty by locating direct or adjacent prior art.
+  You are my personal technology scout conducting a concept and prior-art survey.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project built for fun and learning, not a commercial product.
+  - Finding existing projects is a WIN: it gives me build logs, CAD models, BOMs, or proven mechanics to remix or improve.
+  - Finding nothing validates genuine novelty.
+  Do not act as a corporate patent auditor; act as a collaborative maker-partner looking for inspiration, existing solutions, and technical traps.
 
   Execute the following:
-  1. Search 4 key arenas:
-     - Active & Expired Patents (USPTO, EPO, WIPO).
-     - Commercial Products (teardowns, existing market devices).
-     - Academic Literature (IEEE, ACM, arXiv, university labs).
-     - Adjacent Domain Transfers (mechanisms in aerospace, automotive, medical).
-  2. No Hallucinations: Provide real patent numbers, real assignees, and real publication dates. Flag unverified citations.
-  3. Freedom-to-Operate & Design-Arounds: Identify active IP risks and expired foundational mechanics in the public domain.
-  4. Provide a Novelty Score (1-5) and actionable recommendation.
+  1. Search Key Arenas:
+     - Maker & DIY projects (Printables, Thingiverse, Instructables, Hackaday, YouTube build logs).
+     - Open-source hardware/software repositories (GitHub, GitLab).
+     - Commercial products, teardowns, or adjacent domain mechanisms.
+  2. Summarize Findings & Visuals:
+     - Provide concise summaries of the closest 2-5 projects or products found, with links/names so I can dig deeper.
+     - Include pictures and diagrams: Visuals (product photos, teardowns, CAD models, patent drawings, or schematics) are always encouraged for any prior art found. Embed pictures directly into the results if possible (e.g. `![Product Name](image_url)`), or provide direct clickable hyperlinks to pictures, galleries, teardowns, patent drawings, or product photos from the web.
+  3. Compare to My Concept:
+     - Detail key similarities (what mechanics or ideas can I borrow or learn from?).
+     - Detail key differences (where does my concept diverge or do something unique?).
+  4. Novelty Score & Recommendation:
+     - Provide a Novelty Score from 1 to 5:
+       1 = Identical DIY tutorial or off-the-shelf product already exists.
+       2 = Very similar existing projects; minor cosmetic or configuration differences.
+       3 = Similar concepts exist, but my specific mechanism or combination is distinct.
+       4 = Highly novel; only distant or tangential prior art found.
+       5 = Unprecedented; zero direct or adjacent solutions found.
+     - Set this in the deliverable metadata header under `scores: { novel: <score> }`.
+     - Recommend whether to build as-is, adapt/remix an existing build, or pivot.
 
 deliverable_schema:
   required_sections:
     - "executive_summary"
     - "sources_and_search_strategy"
     - "direct_and_adjacent_prior_art"
-    - "freedom_to_operate_assessment"
+    - "similarities_and_differences"
     - "novelty_verdict_and_recommendation"
+
   fields:
     prior_art_found: bool
-    closest_patents: list
     closest_products: list
     novelty_score: int # 1 to 5
-    freedom_to_operate_verdict: string # clear | risk | blocked

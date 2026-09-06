@@ -239,3 +239,25 @@ def test_store_16_id_lookup_is_case_insensitive(tmp_path: Path):
     assert node_upper is not None
     assert node_lower.id == "FRI-A16"
     assert node_upper.id == "FRI-A16"
+
+
+def test_store_work_folder_deliverables_not_quarantined(tmp_path: Path):
+    """STORE-17/18: Files in work/ and inbox/ are not treated as entity nodes or quarantined."""
+    work_dir = tmp_path / "work" / "UOW-A01"
+    work_dir.mkdir(parents=True)
+    deliverable = work_dir / "deliverable.md"
+    deliverable.write_text(
+        "<!--\n"
+        "unit: UOW-A01\n"
+        "summary: Test summary\n"
+        "scores:\n"
+        "  works: 3\n"
+        "-->\n"
+        "# Findings\nProse content\n",
+        encoding="utf-8",
+    )
+
+    store = MarkdownStore(vault_dir=tmp_path)
+    attention = store.list_needs_attention()
+    assert len(attention) == 0
+

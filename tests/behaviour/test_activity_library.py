@@ -115,7 +115,7 @@ def test_actlib_07_prior_art_and_questionstorm_templates():
     prior = load_template("prior-art-survey.v1.yaml")
     assert prior["id"] == "prior-art-survey@1"
     assert prior["advances"] == "novel"
-    assert "freedom_to_operate_assessment" in prior["deliverable_schema"]["required_sections"]
+    assert "similarities_and_differences" in prior["deliverable_schema"]["required_sections"]
 
     qstorm = load_template("questionstorm.v1.yaml")
     assert qstorm["id"] == "questionstorm@1"

@@ -55,13 +55,22 @@ def atomic_write_markdown(
 
 
 def scan_vault_markdown_files(vault_dir: Path) -> list[Path]:
-    """Find all entity .md files in the vault, excluding inbox directory."""
+    """Find all entity .md files in the vault, excluding non-entity directories (work, inbox, cas, etc.)."""
     if not vault_dir.exists():
         return []
-    return [
-        p for p in vault_dir.rglob("*.md")
-        if p.is_file() and not p.parts[-2] == "inbox"
-    ]
+    excluded_dirs = {"inbox", "work", "cas", "meta", ".obsidian", ".git", ".trash"}
+    results: list[Path] = []
+    for p in vault_dir.rglob("*.md"):
+        if not p.is_file():
+            continue
+        try:
+            rel_parts = p.relative_to(vault_dir).parts
+        except ValueError:
+            rel_parts = p.parts
+        if any(part in excluded_dirs or (part.startswith(".") and part != ".") for part in rel_parts[:-1]):
+            continue
+        results.append(p)
+    return results
 
 
 def parse_vault_file(path: Path) -> tuple[Node | None, AttentionItem | None]:

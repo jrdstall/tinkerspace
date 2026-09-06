@@ -55,7 +55,7 @@
                         <div>
                             Subject: 
                             {% for sub in u.subject_ids %}
-                            <a href="/node/{{ sub }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ sub }}</a>{% if not loop.last %}, {% endif %}
+                            <a href="/node/{{ sub }}?from=board" class="mono" style="color: var(--accent); text-decoration: none;">{{ sub }}</a>{% if not loop.last %}, {% endif %}
                             {% endfor %}
                         </div>
                         {% endif %}

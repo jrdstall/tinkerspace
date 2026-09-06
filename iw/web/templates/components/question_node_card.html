@@ -3,7 +3,7 @@
     <!-- Top Row -->
     <div style="display: flex; justify-content: space-between; align-items: center;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <a href="/node/{{ q.id }}" class="mono" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none;">{{ q.id }}</a>
+            <a href="/node/{{ q.id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="font-size: 0.8rem; font-weight: 700; color: var(--accent); text-decoration: none;">{{ q.id }}</a>
             <span class="badge {% if q.importance == 'high' %}badge-orange{% endif %}" style="font-size: 0.65rem;">
                 {% if q.importance == 'high' %}⚡ HIGH{% elif q.importance == 'medium' %}MED{% else %}LOW{% endif %}
             </span>
@@ -22,7 +22,7 @@
         {% for edge in q.out_edges %}
         <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
             <span class="mono" style="color: var(--accent);">&rarr; [{{ edge.relation }}]</span>
-            <a href="/node/{{ edge.to_id }}" class="mono" style="color: var(--accent); text-decoration: none;">{{ edge.to_id }}</a>
+            <a href="/node/{{ edge.to_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none;">{{ edge.to_id }}</a>
         </div>
         {% endfor %}
     </div>

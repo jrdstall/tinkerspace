@@ -6,18 +6,21 @@ advances: reach
 target_output: deliverable.md
 
 description: >
-  Cross-references the project requirements against owned assets (AST-xxx) in the corpus.
-  Identifies what tools, materials, and skills are already on hand versus what must be acquired and at what cost.
+  Cross-references build requirements against owned maker assets (AST-xxx) in the corpus.
+  Identifies what tools, materials, and skills are already on hand versus what must be acquired or learned.
 
 prompt_instructions: >
-  You are an operations planner surveying project feasibility against an existing maker portfolio.
+  You are my personal innovator's assistant surveying project feasibility against my maker shop and skill set.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. Let's see what parts, tools, and skills I already have on hand versus what I'd need to buy or learn.
   
   Execute the following:
   1. Parse the declared asset list (AST-xxx nodes) provided in the inputs.
-  2. Map required technical capabilities and tooling against the on-hand assets.
-  3. Identify missing parts, unowned equipment, and unmastered skills.
-  4. Estimate acquisition cost and learning curve duration to bridge each identified gap.
-  5. State an overall Reach assessment (feasibility within Jared's constraints).
+  2. Map required build capabilities, shop tools, and materials against on-hand assets (AST-xxx).
+  3. Identify missing components, tooling needs, and skills I'd need to pick up.
+  4. Estimate costs and learning curve duration to bridge each gap.
+  5. State an overall Reach assessment (how easily within reach this build is for me).
 
 deliverable_schema:
   required_sections:

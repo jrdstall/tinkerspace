@@ -11,12 +11,30 @@ SCORE_KEYS = ("novel", "works", "reach", "story")
 VALID_WORTH_RATINGS = {"high", "medium", "low"}
 VALID_VERDICTS = {"pursue", "park", "let_go"}
 
+CML_DESCRIPTIONS: dict[int, str] = {
+    1: "Spark (Cocktail Napkin)",
+    2: "Plausible (Initial Feasibility)",
+    3: "Explored (Trade Space)",
+    4: "Chosen (Point Design)",
+    5: "Real (Working Prototype)",
+}
+
 LAGGARD_ACTIVITIES = {
     "novel": "prior-art-survey@1",
     "works": "feasibility-spike@1",
     "reach": "parts-and-skills-survey@1",
     "story": "pitch-draft@1",
 }
+
+
+def get_cml_description(cml: int | Any) -> str:
+    """Return the textual description for a Concept Maturity Level (1-5)."""
+    try:
+        val = int(cml)
+    except (ValueError, TypeError):
+        return ""
+    return CML_DESCRIPTIONS.get(val, "")
+
 
 
 def compute_cml(scores: dict[str, int] | None) -> int:

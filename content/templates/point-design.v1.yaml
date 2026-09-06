@@ -6,17 +6,20 @@ advances: reach
 target_output: deliverable.md
 
 description: >
-  Detailed operational and physical breakdown of a single chosen concept.
-  Costs the concept in bill-of-materials parts, labor hours, calendar schedule, and budget.
+  Detailed practical and physical breakdown of a chosen concept.
+  Costs the build in bill-of-materials parts, weekend hours, build schedule, and budget.
 
 prompt_instructions: >
-  You are a lead project engineer producing a baseline point design.
+  You are my personal innovator's assistant mapping out a practical build plan for a chosen design.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. We want a clear, realistic roadmap of how to assemble it, what off-the-shelf hardware to buy, and what to fabricate.
   
   Execute the following:
-  1. Specify the subsystem breakdown and physical/software components of the chosen concept.
-  2. Produce a preliminary Bill of Materials (BOM) detailing major components, suppliers, and estimated hardware costs.
-  3. Estimate engineering and build effort broken down by subsystem into hours and weeks.
-  4. Identify critical path risks, lead-time bottlenecks, and estimated total financial cost.
+  1. Specify the subsystem breakdown and physical/software components of the chosen build.
+  2. Produce a preliminary Bill of Materials (BOM) with major components, common maker suppliers (e.g. McMaster, Amazon, Adafruit, AliExpress), and estimated costs.
+  3. Estimate realistic build effort broken down by subsystem into weekend hours.
+  4. Identify tricky build steps, long-lead parts, and overall estimated budget.
 
 deliverable_schema:
   required_sections:

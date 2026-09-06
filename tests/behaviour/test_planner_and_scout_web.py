@@ -62,7 +62,7 @@ def test_planui_01_planner_view_renders_scores_and_cml(web_test_env):
     res = client.get("/ideas/IDEA-A01/plan")
     assert res.status_code == 200
     assert "Regenerative Shock Absorbers" in res.text
-    assert "Current CML" in res.text
+    assert "Current CML: 2 Plausible (Initial Feasibility)" in res.text
     assert "Target Concept Maturity Level" in res.text
 
 

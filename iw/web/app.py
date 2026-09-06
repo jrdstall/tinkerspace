@@ -14,6 +14,7 @@ from iw.contracts.store import StoreProtocol
 from iw.core.events import FileEventLog
 from iw.core.index import InMemoryIndex
 from iw.core.store import MarkdownStore
+from iw.domain.assessor.cml import get_cml_description
 from iw.domain.scout.service import ScoutService
 from iw.web.helpers import extract_facets, resolve_inbound_edges
 from iw.web import (
@@ -23,6 +24,8 @@ from iw.web import (
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+templates.env.filters["cml_desc"] = get_cml_description
+
 
 
 def get_default_store() -> StoreProtocol:
@@ -38,9 +41,11 @@ async def index_view(request: Request) -> Response:
     all_nodes = store.list_nodes()
     corpus_nodes = [n for n in all_nodes if not (n.attrs.get("is_subquestion") is True or (n.type == "question" and bool(n.attrs.get("subject_id"))))]
     q, n_type = request.query_params.get("q", "").strip(), request.query_params.get("type", "").strip()
+    type_aliases = {"fri": "friction", "que": "question", "obs": "observation", "ast": "asset"}
+    normalized_type = type_aliases.get(n_type.lower(), n_type.lower()) if n_type else ""
     domain, tag = request.query_params.get("domain", "").strip(), request.query_params.get("tag", "").strip()
     state, sort_by = request.query_params.get("state", "").strip(), request.query_params.get("sort", "touched").strip()
-    filters = QueryFilters(type=n_type or None, domain=domain or None, tag=tag or None, state=state or None)
+    filters = QueryFilters(type=normalized_type or None, domain=domain or None, tag=tag or None, state=state or None)
     filtered = InMemoryIndex(corpus_nodes).filter_and_search(filters, query_text=q or None, sort_by=sort_by)
 
     scout = ScoutService(store.vault_dir / "meta" / "scout_interests.json")
@@ -52,7 +57,7 @@ async def index_view(request: Request) -> Response:
             "request": request, "nodes": filtered, "total_nodes": len(corpus_nodes),
             "attention_items": store.list_needs_attention(), "inbox_count": len(store.list_inbox()),
             "drop_count": len(store.list_dropped_files()), "facets": extract_facets(corpus_nodes),
-            "offers": offers, "q": q, "current_type": n_type, "current_domain": domain,
+            "offers": offers, "q": q, "current_type": normalized_type, "current_domain": domain,
             "current_tag": tag, "current_state": state, "current_sort": sort_by,
         },
     )

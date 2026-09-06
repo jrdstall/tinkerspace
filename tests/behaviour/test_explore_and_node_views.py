@@ -134,6 +134,15 @@ def test_explore_03_web_explore_search_and_filter_views(tmp_path: Path):
     assert "AST-A01" in res_type.text
     assert "IDEA-A01" not in res_type.text
 
+    # 4. Filter by type alias ?type=fri returns FRI-A01
+    res_fri = client.get("/?type=fri")
+    assert res_fri.status_code == 200
+    assert "FRI-A01" in res_fri.text
+    assert "AST-A01" not in res_fri.text
+    assert "node-tile" in res_all.text
+    assert "setTypeFilter" in res_all.text
+    assert "setStateFilter" in res_all.text
+
 
 def test_explore_04_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path: Path):
     """EXPLORE-04: Node detail page renders CML scores and resolves inbound edge graph links."""
@@ -145,7 +154,7 @@ def test_explore_04_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path:
     app = create_app(store=store)
     client = TestClient(app)
 
-    # 1. Idea detail view renders CML scores breakdown
+    # 1. Idea detail view renders CML scores breakdown and flush body text
     res_idea = client.get("/node/IDEA-A01")
     assert res_idea.status_code == 200
     assert "CML Level:" in res_idea.text
@@ -153,6 +162,7 @@ def test_explore_04_node_detail_view_renders_frontmatter_cml_and_edges(tmp_path:
     assert "Worth (me): <strong>high</strong>" in res_idea.text
     assert "&rarr; [addresses]" in res_idea.text
     assert "FRI-A01" in res_idea.text
+    assert ">Reflective Sharp memory LCD consumes microwatts" in res_idea.text
 
     # 2. Friction detail view resolves inbound edge from IDEA-A01
     res_fri = client.get("/node/FRI-A01")
@@ -281,5 +291,51 @@ def test_explore_06_subquestions_excluded_from_explore_and_search(tmp_path: Path
     assert res_search.status_code == 200
     assert "QUE-A02" not in res_search.text
     assert "Showing <strong>0</strong> of <strong>4</strong>" in res_search.text
+
+
+def test_explore_07_node_back_link_navigation(tmp_path: Path):
+    """EXPLORE-07: Node detail view resolves intelligent back links from referring nodes/pages."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    for n in _sample_nodes():
+        store.write_node(n, author=author)
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    # 1. Direct view from explore (no from param, no referer) -> Back to Explore
+    res_direct = client.get("/node/IDEA-A01")
+    assert res_direct.status_code == 200
+    assert 'href="/"' in res_direct.text
+    assert "Back to Explore" in res_direct.text
+    assert 'href="/node/FRI-A01?from=IDEA-A01"' in res_direct.text
+
+    # 2. View node arriving from another node via ?from= query param
+    res_from_node = client.get("/node/FRI-A01?from=IDEA-A01")
+    assert res_from_node.status_code == 200
+    assert 'href="/node/IDEA-A01"' in res_from_node.text
+    assert "Back to Idea (IDEA-A01: Memory-in-pixel handlebar puck...)" in res_from_node.text
+
+    # 3. View node arriving via Referer header
+    res_referer = client.get("/node/FRI-A01", headers={"referer": "http://testserver/node/IDEA-A01"})
+    assert res_referer.status_code == 200
+    assert 'href="/node/IDEA-A01"' in res_referer.text
+    assert "Back to Idea (IDEA-A01: Memory-in-pixel handlebar puck...)" in res_referer.text
+
+    # 4. View node arriving from Work Board
+    res_board = client.get("/node/IDEA-A01?from=board")
+    assert res_board.status_code == 200
+    assert 'href="/board"' in res_board.text
+    assert "Back to Work Board" in res_board.text
+
+    # 5. Form actions preserve ?from= parameter upon redirect
+    res_link = client.post(
+        "/node/FRI-A01/link?from=IDEA-A01",
+        data={"target_id": "AST-A01", "relation": "relates_to", "note": "test"},
+        follow_redirects=False,
+    )
+    assert res_link.status_code == 303
+    assert res_link.headers["location"] == "/node/FRI-A01?from=IDEA-A01"
+
 
 

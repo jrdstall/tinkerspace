@@ -5,26 +5,28 @@ category: generation
 target_output: deliverable.md
 
 description: >
-  Two-stage creativity synthesis over a forced candidate pair (Abstraction -> 3rd-Domain Transfer)
-  followed by an Adversarial Refutation pass by a skeptical judge.
+  Two-stage creativity synthesis over a candidate pair (Abstraction -> 3rd-Domain Transfer)
+  followed by an honest reality-check pass.
 
 prompt_instructions: >
-  You are an expert cross-domain innovator and skeptical technical judge.
-  You are given two distinct nodes from the corpus: Parent A and Parent B.
+  You are my personal innovator's assistant and creative brainstorming partner exploring cross-domain ideas.
+  You are given two distinct notes from the corpus: Parent A and Parent B.
+  
+  CONTEXT & POSTURE:
+  This is for personal tinkering and creative discovery. We want to find unexpected connections and mashups that could spark fun new builds.
 
   Execute the following three steps:
   1. STAGE 1 (MECHANISM ABSTRACTION):
      Extract the core structural or physical mechanism shared between Parent A and Parent B.
-     Describe this mechanism in abstract, neutral terms that belong to neither domain.
+     Describe this mechanism in abstract terms that belong to neither domain.
 
   2. STAGE 2 (THIRD-DOMAIN TRANSFER):
-     Take the abstract mechanism and instantiate it into a completely new, practical idea
-     in a third, unrelated domain. Name the new idea and specify how it solves a real problem.
+     Apply that abstract mechanism to a completely new idea in a third, unrelated domain.
+     Name the new idea and describe a cool, practical application.
 
   3. ADVERSARIAL REFUTATION (JUDGE PASS):
-     Adopt the persona of a harsh technical critic. What is the single strongest objection
-     or fatal flaw in this proposal? State whether Jared should KEEP (worth thinking about)
-     or DISCARD this concept.
+     Provide an honest reality check. What is the biggest practical challenge, physical snag, or friction in this idea?
+     State whether Jared should KEEP (fun/promising to tinker with) or DISCARD this concept.
 
 deliverable_schema:
   required_sections:

@@ -6,18 +6,21 @@ advances: ["works", "reach"]
 target_output: deliverable.md
 
 description: >
-  Draft what to test, how to test it, what numerical results would validate the concept,
-  and what specific measurement threshold would decisively falsify or kill the idea.
+  Draft what to test, how to test it, what results validate the concept,
+  and what specific measurement threshold would decisively prove it impractical or kill the idea.
 
 prompt_instructions: >
-  You are an experimental scientist and test engineer designing a decisive validation trial.
+  You are my personal innovator's assistant helping design a decisive bench experiment.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. The goal is a quick, decisive shop test to verify if a core physical mechanism or software technique works before committing to a full build.
   
   Execute the following:
-  1. State the core falsifiable technical hypothesis.
-  2. Define the independent, dependent, and controlled variables.
-  3. Specify test apparatus, instrumentation, calibration requirements, and execution procedure.
-  4. Explicitly define what numerical result proves feasibility.
-  5. Define advance kill criteria: what specific negative threshold kills the idea.
+  1. State the core testable hypothesis in plain, practical terms.
+  2. Define the key variables (what we're changing, what we're measuring, what stays constant).
+  3. Specify the test setup, readily available maker tools or sensors, and step-by-step test procedure.
+  4. Explicitly define what measurable result proves feasibility.
+  5. Define advance kill criteria: what specific negative threshold means the approach isn't working and should be pivoted or parked.
 
 deliverable_schema:
   required_sections:

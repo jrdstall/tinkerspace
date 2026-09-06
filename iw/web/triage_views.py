@@ -42,10 +42,10 @@ async def triage_accept_view(request: Request) -> Response:
     form = await request.form()
     item_id = str(form.get("item_id", "")).strip()
     node_type = str(form.get("node_type", "friction")).strip()
-    title = str(form.get("title", "")).strip()
+    body = str(form.get("body", "")).strip()
+    title = str(form.get("title", "")).strip() or body[:80]
     domain = str(form.get("domain", "general")).strip()
     tags = [t.strip() for t in str(form.get("tags", "")).split(",") if t.strip()]
-    body = str(form.get("body", "")).strip()
     raw_target = str(form.get("edge_target", "")).strip()
     edge_target = raw_target.split()[0].upper() if raw_target else ""
     edge_rel = str(form.get("edge_rel", "")).strip()

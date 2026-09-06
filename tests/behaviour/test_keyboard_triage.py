@@ -187,6 +187,7 @@ def test_triage_05_web_triage_editable_body_and_node_datalist(tmp_path: Path):
     assert "Captured Thought &amp; Note Body (Editable)" in res_get.text or "Captured Thought & Note Body (Editable)" in res_get.text
     assert "FRI-A01" in res_get.text
     assert "existing-nodes-list" in res_get.text
+    assert res_get.text.find('name="edge_rel"') < res_get.text.find('name="edge_target"')
 
     # Submit with edited body and datalist-formatted target node
     res_post = client.post(

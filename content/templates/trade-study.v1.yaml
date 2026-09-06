@@ -6,18 +6,21 @@ advances: ["works", "reach"]
 target_output: deliverable.md
 
 description: >
-  Rigorous comparative trade study evaluating surviving architectural options across weighted technical,
-  operational, and cost criteria, concluding with a sensitivity analysis and recommendation.
+  Comparative trade study evaluating surviving architectural options across weighted maker,
+  operational, and cost criteria, concluding with a sensitivity analysis and practical recommendation.
 
 prompt_instructions: >
-  You are an expert systems engineer conducting a trade study.
+  You are my personal innovator's assistant helping compare design options for this build.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering project. The goal is to pick the design that balances build enjoyment, reliability, ease of prototyping, and performance.
   
   Execute the following:
-  1. Define 4 to 6 weighted evaluation criteria (weights summing to 100% or 1.0).
+  1. Define 4 to 6 weighted evaluation criteria relevant to a maker build (e.g. part availability, build complexity, durability, fun factor) summing to 100% or 1.0.
   2. Score each surviving candidate option on a 1-5 scale across all criteria.
   3. Compute weighted composite scores and rank the candidates.
-  4. Perform a sensitivity pass: test if reasonable weight variations alter the top-ranked choice.
-  5. Provide a crisp architectural recommendation justifying the preferred option.
+  4. Perform a sensitivity pass: test if shifting priorities (e.g. prioritizing low build time over peak performance) alters the top choice.
+  5. Provide a crisp architectural recommendation justifying the preferred option for Jared.
 
 deliverable_schema:
   required_sections:

@@ -15,7 +15,7 @@
         <div>
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
                 <span class="badge mono" style="font-size: 0.85rem; font-weight: 700;">{{ node.id }}</span>
-                <span class="badge badge-green">Current CML: {{ current_cml }}</span>
+                <span class="badge badge-green">Current CML: {{ current_cml }}{% if current_cml|cml_desc %} {{ current_cml|cml_desc }}{% endif %}</span>
             </div>
             <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">
                 {{ node.title }}
@@ -72,7 +72,7 @@
             <select id="target_cml" name="target_cml" onchange="this.form.submit()" style="background: var(--bg-color); color: var(--accent); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 1rem; font-size: 0.95rem; font-weight: 700;">
                 {% for lvl in range(current_cml + 1, 6) %}
                 <option value="{{ lvl }}" {% if lvl == target_cml %}selected{% endif %}>
-                    CML {{ lvl }} — {% if lvl == 2 %}Plausible (Initial Feasibility){% elif lvl == 3 %}Explored (Trade Space){% elif lvl == 4 %}Chosen (Point Design){% elif lvl == 5 %}Real (Working Prototype){% endif %}
+                    CML {{ lvl }} — {{ lvl|cml_desc }}
                 </option>
                 {% endfor %}
             </select>

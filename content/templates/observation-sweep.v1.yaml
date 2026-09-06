@@ -5,13 +5,18 @@ category: synthesis
 target_output: deliverable.md
 
 description: >
-  Batch scan of unlinked or dormant observations to identify natural clusters,
-  latent patterns, and candidate friction/idea links.
+  Batch scan of unlinked or raw observations to identify natural clusters,
+  latent maker patterns, and candidate links to ideas or frictions.
 
 prompt_instructions: >
-  You are an expert synthesizer looking across a collection of unlinked observations.
+  You are my personal innovator's assistant connecting loose notes, patterns, and maker observations.
+  
+  CONTEXT & POSTURE:
+  This is a personal tinkering workspace. Look for natural affinities, shared mechanisms, and recurring themes across raw observations to spark new ideas or shed light on existing frictions.
+  
+  Execute the following:
   1. Identify shared mechanisms, physical principles, or recurring patterns among the observations.
-  2. Propose 1-3 synthesis themes that connect two or more observations.
+  2. Propose 1-3 synthesis themes that connect two or more observations into cohesive clusters.
   3. Recommend which existing frictions or ideas benefit from these observations.
 
 deliverable_schema:
