@@ -3,6 +3,31 @@
     .node-picker-wrapper {
         position: relative;
         width: 100%;
+        display: flex;
+        align-items: center;
+    }
+    .node-picker-input {
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .node-picker-clear-btn {
+        display: none;
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        font-size: 1.1rem;
+        line-height: 1;
+        padding: 0 4px;
+        border-radius: 50%;
+    }
+    .node-picker-clear-btn:hover {
+        color: var(--accent);
+        background: rgba(255, 255, 255, 0.1);
     }
     .node-picker-dropdown {
         display: none;
@@ -11,13 +36,13 @@
         left: 0;
         right: 0;
         margin-top: 4px;
-        max-height: 280px;
+        max-height: 300px;
         overflow-y: auto;
         background-color: #1a2230;
         border: 1px solid var(--accent);
         border-radius: 6px;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-        z-index: 1000;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+        z-index: 1500;
         padding: 0.25rem 0;
     }
     .node-picker-dropdown.active {
@@ -50,7 +75,7 @@
 </style>
 
 <script>
-function setupNodePicker(config) {
+window.setupNodePicker = function(config) {
     const input = document.getElementById(config.inputId);
     const hidden = document.getElementById(config.hiddenId);
     const dropdown = document.getElementById(config.dropdownId);
@@ -60,6 +85,31 @@ function setupNodePicker(config) {
     let debounceTimer = null;
 
     if (!input || !hidden || !dropdown) return;
+
+    // Attach clear button if not already present
+    let clearBtn = input.parentElement ? input.parentElement.querySelector('.node-picker-clear-btn') : null;
+    if (!clearBtn && input.parentElement) {
+        clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'node-picker-clear-btn';
+        clearBtn.title = 'Clear selected node';
+        clearBtn.innerHTML = '&times;';
+        input.parentElement.appendChild(clearBtn);
+        clearBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            clearSelection();
+            input.focus();
+        });
+    }
+
+    function clearSelection() {
+        hidden.value = '';
+        input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+        dropdown.classList.remove('active');
+        if (config.onSelect) config.onSelect(null);
+    }
 
     function renderDropdown(nodes) {
         dropdown.innerHTML = '';
@@ -101,7 +151,11 @@ function setupNodePicker(config) {
                 ${excerptHtml}
             `;
 
-            div.addEventListener('click', () => selectNode(n));
+            div.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                selectNode(n);
+            });
             dropdown.appendChild(div);
         });
 
@@ -112,6 +166,7 @@ function setupNodePicker(config) {
         hidden.value = n.id;
         input.value = `${n.id} — ${n.title}`;
         dropdown.classList.remove('active');
+        if (clearBtn) clearBtn.style.display = 'block';
         if (config.onSelect) config.onSelect(n);
     }
 
@@ -125,15 +180,37 @@ function setupNodePicker(config) {
     input.addEventListener('input', () => {
         clearTimeout(debounceTimer);
         const q = input.value.trim();
-        hidden.value = q.split(' ')[0].toUpperCase();
-        debounceTimer = setTimeout(() => fetchNodes(q), 150);
+        if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+        if (!q) {
+            hidden.value = '';
+        } else {
+            hidden.value = q.split(' ')[0].toUpperCase();
+        }
+        debounceTimer = setTimeout(() => fetchNodes(q), 120);
     });
 
     input.addEventListener('focus', () => {
-        fetchNodes(input.value.trim());
+        const q = input.value.trim();
+        // If it looks like ID — Title, search with empty to show top suggestions
+        const searchQ = q.includes(' — ') ? '' : q;
+        fetchNodes(searchQ);
     });
 
     input.addEventListener('keydown', (e) => {
+        // ALWAYS prevent Enter from submitting the parent form while in this input!
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (dropdown.classList.contains('active') && items.length > 0) {
+                if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+                    selectNode(items[highlightedIndex]);
+                } else {
+                    selectNode(items[0]);
+                }
+            }
+            return;
+        }
+
         if (!dropdown.classList.contains('active') || items.length === 0) return;
 
         if (e.key === 'ArrowDown') {
@@ -144,12 +221,8 @@ function setupNodePicker(config) {
             e.preventDefault();
             highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
             updateHighlight();
-        } else if (e.key === 'Enter') {
-            if (highlightedIndex >= 0 && highlightedIndex < items.length) {
-                e.preventDefault();
-                selectNode(items[highlightedIndex]);
-            }
         } else if (e.key === 'Escape') {
+            e.preventDefault();
             dropdown.classList.remove('active');
         }
     });
@@ -171,5 +244,5 @@ function setupNodePicker(config) {
             dropdown.classList.remove('active');
         }
     });
-}
+};
 </script>

@@ -345,6 +345,7 @@
     {% endif %}
 </div>
 
+{% include "components/node_picker.html" %}
 <script>
     function toggleEditMode() {
         const panel = document.getElementById('node-edit-panel');
@@ -370,5 +371,4 @@
         excludeId: '{{ node.id }}',
     });
 </script>
-{% include "components/node_picker.html" %}
 {% endblock %}

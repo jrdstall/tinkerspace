@@ -150,6 +150,7 @@
     </form>
 </div>
 
+{% include "components/node_picker.html" %}
 <script>
     function selectType(typeName) {
         document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
@@ -230,7 +231,6 @@
         dropdownId: 'edge-target-dropdown',
     });
 </script>
-{% include "components/node_picker.html" %}
 <style>
     .type-btn:has(input:checked), .type-btn.active {
         border-color: var(--accent);
