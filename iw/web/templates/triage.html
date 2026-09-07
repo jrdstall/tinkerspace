@@ -126,13 +126,10 @@
                         <option value="requires">requires</option>
                     </datalist>
                 </div>
-                <div>
-                    <input type="text" name="edge_target" id="edge-target-input" list="existing-nodes-list" placeholder="Target Node (e.g. FRI-A01)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-                    <datalist id="existing-nodes-list">
-                        {% for n in existing_nodes %}
-                        <option value="{{ n.id }} — {{ n.title }} ({{ n.type }})"></option>
-                        {% endfor %}
-                    </datalist>
+                <div class="node-picker-wrapper">
+                    <input type="hidden" name="edge_target" id="edge-target-hidden" value="">
+                    <input type="text" id="edge-target-search" placeholder="🔍 Search node (title, tag, keyword, body, ID)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <div class="node-picker-dropdown" id="edge-target-dropdown"></div>
                 </div>
                 <div>
                     <input type="text" name="edge_note" id="edge-note-input" placeholder="Optional context note..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
@@ -226,7 +223,14 @@
             }
         }
     });
+
+    setupNodePicker({
+        inputId: 'edge-target-search',
+        hiddenId: 'edge-target-hidden',
+        dropdownId: 'edge-target-dropdown',
+    });
 </script>
+{% include "components/node_picker.html" %}
 <style>
     .type-btn:has(input:checked), .type-btn.active {
         border-color: var(--accent);

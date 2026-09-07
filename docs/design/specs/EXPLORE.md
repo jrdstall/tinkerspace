@@ -8,5 +8,6 @@ EXPLORE-05  The Node detail view allows creating and removing typed directional 
 EXPLORE-06  Questionstorm sub-questions are excluded from top-level Explore catalog and search queries.
 EXPLORE-07  The Node detail view resolves intelligent back navigation to the referring node or surface rather than defaulting to Explore.
 EXPLORE-08  The Node detail view allows editing core note attributes (title, domain, tags, keywords, note prose body, state, worth ratings) and atomically persists modifications with author attribution.
+EXPLORE-09  Interactive search box searches candidate target nodes by title, body, tags, keywords, and ID for rapid keyboard linking on node detail pages.
 
 

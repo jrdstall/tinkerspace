@@ -122,3 +122,76 @@ class InMemoryIndex(IndexProtocol):
             worth_to_others=node.attrs.get("worth_to_others"),
             concept_graphic=node.attrs.get("concept_graphic"),
         )
+
+    def search_for_picker(
+        self,
+        query: str = "",
+        exclude_id: str | None = None,
+        limit: int = 15,
+    ) -> list[dict[str, Any]]:
+        """Search nodes matching query for autocomplete picker."""
+        q = query.strip().lower()
+        ex_id = exclude_id.strip().upper() if exclude_id else ""
+        scored: list[tuple[int, float, dict[str, Any]]] = []
+
+        for n in self._nodes:
+            if ex_id and n.id.upper() == ex_id:
+                continue
+            if n.attrs.get("is_subquestion") is True:
+                continue
+            score = _score_node_match(n, q)
+            if q and score == 0:
+                continue
+            kw = n.attrs.get("keywords", [])
+            kw_list = kw if isinstance(kw, list) else [kw] if kw else []
+            excerpt = _extract_search_excerpt(n.body, q)
+            t_stamp = n.last_touched or n.created or 0
+            t_val = t_stamp.timestamp() if hasattr(t_stamp, "timestamp") else 0.0
+            data = {
+                "id": n.id, "type": n.type, "title": n.title, "domain": n.domain,
+                "tags": n.tags, "keywords": kw_list, "state": n.state, "excerpt": excerpt,
+            }
+            scored.append((score, t_val, data))
+
+        scored.sort(key=lambda item: (item[0], item[1]), reverse=True)
+        return [item[2] for item in scored[:limit]]
+
+
+def _extract_search_excerpt(body: str, q: str) -> str:
+    """Extract snippet around matched query in body text."""
+    clean = body.replace("\r\n", " ").replace("\n", " ").strip()
+    if not clean:
+        return ""
+    if not q:
+        return clean[:90] + ("..." if len(clean) > 90 else "")
+    idx = clean.lower().find(q.lower())
+    if idx == -1:
+        return clean[:90] + ("..." if len(clean) > 90 else "")
+    start = max(0, idx - 20)
+    end = min(len(clean), idx + len(q) + 50)
+    prefix = "..." if start > 0 else ""
+    suffix = "..." if end < len(clean) else ""
+    return prefix + clean[start:end].strip() + suffix
+
+
+def _score_node_match(node: Node, q: str) -> int:
+    """Score relevance of node match against search query."""
+    if not q:
+        return 1
+    score = 0
+    if q == node.id.lower() or node.id.lower().startswith(q):
+        score += 100
+    elif q in node.id.lower():
+        score += 70
+    if q in node.title.lower():
+        score += 80
+    if any(q in t.lower() for t in node.tags):
+        score += 60
+    kw = node.attrs.get("keywords", [])
+    if (isinstance(kw, list) and any(q in str(k).lower() for k in kw)) or (isinstance(kw, str) and q in kw.lower()):
+        score += 60
+    if q in node.domain.lower():
+        score += 40
+    if q in node.body.lower():
+        score += 30
+    return score

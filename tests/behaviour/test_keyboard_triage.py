@@ -198,8 +198,7 @@ def test_triage_05_web_triage_editable_body_and_node_datalist(tmp_path: Path):
     res_get = client.get("/triage")
     assert res_get.status_code == 200
     assert "My Thought" in res_get.text
-    assert "FRI-A01" in res_get.text
-    assert "existing-nodes-list" in res_get.text
+    assert "edge-target-search" in res_get.text
     assert res_get.text.find('name="edge_rel"') < res_get.text.find('name="edge_target"')
 
     # Submit with edited body and datalist-formatted target node

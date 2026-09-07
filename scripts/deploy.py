@@ -47,14 +47,17 @@ def install_package(target_dir: Path, source_dir: Path) -> None:
 
 
 def copy_static_assets(source_dir: Path, target_dir: Path) -> None:
-    print("Copying activity templates and documentation...")
-    src_templates = source_dir / "content" / "templates"
-    dest_templates = target_dir / "content" / "templates"
-    dest_templates.parent.mkdir(parents=True, exist_ok=True)
-    if src_templates.exists():
-        if dest_templates.exists():
-            shutil.rmtree(dest_templates)
-        shutil.copytree(src_templates, dest_templates)
+    print("Copying activity templates, exercises, and documentation...")
+    src_content = source_dir / "content"
+    dest_content = target_dir / "content"
+    if src_content.exists():
+        for sub in ["templates", "exercises"]:
+            s = src_content / sub
+            d = dest_content / sub
+            if s.exists():
+                if d.exists():
+                    shutil.rmtree(d)
+                shutil.copytree(s, d)
 
     user_guide_src = source_dir / "docs" / "USER_GUIDE.md"
     if user_guide_src.exists():
@@ -96,7 +99,7 @@ def generate_launchers(target_dir: Path) -> None:
         "echo   URL:   http://localhost:8000\r\n"
         "echo ====================================================\r\n"
         'start "" http://localhost:8000\r\n'
-        '".venv\\Scripts\\uvicorn.exe" iw.web.app:app --port 8000 --reload\r\n'
+        "uv run python -m uvicorn iw.web.app:app --port 8000\r\n"
         "pause\r\n"
     )
     with open(target_dir / "start.bat", "w", encoding="utf-8") as f:
@@ -112,7 +115,7 @@ def generate_launchers(target_dir: Path) -> None:
         'Write-Host "  URL:   http://localhost:8000" -ForegroundColor Green\r\n'
         'Write-Host "====================================================" -ForegroundColor Cyan\r\n'
         'Start-Process "http://localhost:8000"\r\n'
-        '& "$scriptDir\\.venv\\Scripts\\uvicorn.exe" iw.web.app:app --port 8000 --reload\r\n'
+        'uv run python -m uvicorn iw.web.app:app --port 8000\r\n'
     )
     with open(target_dir / "start.ps1", "w", encoding="utf-8") as f:
         f.write(ps1_content)

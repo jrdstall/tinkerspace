@@ -211,8 +211,7 @@ def test_explore_05_node_link_and_unlink_post_triage(tmp_path: Path):
     res_view = client.get("/node/IDEA-A01")
     assert res_view.status_code == 200
     assert "Add Link" in res_view.text
-    assert "available-targets-list" in res_view.text
-    assert "AST-A01" in res_view.text
+    assert "node-target-search" in res_view.text
     add_link_sec = res_view.text[res_view.text.find("Add Link"):]
     assert add_link_sec.find('name="relation"') < add_link_sec.find('name="target_id"')
 
@@ -419,7 +418,7 @@ def test_explore_08_node_detail_editing_and_personal_ux(tmp_path: Path):
     assert "Typed Relationships &amp; Graph Edges" not in res_view.text
     assert "Add Link" in res_view.text
     assert "+ Link to Another Node" not in res_view.text
-    assert 'value="AST-A01 — Rigol 4-channel Digital Oscilloscope (asset)"></option>' in res_view.text
+    assert "node-target-search" in res_view.text
     # Adjacent idea buttons by title
     assert "&larr; Prev: Later Idea Head-Up Display" in res_view.text
     assert "Next: Earlier Idea Solar Cells &rarr;" in res_view.text

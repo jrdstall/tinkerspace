@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Creative Exercises — Tinkerspace{% endblock %}
+
+{% block head %}
+<style>
+    .exercise-tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+    .exercise-tab {
+        padding: 0.4rem 0.8rem;
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.15s ease;
+    }
+    .exercise-tab:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+    }
+    .exercise-tab.active {
+        background-color: #21262d;
+        border-color: var(--accent);
+        color: var(--accent);
+        font-weight: 600;
+    }
+    .prompt-hero {
+        background: linear-gradient(180deg, #1b2434 0%, #161d2b 100%);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+    .prompt-text {
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        color: #ffffff;
+        margin: 1rem 0;
+        line-height: 1.35;
+        white-space: pre-line;
+    }
+    .prompt-subtext {
+        color: var(--text-muted);
+        font-size: 1rem;
+        line-height: 1.5;
+        margin-bottom: 1.25rem;
+    }
+    .toast-banner {
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .toast-green {
+        background-color: rgba(63, 185, 80, 0.15);
+        border: 1px solid rgba(63, 185, 80, 0.4);
+        color: var(--green);
+    }
+    .toast-blue {
+        background-color: rgba(88, 166, 255, 0.15);
+        border: 1px solid rgba(88, 166, 255, 0.4);
+        color: var(--accent);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+    <div>
+        <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 0.25rem;">Creative Exercises</h1>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Daily lateral thinking sparks, novel associations, and zero-friction idea capture.</p>
+    </div>
+</div>
+
+{% if captured_id %}
+<div class="toast-banner toast-green">
+    <div>
+        <strong>✓ Thought Captured!</strong> Added to your inbox as <span class="mono">{{ captured_id }}</span>. Ready for triage whenever you are.
+    </div>
+    <a href="/triage" class="btn" style="font-size: 0.8rem; color: var(--green); border-color: rgba(63,185,80,0.4);">Go to Triage →</a>
+</div>
+{% endif %}
+
+{% if notice %}
+<div class="toast-banner toast-blue">
+    <div><strong>ℹ Notice:</strong> {{ notice }}</div>
+</div>
+{% endif %}
+
+<div class="exercise-tabs">
+    {% for type_id, label in nav_options %}
+    <a href="/exercises?type={{ type_id }}" class="exercise-tab {% if current_type == type_id %}active{% endif %}">
+        {{ label }}
+    </a>
+    {% endfor %}
+</div>
+
+<div class="prompt-hero">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <span class="badge badge-green" style="font-size: 0.8rem;">{{ prompt.title }}</span>
+            {% for cat in prompt.categories %}
+            <span class="badge" style="font-size: 0.75rem;">#{{ cat }}</span>
+            {% endfor %}
+        </div>
+        <a href="/exercises?type={{ current_type }}" class="btn btn-primary" id="next-prompt-btn">
+            🎲 Next Prompt <span class="mono" style="opacity: 0.8; font-size: 0.75rem;">[Space]</span>
+        </a>
+    </div>
+
+    <div class="prompt-text">{{ prompt.prompt_text }}</div>
+
+    {% if prompt.sub_text %}
+    <div class="prompt-subtext">{{ prompt.sub_text }}</div>
+    {% endif %}
+</div>
+
+<div class="card">
+    <h2 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 0.75rem;">Ideation Scratchpad</h2>
+    <form action="/exercises/capture" method="POST" id="scratchpad-form">
+        <input type="hidden" name="exercise_type" value="{{ current_type }}">
+        <input type="hidden" name="prompt_title" value="{{ prompt.title }}">
+        <input type="hidden" name="prompt_text" value="{{ prompt.prompt_text }}">
+        
+        <textarea
+            id="exercise-scratchpad"
+            name="raw_text"
+            rows="5"
+            placeholder="What wild ideas, hybrid mechanisms, or unexpected products come to mind? Jot your thoughts here..."
+            style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); padding: 0.85rem; font-size: 1rem; font-family: inherit; margin-bottom: 1rem; resize: vertical;"
+            autofocus
+            required
+        ></textarea>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.8rem; color: var(--text-muted);">
+                Press <span class="mono badge">Ctrl+Enter</span> to capture directly into Inbox.
+            </span>
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="button" class="btn" onclick="document.getElementById('exercise-scratchpad').value=''">Clear</button>
+                <button type="submit" class="btn btn-primary">📥 Capture to Inbox</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<details class="card" style="margin-top: 2rem;">
+    <summary style="cursor: pointer; font-weight: 600; color: var(--text-muted); outline: none;">
+        ⚙️ Manage Seeds & AI Generator Prompt
+    </summary>
+    <div style="margin-top: 1.25rem;">
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1rem;">
+            Want fresh or customized seeds? Copy the prompt below into Claude or Gemini to generate a batch of seeds, then paste the YAML into the import box to replenish or flush your seed pool.
+        </p>
+
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <span style="font-size: 0.85rem; font-weight: 600;">LLM Prompt Template</span>
+                <button type="button" class="btn" style="font-size: 0.75rem;" onclick="copyAiPrompt()">📋 Copy Prompt</button>
+            </div>
+            <textarea id="ai-prompt-box" readonly rows="7" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); padding: 0.75rem; font-size: 0.85rem; font-family: monospace; resize: vertical;">{{ ai_prompt_template }}</textarea>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem;">Import Seeds (YAML)</h3>
+                <form action="/exercises/seeds/import" method="POST">
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem;">
+                        <select name="seed_name" class="btn" style="flex: 1;">
+                            <option value="triads">triads (3-word nouns)</option>
+                            <option value="paradoxes">paradoxes (negative constraints)</option>
+                            <option value="what_if">what_if (cross-domain)</option>
+                            <option value="biomimicry">biomimicry (mechanisms)</option>
+                            <option value="assumptions">assumptions (inversions)</option>
+                        </select>
+                        <select name="mode" class="btn" style="flex: 1;">
+                            <option value="replace">Flush & Replace Existing</option>
+                            <option value="merge">Merge with Existing</option>
+                        </select>
+                    </div>
+                    <textarea name="yaml_content" rows="6" placeholder="Paste generated YAML block here..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-main); padding: 0.75rem; font-size: 0.85rem; font-family: monospace; margin-bottom: 0.75rem;" required></textarea>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Save Seeds to Vault</button>
+                </form>
+            </div>
+
+            <div>
+                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem;">Factory Reset</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Discard all custom vault seed overrides and restore the factory-shipped seed banks.
+                </p>
+                <form action="/exercises/seeds/reset" method="POST" onsubmit="return confirm('Reset all exercise seeds to defaults?');">
+                    <button type="submit" class="btn" style="color: #f85149; border-color: rgba(248,81,73,0.4);">
+                        Reset All Seeds to Factory Defaults
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</details>
+
+<script>
+    function copyAiPrompt() {
+        const box = document.getElementById('ai-prompt-box');
+        box.select();
+        navigator.clipboard.writeText(box.value);
+        alert('AI Prompt copied to clipboard!');
+    }
+
+    const scratchpad = document.getElementById('exercise-scratchpad');
+    scratchpad.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            if (scratchpad.value.trim().length > 0) {
+                document.getElementById('scratchpad-form').submit();
+            }
+        }
+    });
+
+    document.addEventListener('keydown', function(e) {
+        const activeTag = document.activeElement.tagName.toLowerCase();
+        if (activeTag === 'textarea' || activeTag === 'input' || activeTag === 'select') {
+            return;
+        }
+        if (e.code === 'Space') {
+            e.preventDefault();
+            document.getElementById('next-prompt-btn').click();
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,273 @@
+# Concrete nouns across 6 distinct categories for Triad Association
+# Sampled 1 from each of 3 distinct categories to guarantee diverse juxtapositions
+
+organic:
+  - jellyfish
+  - redwood
+  - dandelion
+  - fungal spore
+  - barnacle
+  - armadillo
+  - porcupine
+  - honeycomb
+  - lichen
+  - sea cucumber
+  - chameleon
+  - orchid
+  - pinecone
+  - firefly
+  - coral branch
+  - cactus needle
+  - ant hill
+  - moss clump
+  - beaver dam
+  - bird talon
+  - willow branch
+  - sunflower seed
+  - rattlesnake rattle
+  - octopus tentacle
+  - lotus seedpod
+  - shark denticle
+  - peacock feather
+  - wasp nest
+  - mushroom gill
+  - burdock burr
+  - oyster shell
+  - sea sponge
+  - deer antler
+  - pangolin scale
+  - geyser steam
+  - maple samara
+  - dandelion seed
+  - sea anemone
+  - praying mantis
+  - barnacle cluster
+  - bamboo stalk
+  - silk cocoon
+  - eucalyptus bark
+  - hummingbird wing
+  - coconut husk
+
+mechanical_tools:
+  - anvil
+  - camshaft
+  - flywheel
+  - ratchet wrench
+  - carburetor
+  - centrifuge
+  - periscope
+  - lathe
+  - jackhammer
+  - bicycle chain
+  - pocket knife
+  - plumb bob
+  - bellows
+  - soldering iron
+  - micrometer
+  - bench vise
+  - toggle clamp
+  - ball bearing
+  - lead screw
+  - worm gear
+  - dial caliper
+  - arbor press
+  - band saw
+  - wire stripper
+  - torque wrench
+  - grease gun
+  - leaf spring
+  - pneumatic piston
+  - universal joint
+  - rivet gun
+  - pipe wrench
+  - belt sander
+  - cotter pin
+  - turnbuckle
+  - bevel gear
+  - hydraulic jack
+  - tap and die
+  - center punch
+  - feeler gauge
+  - drill chuck
+  - angle grinder
+  - pulley block
+  - chuck key
+  - scroll saw
+
+technology:
+  - microcontroller
+  - lidar sensor
+  - accelerometer
+  - optical fiber
+  - waveguide
+  - transistor
+  - infrared camera
+  - thermal sensor
+  - phased array antenna
+  - fpga board
+  - supercapacitor
+  - gyro stabilizer
+  - peltier cooler
+  - haptic motor
+  - epaper display
+  - ultrasonic transducer
+  - hall effect sensor
+  - strain gauge
+  - magnetron
+  - peltier tile
+  - photodiode
+  - barometric altimeter
+  - piezoelectric buzzer
+  - reed switch
+  - servo motor
+  - optical rotary encoder
+  - rfid tag
+  - step-down buck converter
+  - solar cell
+  - lithium pouch cell
+  - thermoelectric generator
+  - neopixel ring
+  - relay module
+  - ir distance sensor
+  - electret microphone
+  - brushless motor
+  - current shunt
+  - logic analyzer
+  - gps receiver
+  - coil inductor
+  - mems gyro
+  - shift register
+  - gnss antenna
+  - spark gap
+  - optocoupler
+
+domestic_apparel:
+  - tea kettle
+  - zipper
+  - shoelace
+  - mailbox
+  - thermos
+  - colander
+  - thimble
+  - umbrella
+  - hammock
+  - clothesline
+  - feather duster
+  - cast iron skillet
+  - shoebox
+  - safety pin
+  - rubber band
+  - egg carton
+  - coffee mug
+  - belt buckle
+  - shoelace aglet
+  - pocket watch
+  - clothespin
+  - cutting board
+  - tea strainer
+  - apron strap
+  - ice cube tray
+  - curtain rod
+  - wool sock
+  - corkscrew
+  - candle wick
+  - dustpan
+  - measuring spoon
+  - sewing needle
+  - hot water bottle
+  - fly swatter
+  - salad tongs
+  - coat hanger
+  - key ring
+  - door stopper
+  - rolling pin
+  - mason jar
+  - leather wallet
+  - padlock key
+  - oven mitt
+  - tea cozy
+  - butter churn
+
+off_the_wall_sensory:
+  - bubble wrap
+  - quicksand
+  - lava lamp
+  - tuning fork
+  - cotton candy
+  - foghorn
+  - snow globe
+  - silly putty
+  - wind chime
+  - glowstick
+  - rubber duck
+  - sparkler
+  - slime
+  - smoke ring
+  - confetti cannon
+  - water balloon
+  - static cling
+  - prism
+  - bubble wand
+  - windup music box
+  - dry ice pellet
+  - sand timer
+  - glow-in-the-dark star
+  - kaleidoscope
+  - maraca
+  - slinky spring
+  - whoopee cushion
+  - party popper
+  - magnetic ferrofluid
+  - pop rocks
+  - fog machine
+  - magnifying glass
+  - yo-yo
+  - toy gyroscope
+  - pinwheel
+  - bouncy rubber ball
+  - kazoo
+  - magic 8-ball
+  - chatter teeth
+  - mood ring
+  - whoosh bottle
+
+frontier_scifi:
+  - geodesic dome
+  - faraday cage
+  - space elevator cable
+  - solar sail
+  - blast door
+  - vacuum chamber
+  - ion thruster
+  - particle detector
+  - thermal radiator tile
+  - cryogenic dewar
+  - maglev track
+  - hyperbaric chamber
+  - airlock hatch
+  - orbital tether
+  - radioisotope generator
+  - aerogel tile
+  - heat shield ceramic
+  - centrifuge ring
+  - reaction wheel
+  - solar array boom
+  - laser interferometer
+  - star tracker
+  - plasma torch
+  - glovebox port
+  - cleanroom suit
+  - radiation dosimeter
+  - docking ring
+  - cryostat
+  - magnetic levitator
+  - hyperspectral lens
+  - orbital debris net
+  - regolith scoop
+  - mass spectrometer
+  - solar sail mast
+  - cold gas thruster
+  - beryllium mirror
+  - carbon nanotube yarn
+  - stirling engine
+  - hollow cathode

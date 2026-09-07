@@ -18,8 +18,8 @@ from iw.domain.assessor.cml import get_cml_description
 from iw.domain.scout.service import ScoutService
 from iw.web.helpers import extract_facets, resolve_inbound_edges
 from iw.web import (
-    association_views, board_views, intake_views, maturity_views,
-    node_views, planner_views, question_views, scout_views, triage_views, workflow_views,
+    association_views, board_views, exercise_views, intake_views, maturity_views,
+    node_views, planner_views, question_views, scout_views, search_views, triage_views, workflow_views,
 )
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
@@ -98,6 +98,7 @@ async def _view_scout(r: Request) -> Response: return await scout_views.scout_vi
 async def _view_qgraph(r: Request) -> Response: return await question_views.question_graph_view(r, templates)
 async def _view_triage(r: Request) -> Response: return await triage_views.triage_view(r, templates)
 async def _view_intake(r: Request) -> Response: return await intake_views.intake_view(r, templates)
+async def _view_exercises(r: Request) -> Response: return await exercise_views.exercise_view(r, templates)
 
 
 def _get_core_routes() -> list[Route]:
@@ -115,6 +116,11 @@ def _get_core_routes() -> list[Route]:
         Route("/associations/keep", endpoint=association_views.association_keep_action, methods=["POST"]),
         Route("/associations/discard", endpoint=association_views.association_discard_action, methods=["POST"]),
         Route("/associations/generate", endpoint=association_views.association_generate_action, methods=["POST"]),
+        Route("/exercises", endpoint=_view_exercises, methods=["GET"]),
+        Route("/exercises/capture", endpoint=exercise_views.exercise_capture_action, methods=["POST"]),
+        Route("/exercises/seeds/import", endpoint=exercise_views.exercise_import_action, methods=["POST"]),
+        Route("/exercises/seeds/reset", endpoint=exercise_views.exercise_reset_action, methods=["POST"]),
+        Route("/api/nodes/search", endpoint=search_views.api_node_search_view, methods=["GET"]),
         Route("/board", endpoint=_view_board, methods=["GET"]),
         Route("/workboard", endpoint=_view_board, methods=["GET"]),
         Route("/workflow/{workflow_id}", endpoint=_view_workflow, methods=["GET"]),

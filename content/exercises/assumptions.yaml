@@ -1,0 +1,157 @@
+# Assumption Inversions (Orthogonal Dogma Flips)
+
+inversions:
+  - domain: "Dining & Restaurants"
+    standard_assumption: "The restaurant prepares, cooks, and plates the meal, while the customer sits and consumes."
+    orthogonal_inversion: "The diners do all the physical assembly and cooking at the table, but the kitchen provides only high-precision thermal control, exotic timing, and bespoke seasoning."
+    spark_question: "How would you design a culinary experience where diners take all cooking actions without any risk of culinary failure?"
+
+  - domain: "Power Tools"
+    standard_assumption: "Heavy-duty workshop tools must be plugged into electrical mains or carry bulky lithium battery packs."
+    orthogonal_inversion: "Tools operate entirely on human biomechanical energy stored via high-speed inertia flywheels, spring torsion, or foot pumps."
+    spark_question: "What precision workshop tool could be redesigned to work infinitely in off-grid environments without electricity?"
+
+  - domain: "Product Packaging"
+    standard_assumption: "Packaging exists to protect the product during shipping and is discarded immediately after unboxing."
+    orthogonal_inversion: "The shipping box is the primary structural chassis, dock, or functional base of the device itself."
+    spark_question: "How could packaging become an indispensable permanent component of an electronic or mechanical product?"
+
+  - domain: "Personal Transportation"
+    standard_assumption: "Vehicles move people and cargo between fixed physical buildings and destinations."
+    orthogonal_inversion: "The vehicle is a stationary sanctuary or workspace that remains fixed, while modular services and rooms travel and dock with it."
+    spark_question: "What does an urban living or working pod look like when the inhabitant never commutes?"
+
+  - domain: "Software Tools"
+    standard_assumption: "As users become more advanced, interfaces add more buttons, complex menus, and customizable toolbars."
+    orthogonal_inversion: "Software that progressively sheds buttons and controls as proficiency increases, eventually operating on pure intent, blank canvas, or gestures."
+    spark_question: "How would an expert-mode development environment look if 95% of the UI vanished once mastered?"
+
+  - domain: "Personal Hygiene"
+    standard_assumption: "Cleaning bodies and domestic surfaces requires liquid water and chemical surfactants."
+    orthogonal_inversion: "Cleaning performed entirely through high-frequency acoustic waves, dry absorbent friction, or electrostatic particle levitation."
+    spark_question: "How could a waterless cleaning device revolutionize household sanitation or field medicine?"
+
+  - domain: "Household Dishwashing"
+    standard_assumption: "Dishes are placed inside a stationary appliance that sprays recirculated hot detergent water for two hours."
+    orthogonal_inversion: "Eating surfaces and cookware are treated with reusable, peelable oleophobic films or high-intensity steam blades that clean in two seconds flat."
+    spark_question: "What would instantaneous, zero-soak post-meal cleanup look like without a motorized cabinet dishwasher?"
+
+  - domain: "Home Heating & Cooling"
+    standard_assumption: "Conditioning a home requires heating or cooling thousands of cubic feet of empty air in rooms."
+    orthogonal_inversion: "Thermal conditioning is applied directly to the human micro-environment: chairs, desktop pads, footwear, and radiant directional heaters."
+    spark_question: "How could personal micro-climate targeting cut domestic energy usage by 80% while increasing comfort?"
+
+  - domain: "Fasteners & Hardware Joinery"
+    standard_assumption: "Assembling furniture and structures requires metal screws, nails, threaded inserts, or chemical adhesives."
+    orthogonal_inversion: "Components lock together permanently using compliant self-interlocking bistable tabs, magnetic catches, or wooden wedged mortises."
+    spark_question: "How could a durable workshop bench or desk be assembled rigidly in sixty seconds without a single tool or fastener?"
+
+  - domain: "Hand Tool Ergonomics"
+    standard_assumption: "Hand tools have rigid, identical steel or plastic handles designed to fit an average statistical hand."
+    orthogonal_inversion: "Tool grips consist of reusable thermoplastic polymers or granular phase-change bladders that mold perfectly to the user's exact grip."
+    spark_question: "What tool would benefit most from custom, zero-fatigue grip molding that can be remolded on demand?"
+
+  - domain: "Precision Measurement"
+    standard_assumption: "Measuring dimensions requires aligning physical markings on a ruler or reading decimal numbers on a digital screen."
+    orthogonal_inversion: "Measurement tools convey dimension through audible pitch changes, tactile click detents, or direct go/no-go physical limit stops."
+    spark_question: "How could a woodworker or machinist cut exact lengths repeatedly without ever looking at numbers or dials?"
+
+  - domain: "Footwear & Ergonomics"
+    standard_assumption: "Walking and running safely requires thick, cushioned foam soles to absorb foot impact shock."
+    orthogonal_inversion: "Footwear provides ultra-thin, puncture-proof tactile ground contact that stimulates natural tendon rebound and foot musculature."
+    spark_question: "How would everyday footwear look if engineered to strengthen legs rather than cushion them into atrophy?"
+
+  - domain: "Domestic Refrigeration"
+    standard_assumption: "A refrigerator is a single giant insulated cabinet with a door that dumps all cold air onto the floor when opened."
+    orthogonal_inversion: "Refrigeration is divided into shallow, insulated pull-out drawers with independent micro-zoned temperatures tailored to specific foods."
+    spark_question: "How could modular multi-zone refrigeration preserve groceries twice as long while cutting power consumption?"
+
+  - domain: "Audio & Headphones"
+    standard_assumption: "Listening to private audio requires sealing the ear canal with silicone buds or covering the outer ear with acoustic cushions."
+    orthogonal_inversion: "Audio is coupled through temporal bone conduction or directional ultrasonic acoustic beams, leaving the ear canals 100% open."
+    spark_question: "What situational-awareness audio experience could be built for cycling, workshop machining, or urban walking?"
+
+  - domain: "Electronic Prototyping"
+    standard_assumption: "Building physical electronic circuits requires soldering components with 350°C irons or plugging wires into breadboards."
+    orthogonal_inversion: "Circuits are drawn directly with room-temperature conductive carbon/copper inks or assembled using magnetic spring-loaded snap nodes."
+    spark_question: "How could rapid hardware circuit prototyping be made as fast, safe, and fluid as sketching on paper?"
+
+  - domain: "Document Printing"
+    standard_assumption: "Printing hard copies consumes single-use paper sheets and expensive chemical liquid ink cartridges."
+    orthogonal_inversion: "Documents are printed on rewritable, durable polymer paper using localized thermal arrays that erase and rewrite thousands of times."
+    spark_question: "How could a zero-waste rewritable paper system replace disposable paper for daily desk notes, drafts, and schematics?"
+
+  - domain: "Bicycle Drivetrains"
+    standard_assumption: "Bicycles transfer human leg power through exposed steel roller chains that require oily grease and continuous cleaning."
+    orthogonal_inversion: "Power transfer uses carbon-fiber synchronous belts, enclosed shaft gears, or direct fluid-hydraulic transmission with zero grease."
+    spark_question: "What would an ultra-clean, zero-maintenance commuter bike drivetrain look like that never stains trousers?"
+
+  - domain: "Urban Gardening"
+    standard_assumption: "Growing food requires wide horizontal beds of deep soil that must be manually watered and weeded."
+    orthogonal_inversion: "Plants grow in vertical, soil-free aeroponic mist towers that use 95% less water, zero pesticides, and zero soil."
+    spark_question: "How could an apartment balcony or garage produce fresh greens and herbs year-round in two square feet of floor space?"
+
+  - domain: "Physical Security & Locks"
+    standard_assumption: "Locks are unlocked by inserting a physical brass key or tapping an electronic RFID/Bluetooth transponder."
+    orthogonal_inversion: "Locks open via tactile mechanical sequence gestures—a specific combination of push-pull-rotate movements on a single dial."
+    spark_question: "What mechanical keyless lock could provide high security without batteries, electronics, or physical keys that can be lost?"
+
+  - domain: "Rain Protection"
+    standard_assumption: "Staying dry in the rain requires holding a collapsible fabric canopy over your head that catches the wind and flips inside out."
+    orthogonal_inversion: "Rain protection uses a wearable, directional high-velocity air-curtain blower or water-deflecting hydrophobic electrostatic charge."
+    spark_question: "How could a hands-free personal device keep a pedestrian dry in high winds without a fabric umbrella canopy?"
+
+  - domain: "Timekeeping & Clocks"
+    standard_assumption: "Clocks count and display continuous 24-hour chronological seconds, minutes, and hours."
+    orthogonal_inversion: "Timepieces indicate natural context rhythms: remaining sunlight hours, ambient temperature cycles, tidal shifts, or focused deep-work blocks."
+    spark_question: "What would a personal desk chronometer display if designed for productivity and wellbeing rather than meeting schedules?"
+
+  - domain: "Clothing Closets & Storage"
+    standard_assumption: "Garments are hung individually on thin wire/plastic hangers or folded into deep drawers where bottom layers are forgotten."
+    orthogonal_inversion: "Clothing is organized in vertical tensioned fabric roll-cartridges or rotating book-style carousels with instant visual visibility."
+    spark_question: "How could an everyday wardrobe fit into one-third the closet volume while keeping every garment visible and wrinkle-free?"
+
+  - domain: "Window Shading & Blinds"
+    standard_assumption: "Controlling indoor solar glare requires hanging fabric curtains or mechanical slatted blinds with tangled cords."
+    orthogonal_inversion: "Window panes incorporate photochromic micro-layers or passive angular louvers that block midday high summer sun while letting in low winter light."
+    spark_question: "How could residential windows provide passive, zero-electricity, seasonal auto-shading with zero moving parts?"
+
+  - domain: "Screwdriving & Fastening"
+    standard_assumption: "Driver bits are shaped metal tips that slip out and strip fastener screw heads when high torque is applied."
+    orthogonal_inversion: "Fasteners feature captive reverse-taper collets or internal expanding splines that grip tighter as torque increases."
+    spark_question: "How could a universal fastener drive mechanism permanently eliminate stripped screw heads and cam-out?"
+
+  - domain: "Workshop Dust Collection"
+    standard_assumption: "Wood dust and machining swarf are sucked through loud vacuum hoses into bulky bags after they become airborne."
+    orthogonal_inversion: "Dust is captured at the exact blade-material shear boundary via localized electrostatic attraction or high-density water mist curtains."
+    spark_question: "How could workshop tools capture 99% of dust at the tool cutting tip without a roaring, high-decibel shop vacuum?"
+
+  - domain: "Battery Storage & Lifecycle"
+    standard_assumption: "Batteries are permanently glued inside sealed consumer devices, forcing replacement of the entire device when degraded."
+    orthogonal_inversion: "Every device uses standard, spring-loaded swappable cylindrical energy cells that can be refreshed or tested individually."
+    spark_question: "How could standardized modular battery architectures make personal hardware last twenty years instead of three?"
+
+  - domain: "Workspace Desks"
+    standard_assumption: "A desk is a heavy four-legged piece of furniture with a large flat horizontal top that dominates the room."
+    orthogonal_inversion: "A desk is a wall-mounted cantilevered rail system where task surfaces, screens, and tool racks fold flush against the wall when not in use."
+    spark_question: "How could a fully equipped innovator's workshop exist in a shared multi-use living space without clutter?"
+
+  - domain: "Bicycle Security"
+    standard_assumption: "Securing a bicycle requires carrying a 5-pound hardened steel U-lock or chain in a backpack."
+    orthogonal_inversion: "The bicycle's structural components—seatpost, handlebars, or pedal cranks—detach and directly lock the wheels and frame."
+    spark_question: "How could an indispensable bicycle component double as an unpickable, unbendable frame lock with zero added weight?"
+
+  - domain: "Lighting & Work Lamps"
+    standard_assumption: "Desk illumination comes from an overhead point bulb that casts harsh directional shadows behind your hands."
+    orthogonal_inversion: "Illumination is emitted from an ultra-wide diffused planar halo around the work periphery or from ring-lights embedded in the tooltips."
+    spark_question: "What would a 100% shadowless, glare-free benchtop workbench light look like for intricate electronics or watchmaking?"
+
+  - domain: "Domestic Waste & Composting"
+    standard_assumption: "Food scraps sit in smelly kitchen bins until hauled out to garbage cans or yard piles."
+    orthogonal_inversion: "Kitchen sink prep stations grind, dehydrate, and pulverize organic waste on the spot into dry, sterile, odorless fertilizer pellets."
+    spark_question: "How could household kitchen waste be converted instantaneously into clean indoor plant food at the cutting board?"
+
+  - domain: "Beds & Sleep Surfaces"
+    standard_assumption: "Sleep requires a giant foam or spring mattress sitting permanently on a large wooden or metal bed frame."
+    orthogonal_inversion: "The sleep surface is a breathable, ergonomic tensioned sling or articulated modular slat grid that self-cleans and folds into a bench."
+    spark_question: "How could an ergonomic sleep platform provide superior spine alignment while freeing up 80% of bedroom floor space by day?"

@@ -304,13 +304,10 @@
                         <option value="illustrates">illustrates</option>
                     </datalist>
                 </div>
-                <div>
-                    <input type="text" name="target_id" list="available-targets-list" placeholder="Target Node (ID or Title)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
-                    <datalist id="available-targets-list">
-                        {% for target in available_targets %}
-                        <option value="{{ target.id }} — {{ target.title }} ({{ target.type }})"></option>
-                        {% endfor %}
-                    </datalist>
+                <div class="node-picker-wrapper">
+                    <input type="hidden" name="target_id" id="node-target-hidden" required>
+                    <input type="text" id="node-target-search" placeholder="🔍 Search target node (title, tag, keyword, body, ID)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                    <div class="node-picker-dropdown" id="node-target-dropdown"></div>
                 </div>
                 <div>
                     <input type="text" name="note" placeholder="Optional context note..." style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
@@ -365,5 +362,13 @@
         toggleEditMode();
     });
     {% endif %}
+
+    setupNodePicker({
+        inputId: 'node-target-search',
+        hiddenId: 'node-target-hidden',
+        dropdownId: 'node-target-dropdown',
+        excludeId: '{{ node.id }}',
+    });
 </script>
+{% include "components/node_picker.html" %}
 {% endblock %}

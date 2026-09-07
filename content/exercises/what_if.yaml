@@ -1,0 +1,144 @@
+# Cross-Domain "What If?" Pairs (Entity / Philosophy x System / Institution)
+
+entities:
+  - IKEA
+  - Walt Disney
+  - NASA JPL
+  - A Michelin 3-Star Kitchen
+  - Nintendo
+  - Ferrari
+  - Patagonia
+  - A Formula 1 Pit Crew
+  - DARPA
+  - Waffle House
+  - LEGO
+  - A Medieval Monastery
+  - Cirque du Soleil
+  - The Dutch Flood Defense Board
+  - Costco
+  - Apple Design Lab
+  - The Swiss Federal Railways
+  - Red Bull
+  - Pixar Animation Studios
+  - Trader Joe's
+  - The United States Postal Service
+  - A Marine Corps Boot Camp
+  - A Silent Zen Monastery
+  - Bell Labs in 1965
+  - NASA Apollo Program
+  - Toyota Production System
+  - Bauhaus Design School
+  - Swiss Army
+  - The Michelin Guide
+  - The Red Cross
+  - Wikipedia
+  - Studio Ghibli
+  - 3M Innovation Lab
+  - The Dutch Cycling Embassy
+  - Lockheed Skunk Works
+  - Mayo Clinic
+  - Oxford University Press
+  - Sony in 1982
+  - The US Forest Service
+  - Boy Scouts of America
+  - Blue Bottle Coffee
+  - Vespa
+  - Boston Dynamics
+  - Traditional Amish Woodworkers
+  - The Royal Botanic Gardens Kew
+  - An Antarctic Research Station Crew
+  - A Deep-Sea Saturation Diving Team
+  - Harley-Davidson
+  - A High-Speed Japanese Shinkansen Maintenance Depot
+  - Guinness Brewery
+
+systems:
+  - an elementary school
+  - a hospital emergency room
+  - a theme park
+  - city garbage collection & recycling
+  - a public library
+  - airport security screening (TSA)
+  - a municipal traffic court
+  - an apartment complex
+  - a public subway network
+  - an assisted living retirement home
+  - a dental care clinic
+  - an organic vertical farm
+  - a commercial airline
+  - a municipal fire department
+  - a veterinary clinic
+  - a funeral home
+  - an air traffic control tower
+  - a high school cafeteria
+  - a national park campground
+  - an animal shelter
+  - a Department of Motor Vehicles (DMV)
+  - a municipal water treatment plant
+  - an urban botanical garden
+  - a postal mail carrier route
+  - a courthouse waiting room
+  - a commercial construction job site
+  - a public zoo
+  - a hospital pediatric ward
+  - a highway rest stop
+  - a commercial cargo freight port
+  - a blood donation center
+  - a mountain search and rescue squad
+  - a multi-family apartment laundry room
+  - a community vegetable garden
+  - a public city bus stop
+  - an independent auto repair shop
+  - a municipal recycling sorting facility
+  - an airport baggage claim carousel
+  - a city protected bike lane network
+  - a public municipal swimming pool
+  - a commercial restaurant dishwashing station
+  - an off-grid wilderness cabin
+  - a university student dormitory
+  - a passenger ferry terminal
+  - an outpatient physical therapy clinic
+
+curated:
+  - "What if a university ran a theme park?"
+  - "What if IKEA ran an elementary school?"
+  - "What if Disney ran NASA's Jet Propulsion Laboratory?"
+  - "What if a Formula 1 pit crew ran a hospital emergency room?"
+  - "What if LEGO designed public low-cost housing?"
+  - "What if Waffle House organized national disaster relief logistics?"
+  - "What if Nintendo designed a physical rehabilitation center?"
+  - "What if Patagonia ran an airline?"
+  - "What if a Michelin 3-star kitchen ran an airport security checkpoint?"
+  - "What if a medieval monastery designed an open-source operating system?"
+  - "What if Trader Joe's ran a municipal subway system?"
+  - "What if Costco designed an intensive care unit?"
+  - "What if Cirque du Soleil designed a playground for seniors?"
+  - "What if Bell Labs in 1965 designed a modern smart home?"
+  - "What if Red Bull ran an air traffic control tower?"
+  - "What if Pixar designed a pediatric dental clinic?"
+  - "What if Bauhaus designed a municipal waste recycling facility?"
+  - "What if Toyota Production System ran an elementary school morning drop-off?"
+  - "What if Patagonia built an airline passenger seat?"
+  - "What if Lockheed Skunk Works designed hand gardening tools?"
+  - "What if the Mayo Clinic redesigned the Department of Motor Vehicles (DMV)?"
+  - "What if Swiss Army designed a compact off-grid home kitchen?"
+  - "What if Pixar designed hospital surgical waiting rooms?"
+  - "What if LEGO designed outdoor fitness equipment for adult parks?"
+  - "What if Blue Bottle Coffee designed an auto repair shop waiting room?"
+  - "What if The Red Cross organized commercial airline boarding?"
+  - "What if Studio Ghibli designed an urban senior living community?"
+  - "What if 3M Innovation Lab designed winter clothing fasteners?"
+  - "What if Boston Dynamics designed small family farm machinery?"
+  - "What if Michelin 3-Star chefs designed hospital patient food trays?"
+  - "What if Wikipedia designed a municipal public library physical catalog?"
+  - "What if Formula 1 pit crews ran roadside electric vehicle charging hubs?"
+  - "What if Dutch flood defense engineers designed urban stormwater parks?"
+  - "What if Nintendo designed physical therapy gym equipment for stroke recovery?"
+  - "What if Boy Scouts of America designed an urban apartment disaster kit?"
+  - "What if Apple Design Lab redesigned above-ground utility power poles?"
+  - "What if an alpine mountain rescue team designed infant strollers?"
+  - "What if traditional Amish woodworkers designed modular flat-pack furniture?"
+  - "What if Vespa designed urban mobility scooters for seniors?"
+  - "What if an Antarctic research station crew designed a zero-waste home kitchen?"
+  - "What if Japanese Shinkansen cleaners designed hotel room turn-down systems?"
+  - "What if a deep-sea saturation diving team designed an intensive care recovery room?"

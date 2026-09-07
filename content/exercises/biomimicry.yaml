@@ -1,0 +1,122 @@
+# Biomimicry Spark (Biological Mechanism -> Engineering / Software Challenge)
+
+mechanisms:
+  - organism: Namib Desert Beetle
+    adaptation: Fog harvesting via microscopic hydrophilic bumps that condense moisture surrounded by hydrophobic waxy gutters that channel water directly to the mouth.
+    challenge: "How could you apply passive hydrophilic/hydrophobic surface gradients to harvest, separate, or route fluids in everyday or industrial products?"
+
+  - organism: Gecko (Toe Setae)
+    adaptation: Dry adhesion without glue or residue, utilizing millions of microscopic spatulae exploiting van der Waals molecular forces.
+    challenge: "What reusable fastening, robotics gripper, or modular climbing/mounting problem could you solve without adhesives or magnets?"
+
+  - organism: Mantis Shrimp (Dactyl Club)
+    adaptation: Impact-resistant composite microstructure featuring a helicoidal bouligand architecture that dissipates catastrophic shockwaves during 10,000g strikes.
+    challenge: "How could a spiraling layered composite prevent material failure, wear, or vibration fatigue in machines or tools?"
+
+  - organism: Slime Mold (Physarum Polycephalum)
+    adaptation: Decentralized network optimization that dynamically thickens efficient nutrient transport tubes while pruning redundant paths, recreating optimal subway maps.
+    challenge: "How could you apply self-organizing organic routing to supply chains, wire harnesses, or computational scheduling?"
+
+  - organism: Woodpecker (Skull & Beak)
+    adaptation: Multi-layer impact absorption combining spongy trabecular cranial bone, an elongated hyoid bone sling, and uneven beak lengths to dissipate 1200g decelerations.
+    challenge: "How could you protect delicate electronics, sensors, or human limbs from violent repeated shock without bulky foams?"
+
+  - organism: Lotus Leaf (Nelumbo Nucifera)
+    adaptation: Ultrahydrophobic self-cleaning effect created by hierarchical micro-papillae coated in nanoscale wax crystals where rolling water droplets collect contaminants.
+    challenge: "How could maintenance-free self-cleaning surfaces be integrated into outdoor sensors, solar panels, or sterile medical instruments?"
+
+  - organism: Electric Eel (Electrophorus)
+    adaptation: Thousands of stacked biological electrocytes maintaining sodium/potassium ion gradients that discharge in series to deliver 860-volt bursts.
+    challenge: "How could modular stacking of low-voltage micro-cells or capacitors provide safe on-demand high-power actuation?"
+
+  - organism: Cicada Wing Nanopillars
+    adaptation: Dense arrays of nanoscale physical pillars that physically stretch and mechanically puncture bacterial cell walls on contact without any chemical toxicity.
+    challenge: "How could purely physical nanotextures be used in hospitals, keyboards, or door handles to replace chemical disinfectants?"
+
+  - organism: Shark Skin (Dermal Denticles)
+    adaptation: Microscopic grooved tooth-like scales (riblets) that disrupt turbulent vortex formation in the fluid boundary layer, drastically reducing drag and preventing biofouling.
+    challenge: "How could micro-grooved surface textures reduce fluid friction, air turbulence, or sediment accumulation on pipes, hulls, or blades?"
+
+  - organism: Kingfisher Beak
+    adaptation: Streamlined rotational wedge profile that smoothly parts air and water without causing pressure shockwaves, eliminating sonic boom noise on bullet trains.
+    challenge: "How could transitional cross-sectional profiles eliminate acoustic pops, splash turbulence, or aerodynamic drag in mechanical transitions?"
+
+  - organism: Termite Mounds (Macrotermes)
+    adaptation: Passive climate control utilizing subterranean tunnels and central porous chimneys that drive continuous convective air exchange without mechanical fans.
+    challenge: "How could passive convective buoyancy and thermal mass cool or ventilate electronics enclosures, buildings, or battery packs without fans?"
+
+  - organism: Humpback Whale (Flipper Tubercles)
+    adaptation: Rounded sinusoidal nodules on the leading edge of flippers that channel water flow into localized high-speed streams, preventing aerodynamic stall at steep angles.
+    challenge: "How could leading-edge bumps improve efficiency, reduce stall, or eliminate low-speed flutter on fan blades, rudders, or wind turbines?"
+
+  - organism: Spider Silk Dragline
+    adaptation: Protein polymer chains that combine crystalline hard domains for tensile strength with amorphous soft domains for elasticity, absorbing massive kinetic impact energy without snapping.
+    challenge: "How could dual-domain structural materials provide extreme tensile stopping power in safety tethers, seatbelts, or packaging strapping?"
+
+  - organism: Blue Mussel (Byssal Threads)
+    adaptation: Liquid catechol-rich DOPA protein secretions that rapidly crosslink into iron-ion complexed adhesives that cure permanently under turbulent, saline water.
+    challenge: "What plumbing repair, surgical sealant, or marine assembly could be enabled by a fast-curing underwater contact adhesive?"
+
+  - organism: Bombardier Beetle
+    adaptation: Two-chamber micro-chemical reactor that mixes hydroquinone and hydrogen peroxide with catalytic enzymes to generate a boiling, pulsating directional spray jet.
+    challenge: "How could pulsed micro-combustion or localized phase-change chemistry drive ultra-compact sprayers, thrusters, or fire suppressors?"
+
+  - organism: Polar Bear Hollow Hair
+    adaptation: Translucent, pigment-free keratin tubes that channel solar infrared radiation straight to black skin while trapping non-convective air pockets for extreme insulation.
+    challenge: "How could light-conducting hollow micro-tubes capture ambient daylight while providing extreme thermal insulation for winter gear or homes?"
+
+  - organism: Venus Flytrap (Bistable Leaf)
+    adaptation: Elastic snap-buckling instability where leaves slowly store hydraulic tension and then violently snap convex-to-concave in milliseconds without muscle tissue.
+    challenge: "How could bistable mechanical geometry create instantaneous snap-action clamping, switching, or valve shutoff without motor power?"
+
+  - organism: Morpho Butterfly Wing
+    adaptation: Microscopic Christmas-tree scale nanostructures that produce iridescent deep blue color purely through photonic light interference rather than pigment dyes.
+    challenge: "How could structural photonics replace fade-prone toxic dyes and chemical pigments in automotive paint, displays, or fabric?"
+
+  - organism: Ant Colony Pheromone Trails
+    adaptation: Stochastic distributed path reinforcement where shorter routes accumulate evaporative chemical markers faster, finding the optimal network topology without central coordination.
+    challenge: "How could autonomous swarm robotics or warehouse delivery rovers navigate optimal routes using distributed physical or digital breadcrumbs?"
+
+  - organism: Pistol Shrimp (Snapping Claw)
+    adaptation: High-speed claw closure generating a 100 km/h water jet that leaves behind a low-pressure cavitation bubble which collapses with explosive 5000K flash temperatures.
+    challenge: "How could controlled acoustic cavitation be harnessed for water purification, ultrasonic surgical debridement, or precision surface etching?"
+
+  - organism: Cuttlefish (Chromatophores & Iridophores)
+    adaptation: Directly innervated micro-muscle radial sacs that expand or contract localized pigment pouches in milliseconds for instantaneous full-body camouflage.
+    challenge: "How could mechanically actuated pigment micro-apertures create ultra-low-power reflective color displays that consume zero energy when static?"
+
+  - organism: Pangolin (Articulated Keratin Scales)
+    adaptation: Overlapping diamond-shaped mineralized plates that slide smoothly across one another to permit total body flexibility while forming an impenetrable sphere when curled.
+    challenge: "How could overlapping modular scale geometry provide flexible human body armor, cable drag chains, or articulated protective conduits?"
+
+  - organism: Sea Urchin Teeth (Self-Sharpening Calcite)
+    adaptation: Tightly packed calcite crystal fibers embedded in an organic matrix that wears away preferentially at the edge, maintaining a razor-sharp bevel through abrasive rock boring.
+    challenge: "How could continuous preferential matrix wear create cutting blades, drill bits, or mower edges that sharpen themselves as they work?"
+
+  - organism: Sandcastle Worm (Biomineral Glue)
+    adaptation: Oppositely charged polyelectrolyte micro-droplets (coacervates) that squeeze water out to glue silicate sand grains into durable underwater masonry tubes in 30 seconds.
+    challenge: "How could coacervate chemistry create fast-setting eco-concrete, bone adhesives, or quick masonry mortars that set underwater?"
+
+  - organism: Pitcher Plant (Nepenthes Peristome)
+    adaptation: Microscopic radial ridges that lock a continuous microscopic lubricating water film in place, creating an utterly frictionless surface where insects lose all traction.
+    challenge: "How could liquid-infused slippery surfaces prevent ice buildup on airplane wings, grease clogs in drains, or biofouling in medical tubing?"
+
+  - organism: Firefly Lantern (Scale Geometry)
+    adaptation: Tilted, mismatched jagged cuticle scales on the abdominal surface that eliminate internal total reflection, boosting light emission out of the bioluminescent organ by 55%.
+    challenge: "How could nanoscale surface facet mismatching boost light extraction from LEDs or light collection on solar cells?"
+
+  - organism: Pinecone Scales (Hygroscopic Bending)
+    adaptation: Dual-layered cellulose cell walls with perpendicular microfibril grain orientations that swell unevenly with ambient moisture, opening when dry and closing when wet without metabolic energy.
+    challenge: "How could moisture-responsive passive bilayer composites automatically actuate vents, fabric breathability, or greenhouse windows without sensors or electricity?"
+
+  - organism: Desert Locust (Lobula Giant Movement Detector)
+    adaptation: Dedicated wide-field visual neuron that tracks looming angular expansion rates to trigger instantaneous collision-avoidance maneuvers milliseconds before an obstacle strikes.
+    challenge: "How could simple neuromorphic optical threshold circuits provide micro-drone collision avoidance without heavy computer vision cameras?"
+
+  - organism: Elephant Trunk (Muscular Hydrostat)
+    adaptation: Densely interwoven longitudinal, radial, and helical muscle fibers with zero skeletal bones that can delicately manipulate a single peanut or effortlessly uproot a tree.
+    challenge: "How could continuum soft-robotic actuators provide safe, high-strength human-collaborative handling in warehouses or elder care?"
+
+  - organism: Honeycomb Hexagonal Cells
+    adaptation: Tessellated tri-hexagonal prism network that mathematically optimizes perimeter-to-volume ratio, minimizing structural wax while supporting 30 times its own mass.
+    challenge: "How could generative hexagonal cores optimize stiffness-to-weight ratios in 3D-printed chassis, packaging mailers, or bicycle frames?"

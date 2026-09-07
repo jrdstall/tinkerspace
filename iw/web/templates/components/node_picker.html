@@ -1,0 +1,175 @@
+<!-- Reusable Node Search and Autocomplete Picker Component -->
+<style>
+    .node-picker-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .node-picker-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        margin-top: 4px;
+        max-height: 280px;
+        overflow-y: auto;
+        background-color: #1a2230;
+        border: 1px solid var(--accent);
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+        z-index: 1000;
+        padding: 0.25rem 0;
+    }
+    .node-picker-dropdown.active {
+        display: block;
+    }
+    .node-picker-item {
+        padding: 0.6rem 0.85rem;
+        cursor: pointer;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+        transition: background-color 0.1s ease;
+    }
+    .node-picker-item:last-child {
+        border-bottom: none;
+    }
+    .node-picker-item:hover, .node-picker-item.highlighted {
+        background-color: #21262d;
+    }
+    .node-picker-badge {
+        font-size: 0.65rem;
+        font-weight: 700;
+        padding: 0.15rem 0.4rem;
+        border-radius: 4px;
+        text-transform: uppercase;
+    }
+    .badge-friction { background: rgba(248,81,73,0.2); color: #f85149; border: 1px solid rgba(248,81,73,0.4); }
+    .badge-idea { background: rgba(63,185,80,0.2); color: #3fb950; border: 1px solid rgba(63,185,80,0.4); }
+    .badge-question { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid rgba(88,166,255,0.4); }
+    .badge-observation { background: rgba(210,153,34,0.2); color: #d29922; border: 1px solid rgba(210,153,34,0.4); }
+    .badge-asset { background: rgba(163,113,247,0.2); color: #bc8cff; border: 1px solid rgba(163,113,247,0.4); }
+</style>
+
+<script>
+function setupNodePicker(config) {
+    const input = document.getElementById(config.inputId);
+    const hidden = document.getElementById(config.hiddenId);
+    const dropdown = document.getElementById(config.dropdownId);
+    const excludeId = config.excludeId || '';
+    let items = [];
+    let highlightedIndex = -1;
+    let debounceTimer = null;
+
+    if (!input || !hidden || !dropdown) return;
+
+    function renderDropdown(nodes) {
+        dropdown.innerHTML = '';
+        items = nodes;
+        highlightedIndex = -1;
+
+        if (!nodes || nodes.length === 0) {
+            dropdown.innerHTML = '<div style="padding: 0.75rem; font-size: 0.8rem; color: var(--text-muted); text-align: center;">No matching nodes found</div>';
+            dropdown.classList.add('active');
+            return;
+        }
+
+        nodes.forEach((n, idx) => {
+            const div = document.createElement('div');
+            div.className = 'node-picker-item';
+            div.dataset.index = idx;
+
+            const typeClass = 'badge-' + (n.type || 'friction').toLowerCase();
+            let tagsHtml = '';
+            if (n.tags && n.tags.length > 0) {
+                tagsHtml = n.tags.slice(0, 3).map(t => `<span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 0.35rem;">#${t}</span>`).join('');
+            }
+            if (n.keywords && n.keywords.length > 0) {
+                tagsHtml += n.keywords.slice(0, 2).map(k => `<span style="font-size: 0.7rem; color: var(--accent); margin-right: 0.35rem;">*${k}</span>`).join('');
+            }
+
+            const excerptHtml = n.excerpt ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${n.excerpt}</div>` : '';
+
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.2rem;">
+                    <div style="display: flex; align-items: center; gap: 0.4rem; overflow: hidden;">
+                        <span class="node-picker-badge ${typeClass}">${n.type}</span>
+                        <strong class="mono" style="font-size: 0.8rem; color: var(--accent);">${n.id}</strong>
+                        <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${n.title}</span>
+                    </div>
+                    <span class="badge" style="font-size: 0.65rem;">${n.domain}</span>
+                </div>
+                ${tagsHtml ? `<div style="margin-top: 0.15rem;">${tagsHtml}</div>` : ''}
+                ${excerptHtml}
+            `;
+
+            div.addEventListener('click', () => selectNode(n));
+            dropdown.appendChild(div);
+        });
+
+        dropdown.classList.add('active');
+    }
+
+    function selectNode(n) {
+        hidden.value = n.id;
+        input.value = `${n.id} — ${n.title}`;
+        dropdown.classList.remove('active');
+        if (config.onSelect) config.onSelect(n);
+    }
+
+    function fetchNodes(q) {
+        fetch(`/api/nodes/search?q=${encodeURIComponent(q)}&exclude=${encodeURIComponent(excludeId)}&limit=10`)
+            .then(res => res.json())
+            .then(data => renderDropdown(data))
+            .catch(() => {});
+    }
+
+    input.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        const q = input.value.trim();
+        hidden.value = q.split(' ')[0].toUpperCase();
+        debounceTimer = setTimeout(() => fetchNodes(q), 150);
+    });
+
+    input.addEventListener('focus', () => {
+        fetchNodes(input.value.trim());
+    });
+
+    input.addEventListener('keydown', (e) => {
+        if (!dropdown.classList.contains('active') || items.length === 0) return;
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            highlightedIndex = (highlightedIndex + 1) % items.length;
+            updateHighlight();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            highlightedIndex = (highlightedIndex - 1 + items.length) % items.length;
+            updateHighlight();
+        } else if (e.key === 'Enter') {
+            if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+                e.preventDefault();
+                selectNode(items[highlightedIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            dropdown.classList.remove('active');
+        }
+    });
+
+    function updateHighlight() {
+        const itemEls = dropdown.querySelectorAll('.node-picker-item');
+        itemEls.forEach((el, i) => {
+            if (i === highlightedIndex) {
+                el.classList.add('highlighted');
+                el.scrollIntoView({ block: 'nearest' });
+            } else {
+                el.classList.remove('highlighted');
+            }
+        });
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('active');
+        }
+    });
+}
+</script>
