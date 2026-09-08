@@ -3,6 +3,7 @@
 Layer 4 Web surface helper.
 """
 
+from typing import Any
 from urllib.parse import urlparse
 from starlette.requests import Request
 from iw.contracts.models import Node
@@ -32,6 +33,65 @@ def resolve_inbound_edges(nodes: list[Node], target_id: str) -> list[dict[str, s
                     "from_title": other.title,
                 })
     return inbound
+
+
+def _resolve_artifact_meta(target: Node | None, note: str, store: StoreProtocol | None) -> dict[str, str]:
+    """Resolve unit and deliverable metadata for an artifact node."""
+    attrs = target.attrs if target else {}
+    u_id = str(attrs.get("unit", "")).strip().upper()
+    if not u_id and "UOW-" in note.upper():
+        cleaned = note.replace(":", " ").replace("(", " ").replace(")", " ")
+        for w in cleaned.split():
+            if w.upper().startswith("UOW-"):
+                u_id = w.upper()
+                break
+    u_title = str(attrs.get("unit_title", "")).strip()
+    if not u_title and u_id and store:
+        unit = store.get_unit(u_id)
+        if unit and unit.title:
+            u_title = unit.title
+    fname = str(attrs.get("file_name", "")).strip() or note
+    fpath = str(attrs.get("path", "")).strip()
+    is_gen = target.title.startswith("deliverable.md for ") if (target and target.title) else False
+    title = (u_title or target.title) if is_gen else ((target.title if target else "") or u_title)
+    ctx = f"{u_id}: {u_title}" if (u_id and u_title) else (u_id or u_title or note)
+    return {"display_title": title, "unit_id": u_id, "unit_title": u_title, "file_name": fname, "file_path": fpath, "context_note": ctx}
+
+
+def _build_edge_dict(edge: Any, target: Node | None, art_info: dict[str, str], is_art: bool, ttype: str) -> dict[str, Any]:
+    return {
+        "to_id": edge.to_id, "relation": edge.relation, "note": edge.note,
+        "to_title": target.title if target else "", "to_type": ttype, "is_artifact": is_art,
+        "display_title": art_info.get("display_title", target.title if target else ""),
+        "context_note": art_info.get("context_note", edge.note),
+        "file_path": art_info.get("file_path", ""), "file_name": art_info.get("file_name", ""),
+        "unit_id": art_info.get("unit_id", ""),
+    }
+
+
+def resolve_outbound_edges(
+    node: Node, all_nodes: list[Node], store: StoreProtocol | None = None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Resolve outbound links with titles, types, and rich artifact deliverable metadata."""
+    nodes_by_id = {n.id.upper(): n for n in all_nodes}
+    outbound: list[dict[str, Any]] = []
+    artifacts: list[dict[str, Any]] = []
+    for edge in node.edges:
+        tid = edge.to_id.upper()
+        target = nodes_by_id.get(tid)
+        ttype = target.type if target else ("artifact" if tid.startswith("ART-") else "")
+        is_art = (ttype == "artifact") or tid.startswith("ART-")
+        art_info = _resolve_artifact_meta(target, edge.note, store) if is_art else {}
+        ed = _build_edge_dict(edge, target, art_info, is_art, ttype)
+        outbound.append(ed)
+        if is_art:
+            artifacts.append({
+                "id": edge.to_id, "title": ed["display_title"] or edge.to_id, "relation": edge.relation,
+                "unit_id": art_info.get("unit_id", ""), "unit_title": art_info.get("unit_title", ""),
+                "file_name": art_info.get("file_name", ""), "file_path": art_info.get("file_path", ""),
+                "note": edge.note,
+            })
+    return outbound, artifacts
 
 
 def format_node_back_label(target: Node) -> str:

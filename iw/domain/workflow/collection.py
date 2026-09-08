@@ -115,16 +115,24 @@ def _register_folder_artifacts(folder: Path, unit: UnitOfWork, body: str, store:
             continue
         art_id = store.allocate_id("ART")
         edge = Edge(from_id=art_id, to_id=unit.id, relation="produced_by", created=now, author=author, note=item.name)
+        is_deliv = item.name.lower() == "deliverable.md"
+        art_title = (unit.title if is_deliv else f"{item.name} ({unit.title})") if unit.title else f"{item.name} for {unit.id}"
         art_node = Node(
             id=art_id,
             type="artifact",
-            title=f"{item.name} for {unit.id}",
+            title=art_title,
             created=now,
             domain="artifacts",
             tags=["artifact"],
-            body=body if item.name.lower() == "deliverable.md" else f"File output: `work/{unit.id}/{item.name}`",
+            body=body if is_deliv else f"File output: `work/{unit.id}/{item.name}`",
             edges=[edge],
-            attrs={"file_name": item.name, "path": f"work/{unit.id}/{item.name}", "unit": unit.id},
+            attrs={
+                "file_name": item.name,
+                "path": f"work/{unit.id}/{item.name}",
+                "unit": unit.id,
+                "unit_title": unit.title,
+                "activity": unit.activity,
+            },
         )
         arts.append(store.write_node(art_node, author=author))
     return arts
@@ -150,10 +158,11 @@ def _materialize_to_subject(store: StoreProtocol, subject_id: str, header: Deliv
         history.append(f"{now.date()}: {unit.activity} ({unit.id}) - {header.summary}")
         subject.attrs["activity_log"] = history
 
+    unit_desc = f"{unit.id}: {unit.title}" if unit.title else unit.id
     edge_targets = {e.to_id.upper() for e in subject.edges}
     for art in art_nodes:
         if art.id.upper() not in edge_targets:
-            edge = Edge(from_id=subject.id, to_id=art.id.upper(), relation="illustrates", created=now, author=author, note=f"Produced by {unit.id}")
+            edge = Edge(from_id=subject.id, to_id=art.id.upper(), relation="illustrates", created=now, author=author, note=f"Produced by {unit_desc}")
             subject.edges.append(edge)
 
     store.write_node(subject, author=author)

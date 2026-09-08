@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from starlette.testclient import TestClient
 
-from iw.contracts.models import Author, AuthorKind, Edge, Node, QueryFilters
+from iw.contracts.models import Author, AuthorKind, Edge, Node, QueryFilters, UnitOfWork, UnitState
 from iw.core.events import FileEventLog
 from iw.core.index import InMemoryIndex
 from iw.core.store import MarkdownStore
@@ -477,6 +477,87 @@ def test_explore_08_node_detail_editing_and_personal_ux(tmp_path: Path):
     node_no_edges = store.get_node("IDEA-A01")
     assert node_no_edges is not None
     assert len(node_no_edges.edges) == 0
+
+
+def test_explore_04_renders_contextual_artifact_markers_and_titles(tmp_path: Path):
+    """EXPLORE-04: Node detail view renders contextual artifact markers, task titles, and deliverable links."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
+    now = datetime(2026, 8, 29, 12, 0, 0, tzinfo=timezone.utc)
+
+    # 1. Subject Idea
+    idea = Node(
+        id="IDEA-A01",
+        type="idea",
+        title="Sunlight Readable Display Puck",
+        created=now,
+        domain="cycling",
+        tags=["display"],
+        state="active",
+        author=author,
+        body="Puck computer.",
+        edges=[
+            Edge(from_id="IDEA-A01", to_id="ART-A01", relation="illustrates", created=now, author=author, note="Produced by UOW-A01: Prior Art Survey"),
+            Edge(from_id="IDEA-A01", to_id="ART-A02", relation="illustrates", created=now, author=author, note="Produced by UOW-A01: Prior Art Survey"),
+        ],
+    )
+    store.write_node(idea, author=author)
+
+    # 2. Associated Unit of Work
+    unit = UnitOfWork(
+        id="UOW-A01",
+        title="Prior Art Survey",
+        activity="prior-art-survey",
+        state=UnitState.ACCEPTED,
+        subject_ids=["IDEA-A01"],
+    )
+    store.write_unit(unit, author=author)
+
+    # 3. Artifact nodes (main deliverable + companion file)
+    art1 = Node(
+        id="ART-A01",
+        type="artifact",
+        title="Prior Art Survey",
+        created=now,
+        domain="artifacts",
+        tags=["artifact"],
+        body="# Deliverable content",
+        attrs={"unit": "UOW-A01", "unit_title": "Prior Art Survey", "file_name": "deliverable.md", "path": "work/UOW-A01/deliverable.md"},
+    )
+    art2 = Node(
+        id="ART-A02",
+        type="artifact",
+        title="Prior Art Survey: patent_landscape.png",
+        created=now,
+        domain="artifacts",
+        tags=["artifact"],
+        body="File output: `work/UOW-A01/patent_landscape.png`",
+        attrs={"unit": "UOW-A01", "unit_title": "Prior Art Survey", "file_name": "patent_landscape.png", "path": "work/UOW-A01/patent_landscape.png"},
+    )
+    store.write_node(art1, author=author)
+    store.write_node(art2, author=author)
+
+    app = create_app(store=store)
+    client = TestClient(app)
+
+    res = client.get("/node/IDEA-A01")
+    assert res.status_code == 200
+
+    # Dedicated Work Artifacts & Deliverables card renders
+    assert "Work Artifacts &amp; Deliverables" in res.text or "Work Artifacts & Deliverables" in res.text
+    assert "2 Artifacts" in res.text
+    assert "ARTIFACT" in res.text
+    assert "Prior Art Survey" in res.text
+    assert "Prior Art Survey: patent_landscape.png" in res.text
+    assert "deliverable.md" in res.text
+    assert "patent_landscape.png" in res.text
+    assert "/vault-file/work/UOW-A01/deliverable.md" in res.text
+
+    # Links section renders ARTIFACT badge, title, and context note
+    assert "&rarr; [illustrates]" in res.text
+    assert "ART-A01" in res.text
+    assert "ART-A02" in res.text
+    assert "UOW-A01: Prior Art Survey" in res.text
 
 
 

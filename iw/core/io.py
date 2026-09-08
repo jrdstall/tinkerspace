@@ -110,4 +110,7 @@ def build_node_path(vault_dir: Path, node_type: str, title: str, clean_id: str, 
     slug = slugify_title(title, clean_id)
     date_str = now.strftime("%Y-%m-%d")
     folder = vault_dir / node_type.lower()
-    return folder / f"{date_str}-{slug}.md"
+    target = folder / f"{date_str}-{slug}.md"
+    if target.exists():
+        target = folder / f"{date_str}-{slug}-{clean_id.lower()}.md"
+    return target

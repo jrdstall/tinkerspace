@@ -238,16 +238,56 @@
         <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; padding: 1.25rem; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">{{- (node.body|trim) if node.body else '*(No body text provided)*' -}}</div>
     </div>
 
+    <!-- Work Artifacts & Deliverables -->
+    {% if artifacts %}
+    <div class="card" style="background-color: var(--bg-color); border-color: var(--border-color); padding: 1.25rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+            <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0;">
+                📦 Work Artifacts & Deliverables
+            </h3>
+            <span class="badge badge-green">{{ artifacts|length }} Artifact{% if artifacts|length != 1 %}s{% endif %}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for art in artifacts %}
+            <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.6rem 0.85rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                    <span class="badge" style="background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3); font-size: 0.7rem; font-weight: 700;">ARTIFACT</span>
+                    <a href="/node/{{ art.id }}?from={{ node.id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ art.id }}</a>
+                    <span style="font-weight: 600; color: var(--text-main);">{{ art.title }}</span>
+                    {% if art.unit_id %}
+                    <span class="badge mono" style="font-size: 0.7rem;" title="Source Unit of Work">{{ art.unit_id }}</span>
+                    {% endif %}
+                    {% if art.file_name %}
+                    <span class="mono" style="font-size: 0.75rem; color: var(--text-muted);">{{ art.file_name }}</span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    {% if art.file_path %}
+                    <a href="/vault-file/{{ art.file_path }}" target="_blank" class="btn" style="font-size: 0.75rem; text-decoration: none; padding: 0.2rem 0.5rem;" title="View raw deliverable file">
+                        📄 View File
+                    </a>
+                    {% endif %}
+                    <a href="/node/{{ art.id }}?from={{ node.id }}" class="btn" style="font-size: 0.75rem; text-decoration: none; padding: 0.2rem 0.5rem;">
+                        Open Note &rarr;
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Links -->
+    {% set effective_out_edges = outbound_edges if outbound_edges is defined else node.edges %}
     <div style="margin-bottom: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
             <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin: 0;">
                 Links
             </h3>
-            <span class="badge">{{ (inbound_edges|length) + (node.edges|length) }} Links</span>
+            <span class="badge">{{ (inbound_edges|length) + (effective_out_edges|length) }} Links</span>
         </div>
 
-        {% if inbound_edges or node.edges %}
+        {% if inbound_edges or effective_out_edges %}
         <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem;">
             {% for in_edge in inbound_edges %}
             <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
@@ -260,20 +300,38 @@
             </div>
             {% endfor %}
 
-            {% for out_edge in node.edges %}
+            {% for out_edge in effective_out_edges %}
             <div style="background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between;">
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                     <span class="mono" style="color: var(--accent);">&rarr; [{{ out_edge.relation }}]</span>
+                    {% if out_edge.is_artifact %}
+                    <span class="badge" style="background: rgba(88,166,255,0.15); color: var(--accent); border-color: rgba(88,166,255,0.3); font-size: 0.7rem; font-weight: 700;">ARTIFACT</span>
+                    {% endif %}
                     <a href="/node/{{ out_edge.to_id }}?from={{ node.id }}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ out_edge.to_id }}</a>
+                    {% if out_edge.is_artifact %}
+                    <strong style="color: var(--text-main);">"{{ out_edge.display_title }}"</strong>
+                    {% if out_edge.context_note %}
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">({{ out_edge.context_note }})</span>
+                    {% endif %}
+                    {% else %}
+                    {% if out_edge.to_title %}
+                    <span style="color: var(--text-muted);">("{{ out_edge.to_title }}")</span>
+                    {% endif %}
                     {% if out_edge.note %}
-                    <span style="color: var(--text-muted);">({{ out_edge.note }})</span>
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">({{ out_edge.note }})</span>
+                    {% endif %}
                     {% endif %}
                 </div>
-                <form action="/node/{{ node.id }}/unlink{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="margin: 0;">
-                    <input type="hidden" name="target_id" value="{{ out_edge.to_id }}">
-                    <input type="hidden" name="relation" value="{{ out_edge.relation }}">
-                    <button type="submit" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);" title="Remove this relationship edge">&times; Unlink</button>
-                </form>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    {% if out_edge.file_path %}
+                    <a href="/vault-file/{{ out_edge.file_path }}" target="_blank" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; text-decoration: none;" title="View file">📄 File</a>
+                    {% endif %}
+                    <form action="/node/{{ node.id }}/unlink{% if request.query_params.get('from') %}?from={{ request.query_params.get('from') }}{% endif %}" method="POST" style="margin: 0;">
+                        <input type="hidden" name="target_id" value="{{ out_edge.to_id }}">
+                        <input type="hidden" name="relation" value="{{ out_edge.relation }}">
+                        <button type="submit" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248,81,73,0.3);" title="Remove this relationship edge">&times; Unlink</button>
+                    </form>
+                </div>
             </div>
             {% endfor %}
         </div>

@@ -3,6 +3,7 @@
 Layer 4 Web surface module.
 """
 
+from typing import Any
 from datetime import datetime, timezone
 from starlette.requests import Request
 from starlette.responses import HTMLResponse, RedirectResponse, Response
@@ -10,7 +11,12 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Edge, Node
 from iw.contracts.store import StoreProtocol
-from iw.web.helpers import resolve_adjacent_nodes, resolve_back_target, resolve_inbound_edges
+from iw.web.helpers import (
+    resolve_adjacent_nodes,
+    resolve_back_target,
+    resolve_inbound_edges,
+    resolve_outbound_edges,
+)
 
 
 def _count_questions(nodes: list[Node], subject_id: str) -> int:
@@ -25,6 +31,24 @@ def _count_questions(nodes: list[Node], subject_id: str) -> int:
     return count
 
 
+def _node_context(request: Request, node: Node, all_nodes: list[Node], store: StoreProtocol) -> dict[str, Any]:
+    inbound = resolve_inbound_edges(all_nodes, node.id)
+    outbound, artifacts = resolve_outbound_edges(node, all_nodes, store)
+    back_url, back_label = resolve_back_target(request, node.id, store)
+    prev_node, next_node = resolve_adjacent_nodes(all_nodes, node)
+    raw_kw = node.attrs.get("keywords", [])
+    kw_list = raw_kw if isinstance(raw_kw, list) else [raw_kw] if raw_kw else []
+    return {
+        "request": request, "node": node, "inbound_edges": inbound, "outbound_edges": outbound,
+        "artifacts": artifacts, "available_targets": [n for n in all_nodes if n.id != node.id],
+        "question_count": _count_questions(all_nodes, node.id),
+        "inbox_count": len(store.list_inbox()), "drop_count": len(store.list_dropped_files()),
+        "back_url": back_url, "back_label": back_label, "prev_node": prev_node, "next_node": next_node,
+        "keywords_list": kw_list, "keywords_display": ", ".join(str(k) for k in kw_list),
+        "tags_display": ", ".join(node.tags),
+    }
+
+
 async def node_detail_view(request: Request, templates: Jinja2Templates) -> Response:
     """Render the node detail view with frontmatter, edges, and relationship editor."""
     store: StoreProtocol = request.app.state.store
@@ -33,37 +57,8 @@ async def node_detail_view(request: Request, templates: Jinja2Templates) -> Resp
     if node is None:
         return HTMLResponse(f"<h1>404 Not Found</h1><p>Node '{node_id}' does not exist.</p>", status_code=404)
 
-    all_nodes = store.list_nodes()
-    available_targets = [n for n in all_nodes if n.id != node_id]
-    inbound = resolve_inbound_edges(all_nodes, node_id)
-    q_count = _count_questions(all_nodes, node_id)
-    back_url, back_label = resolve_back_target(request, node_id, store)
-    prev_node, next_node = resolve_adjacent_nodes(all_nodes, node)
-
-    raw_keywords = node.attrs.get("keywords", [])
-    keywords_list = raw_keywords if isinstance(raw_keywords, list) else [raw_keywords] if raw_keywords else []
-    keywords_display = ", ".join(str(k) for k in keywords_list)
-
-    return templates.TemplateResponse(
-        request=request,
-        name="node.html",
-        context={
-            "request": request,
-            "node": node,
-            "inbound_edges": inbound,
-            "available_targets": available_targets,
-            "question_count": q_count,
-            "inbox_count": len(store.list_inbox()),
-            "drop_count": len(store.list_dropped_files()),
-            "back_url": back_url,
-            "back_label": back_label,
-            "prev_node": prev_node,
-            "next_node": next_node,
-            "keywords_list": keywords_list,
-            "keywords_display": keywords_display,
-            "tags_display": ", ".join(node.tags),
-        },
-    )
+    ctx = _node_context(request, node, store.list_nodes(), store)
+    return templates.TemplateResponse(request=request, name="node.html", context=ctx)
 
 
 async def node_edit_action(request: Request) -> Response:

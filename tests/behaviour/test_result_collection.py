@@ -129,6 +129,15 @@ def test_collect_04_open_hospitality_registers_all_discovered_files_as_artifacts
     all_arts = store.list_nodes(type_filter="artifact")
     assert len(all_arts) == 3
 
+    deliv_node = next(a for a in created_arts if a.attrs.get("file_name") == "deliverable.md")
+    assert deliv_node.title == "Display Sunlight Readability Trade Study"
+    assert deliv_node.attrs["unit"] == "UOW-A04"
+    assert deliv_node.attrs["unit_title"] == "Display Sunlight Readability Trade Study"
+    assert deliv_node.attrs["activity"] == "trade-study@1"
+
+    sketch_node = next(a for a in created_arts if a.attrs.get("file_name") == "sketch.svg")
+    assert sketch_node.title == "sketch.svg (Display Sunlight Readability Trade Study)"
+
 
 def test_collect_05_attribution_stamped_with_courier_and_author(tmp_path: Path):
     """COLLECT-05: Attribution is stamped on collection with observed courier and author."""
@@ -220,6 +229,9 @@ def test_collect_07_materializes_verdict_and_summary_on_subject_node(tmp_path: P
     assert updated_idea.attrs.get("screening_verdict") == "pass"
     history = updated_idea.attrs.get("activity_log", [])
     assert any("Display feasibility screening passed" in entry for entry in history)
+    art_edges = [e for e in updated_idea.edges if e.to_id.startswith("ART-")]
+    assert len(art_edges) >= 1
+    assert any("Produced by UOW-A07: Display Sunlight Readability Trade Study" in e.note for e in art_edges)
 
 
 def test_collect_08_collection_sets_unit_to_accepted_and_unblocks_successors(tmp_path: Path):
