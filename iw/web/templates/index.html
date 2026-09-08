@@ -34,7 +34,10 @@
         <input type="hidden" name="state" id="filter-state-input" value="{{ current_state }}">
 
         <div style="display: flex; gap: 0.75rem;">
-            <input type="text" name="q" value="{{ q }}" placeholder="Search title, ID, tags, or content..." style="flex: 1; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem;">
+            <div class="node-picker-wrapper" style="flex: 1;">
+                <input type="text" name="q" id="explore-search-input" value="{{ q }}" placeholder="🔍 Search title, ID, tags, keywords, or content..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem 0.75rem; color: var(--text-main); font-family: inherit; font-size: 0.95rem;">
+                <div class="node-picker-dropdown" id="explore-search-dropdown"></div>
+            </div>
             <button type="submit" class="btn btn-primary">Search</button>
             {% if q or current_type or current_state or current_domain or current_sort != 'touched' %}
             <a href="/" class="btn" style="text-decoration: none; display: flex; align-items: center;">Clear</a>
@@ -138,9 +141,33 @@
             Try clearing filters or search query to explore your full innovation corpus.
         </p>
         <a href="/" class="btn btn-primary">Reset Filters</a>
+
+        {% if other_matches %}
+        <div style="margin-top: 1.5rem; text-align: left; background: rgba(88, 166, 255, 0.08); border: 1px solid var(--accent); border-radius: 6px; padding: 1rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            <div style="font-size: 0.85rem; font-weight: 600; color: var(--accent); margin-bottom: 0.5rem;">
+                Matches found in other categories for "{{ q }}":
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                {% for m in other_matches %}
+                <a href="/node/{{ m.id }}" style="display: flex; justify-content: space-between; align-items: center; text-decoration: none; padding: 0.5rem 0.75rem; background: var(--card-bg); border-radius: 4px; border: 1px solid var(--border-color);">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="badge" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">{{ m.type }}</span>
+                        <strong class="mono" style="color: var(--accent); font-size: 0.8rem;">{{ m.id }}</strong>
+                        <span style="color: var(--text-main); font-weight: 500; font-size: 0.85rem;">{{ m.title }}</span>
+                    </div>
+                    <span style="color: var(--accent); font-size: 0.8rem;">View &rarr;</span>
+                </a>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 0.75rem; text-align: center;">
+                <a href="/?q={{ q }}" class="btn btn-primary" style="font-size: 0.8rem;">Show All Results Across All Types</a>
+            </div>
+        </div>
+        {% endif %}
     </div>
 {% endif %}
 
+{% include "components/node_picker.html" %}
 <script>
     function setTypeFilter(val) {
         document.getElementById('filter-type-input').value = val;
@@ -150,6 +177,18 @@
         document.getElementById('filter-state-input').value = val;
         document.getElementById('explore-filter-form').submit();
     }
+
+    setupNodePicker({
+        inputId: 'explore-search-input',
+        hiddenId: 'explore-search-input',
+        dropdownId: 'explore-search-dropdown',
+        preventFormSubmit: false,
+        onSelect: function(n) {
+            if (n && n.id) {
+                window.location.href = '/node/' + n.id;
+            }
+        }
+    });
 </script>
 
 <style>

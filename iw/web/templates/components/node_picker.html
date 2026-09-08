@@ -196,17 +196,27 @@ window.setupNodePicker = function(config) {
         fetchNodes(searchQ);
     });
 
+    const preventFormSubmit = config.preventFormSubmit !== false;
+
     input.addEventListener('keydown', (e) => {
-        // ALWAYS prevent Enter from submitting the parent form while in this input!
         if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
             if (dropdown.classList.contains('active') && items.length > 0) {
                 if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+                    e.preventDefault();
+                    e.stopPropagation();
                     selectNode(items[highlightedIndex]);
-                } else {
-                    selectNode(items[0]);
+                    return;
                 }
+                if (preventFormSubmit) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    selectNode(items[0]);
+                    return;
+                }
+            }
+            if (preventFormSubmit) {
+                e.preventDefault();
+                e.stopPropagation();
             }
             return;
         }

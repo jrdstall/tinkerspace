@@ -99,7 +99,7 @@ def generate_launchers(target_dir: Path) -> None:
         "echo   URL:   http://localhost:8000\r\n"
         "echo ====================================================\r\n"
         'start "" http://localhost:8000\r\n'
-        "uv run python -m uvicorn iw.web.app:app --port 8000\r\n"
+        "uv run python -m uvicorn iw.web.app:app --port 8000 --reload\r\n"
         "pause\r\n"
     )
     with open(target_dir / "start.bat", "w", encoding="utf-8") as f:
@@ -115,7 +115,7 @@ def generate_launchers(target_dir: Path) -> None:
         'Write-Host "  URL:   http://localhost:8000" -ForegroundColor Green\r\n'
         'Write-Host "====================================================" -ForegroundColor Cyan\r\n'
         'Start-Process "http://localhost:8000"\r\n'
-        'uv run python -m uvicorn iw.web.app:app --port 8000\r\n'
+        'uv run python -m uvicorn iw.web.app:app --port 8000 --reload\r\n'
     )
     with open(target_dir / "start.ps1", "w", encoding="utf-8") as f:
         f.write(ps1_content)

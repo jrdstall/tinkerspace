@@ -46,7 +46,9 @@ async def index_view(request: Request) -> Response:
     domain, tag = request.query_params.get("domain", "").strip(), request.query_params.get("tag", "").strip()
     state, sort_by = request.query_params.get("state", "").strip(), request.query_params.get("sort", "touched").strip()
     filters = QueryFilters(type=normalized_type or None, domain=domain or None, tag=tag or None, state=state or None)
-    filtered = InMemoryIndex(corpus_nodes).filter_and_search(filters, query_text=q or None, sort_by=sort_by)
+    index = InMemoryIndex(corpus_nodes)
+    filtered = index.filter_and_search(filters, query_text=q or None, sort_by=sort_by)
+    other_matches = index.filter_and_search(QueryFilters(), query_text=q)[:5] if (q and not filtered and (normalized_type or domain or tag or state)) else []
 
     scout = ScoutService(store.vault_dir / "meta" / "scout_interests.json")
     offers = scout.get_stale_offers()
@@ -59,6 +61,7 @@ async def index_view(request: Request) -> Response:
             "drop_count": len(store.list_dropped_files()), "facets": extract_facets(corpus_nodes),
             "offers": offers, "q": q, "current_type": normalized_type, "current_domain": domain,
             "current_tag": tag, "current_state": state, "current_sort": sort_by,
+            "other_matches": other_matches,
         },
     )
 
