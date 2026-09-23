@@ -1,7 +1,7 @@
 """Questionstorming Service orchestrating question nodes and relationship graph.
 
 Layer 2 Domain module. Depends on iw.contracts, iw.domain.questionstorm.models, and stdlib.
-Governed by Vision §12 and QSTORM-01 through QSTORM-08.
+Governed by Vision §12 and QSTORM-01 through QSTORM-10.
 """
 
 from datetime import datetime, timezone
@@ -18,17 +18,16 @@ from iw.domain.questionstorm.moves import (
 )
 
 
-def _build_edges(qid: str, subject_id: str, parent_id: str | None, relation: str, now: datetime, auth: Author) -> list[Edge]:
-    """Construct initial subject and parent relationship edges for a question."""
+def _build_edges(qid: str, subject_id: str, parent_id: str | None, rel: str, now: datetime, auth: Author) -> list[Edge]:
     edges = [Edge(from_id=qid, to_id=subject_id.upper(), relation="questions", created=now, author=auth)]
     if parent_id:
-        clean_rel = relation if relation in QUESTION_RELATIONS else "reframes"
+        clean_rel = rel if rel in QUESTION_RELATIONS else "reframes"
         edges.append(Edge(from_id=qid, to_id=parent_id.upper(), relation=clean_rel, created=now, author=auth))
     return edges
 
 
 class QuestionstormService:
-    """Orchestrates Question node creation, transforms, and edge linking."""
+    """Orchestrates Question node creation, transforms, edits, and edge linking."""
 
     def __init__(self, store: StoreProtocol) -> None:
         self.store = store
@@ -52,12 +51,11 @@ class QuestionstormService:
         if "question" not in tags:
             tags.append("question")
 
-        clean_form = form.lower() if form.lower() in [f.value for f in QuestionForm] else "open"
-        clean_imp = importance.lower() if importance.lower() in [i.value for i in QuestionImportance] else "medium"
+        clean_form = form.lower() if form.lower() in ("open", "closed") else "open"
+        clean_imp = importance.lower() if importance.lower() in ("high", "medium", "low") else "medium"
         now = datetime.now(timezone.utc)
         qid = self.store.allocate_id("QUE")
         edges = _build_edges(qid, subject_id, parent_question_id, relation, now, auth)
-
         node = Node(
             id=qid, type="question", title=text.strip(), created=now, domain=domain, tags=tags,
             state="held_open", author=auth, last_touched=now, body="",
@@ -67,11 +65,27 @@ class QuestionstormService:
         self.store.write_node(node, author=auth)
         return node
 
+    def update_question(
+        self, question_id: str, text: str | None = None, form: str | None = None,
+        importance: str | None = None, author: Author | None = None,
+    ) -> Node | None:
+        """Update an existing Question node's text, form, and/or importance."""
+        auth = author or Author(kind=AuthorKind.HUMAN, courier="web-ui")
+        node = self.store.get_node(question_id)
+        if node is None or node.type != "question":
+            return None
+        if text is not None and text.strip():
+            node.title = text.strip()
+        if form is not None and form.lower().strip() in ("open", "closed"):
+            node.attrs["form"] = form.lower().strip()
+        if importance is not None and importance.lower().strip() in ("high", "medium", "low"):
+            node.attrs["importance"] = importance.lower().strip()
+        node.last_touched = datetime.now(timezone.utc)
+        self.store.write_node(node, author=auth)
+        return node
+
     def transform_open_closed(
-        self,
-        question_id: str,
-        new_text: str,
-        author: Author | None = None,
+        self, question_id: str, new_text: str, author: Author | None = None,
     ) -> Node | None:
         """Transform a question into its opposite form, linking with directional edge."""
         auth = author or Author(kind=AuthorKind.HUMAN, courier="web-ui")
@@ -82,33 +96,21 @@ class QuestionstormService:
         current_form = source.attrs.get("form", "open")
         new_form = invert_question_form(current_form)
         relation = suggest_relation_for_transform(current_form, new_form)
-
-        subject_id = str(source.attrs.get("subject_id") or "")
-        if not subject_id:
-            for e in source.edges:
-                if e.relation == "questions":
-                    subject_id = e.to_id
-                    break
+        subj = str(source.attrs.get("subject_id") or "")
+        if not subj:
+            subj = next((e.to_id for e in source.edges if e.relation == "questions"), source.id)
 
         return self.create_question(
-            subject_id=subject_id or source.id,
-            text=new_text,
-            form=new_form,
+            subject_id=subj, text=new_text, form=new_form,
             importance=source.attrs.get("importance", "medium"),
-            move="open_closed",
-            parent_question_id=source.id,
-            relation=relation,
-            author=auth,
+            move="open_closed", parent_question_id=source.id,
+            relation=relation, author=auth,
         )
 
     def link_questions(
-        self,
-        from_id: str,
-        to_id: str,
-        relation: str,
-        author: Author | None = None,
+        self, from_id: str, to_id: str, relation: str, author: Author | None = None,
     ) -> Edge | None:
-        """Create a directional relationship edge between two question nodes."""
+        """Create or update a directional relationship edge between two question nodes."""
         auth = author or Author(kind=AuthorKind.HUMAN, courier="web-ui")
         from_node = self.store.get_node(from_id)
         if from_node is None:
@@ -116,21 +118,67 @@ class QuestionstormService:
 
         clean_rel = relation if relation in QUESTION_RELATIONS else "sibling"
         now = datetime.now(timezone.utc)
-        edge = Edge(from_id=from_id.upper(), to_id=to_id.upper(), relation=clean_rel, created=now, author=auth)
+        clean_to = to_id.upper()
+        for existing in from_node.edges:
+            if existing.to_id.upper() == clean_to and existing.relation != "questions":
+                existing.relation = clean_rel
+                existing.author = auth
+                from_node.last_touched = now
+                self.store.write_node(from_node, author=auth)
+                return existing
 
+        edge = Edge(from_id=from_id.upper(), to_id=clean_to, relation=clean_rel, created=now, author=auth)
         from_node.edges.append(edge)
+        from_node.last_touched = now
         self.store.write_node(from_node, author=auth)
         return edge
 
+    def update_relation(
+        self, from_id: str, to_id: str, new_relation: str, author: Author | None = None,
+    ) -> Edge | None:
+        """Update an existing relationship relation between two questions."""
+        auth = author or Author(kind=AuthorKind.HUMAN, courier="web-ui")
+        clean_from, clean_to = from_id.upper(), to_id.upper()
+        clean_rel = new_relation if new_relation in QUESTION_RELATIONS else "sibling"
+        now = datetime.now(timezone.utc)
+
+        for qid, target in ((clean_from, clean_to), (clean_to, clean_from)):
+            node = self.store.get_node(qid)
+            if node is not None:
+                for edge in node.edges:
+                    if edge.to_id.upper() == target and edge.relation != "questions":
+                        edge.relation = clean_rel
+                        edge.author = auth
+                        node.last_touched = now
+                        self.store.write_node(node, author=auth)
+                        return edge
+        return None
+
+    def unlink_questions(
+        self, from_id: str, to_id: str, author: Author | None = None,
+    ) -> bool:
+        """Remove relationship edge between two question nodes."""
+        auth = author or Author(kind=AuthorKind.HUMAN, courier="web-ui")
+        clean_from, clean_to = from_id.upper(), to_id.upper()
+        now = datetime.now(timezone.utc)
+        removed = False
+
+        for qid, target in ((clean_from, clean_to), (clean_to, clean_from)):
+            node = self.store.get_node(qid)
+            if node is not None:
+                initial_count = len(node.edges)
+                node.edges = [e for e in node.edges if not (e.to_id.upper() == target and e.relation != "questions")]
+                if len(node.edges) < initial_count:
+                    node.last_touched = now
+                    self.store.write_node(node, author=auth)
+                    removed = True
+        return removed
+
     def resolve_subject_questions(self, subject_id: str) -> list[Node]:
         """Resolve all question nodes connected to a subject node."""
-        clean_target = subject_id.upper()
-        all_nodes = self.store.list_nodes()
+        target = subject_id.upper()
         questions: list[Node] = []
-        for n in all_nodes:
-            if n.type == "question":
-                for e in n.edges:
-                    if e.to_id.upper() == clean_target and e.relation == "questions":
-                        questions.append(n)
-                        break
+        for n in self.store.list_nodes():
+            if n.type == "question" and any(e.to_id.upper() == target and e.relation == "questions" for e in n.edges):
+                questions.append(n)
         return questions

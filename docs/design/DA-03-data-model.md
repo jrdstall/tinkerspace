@@ -108,6 +108,12 @@ To enable automated graph rendering (e.g. question graphs, maturity calculations
 | 17 | **`reframes`** | Question / Idea | Question / Idea | `from` shifts the paradigm or perspective of `to` |
 | 18 | **`rejected_because`** | Candidate Idea / Option | Observation / Finding | `from` was screened out due to criteria in `to` |
 | 19 | **`enables`** | **Asset** | **Idea / Experiment** | **`from` (standing capability) makes `to` reachable** |
+| 20 | **`decomposes`** | Question | Question | `from` breaks down `to` into constituent sub-problems/parts |
+| 21 | **`explores`** | Question | Question | `from` explores an implication, tangent, or scenario of `to` |
+| 22 | **`challenges`** | Question | Question | `from` critiques, questions assumptions, or stress-tests `to` |
+| 23 | **`tests`** | Question (Closed) | Question (Open) | `from` establishes a concrete, decidable test for `to` |
+| 24 | **`depends_on`** | Question | Question | `from` requires `to` to be resolved or answered first |
+| 25 | **`sibling`** | Question | Question | `from` shares coordinate inquiry context with `to` |
 
 > [!IMPORTANT]
 > **Direction of `enables`**: `AST-A01 (Asset)` → `IDEA-A01 (Idea)`. The asset is the enabler; the idea is the beneficiary.

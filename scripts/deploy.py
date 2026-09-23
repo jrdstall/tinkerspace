@@ -68,6 +68,19 @@ def setup_vault_directory(target_dir: Path, vault_repo: str) -> None:
     vault_dir = target_dir / "vault"
     if vault_dir.exists() and (vault_dir / ".git").exists():
         print(f"Vault already exists at {vault_dir}; keeping existing data untouched.")
+        (vault_dir / "drop").mkdir(parents=True, exist_ok=True)
+        inbox_drop = vault_dir / "inbox" / "drop"
+        if inbox_drop.exists() and inbox_drop.is_dir():
+            for p in inbox_drop.iterdir():
+                if p.is_file() and not p.name.startswith("."):
+                    target = vault_dir / "drop" / p.name
+                    if not target.exists():
+                        shutil.move(str(p), str(target))
+            try:
+                if not any(inbox_drop.iterdir()):
+                    inbox_drop.rmdir()
+            except OSError:
+                pass
         return
 
     if vault_repo:
@@ -76,7 +89,7 @@ def setup_vault_directory(target_dir: Path, vault_repo: str) -> None:
     else:
         print(f"Initializing clean local datastore in {vault_dir}...")
         vault_dir.mkdir(parents=True, exist_ok=True)
-        for sub in ["notes", "work", "inbox/drop", "cas", "meta"]:
+        for sub in ["notes", "work", "drop", "inbox", "cas", "meta"]:
             (vault_dir / sub).mkdir(parents=True, exist_ok=True)
         (vault_dir / "events.jsonl").touch(exist_ok=True)
         (vault_dir / "inbox" / "raw.jsonl").touch(exist_ok=True)

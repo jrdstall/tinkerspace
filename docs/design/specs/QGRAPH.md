@@ -11,10 +11,12 @@ Governed by `docs/InnovatorsWorkspaceVision_12.md` §12, §14.2, §14.8, and `do
 QGRAPH-01  The Question Graph surface (`/question-graph/{subject_id}`) renders an interactive visual DAG of all question nodes attached to the subject.
 QGRAPH-02  Question nodes are visually partitioned and categorized by form (Open Questions vs. Closed Questions).
 QGRAPH-03  Question nodes reflect importance styling (High: prominent accent/amber, Medium: standard accent, Low: muted).
-QGRAPH-04  Directed relationship indicators display question-to-question edge relationships (`broadens`, `narrows`, `presupposes`, `reframes`, `sibling`).
+QGRAPH-04  Directed relationship indicators display question-to-question edge relationships (`decomposes`, `explores`, `broadens`, `narrows`, `reframes`, `presupposes`, `challenges`, `tests`, `depends_on`, `sibling`).
 QGRAPH-05  An interactive quick-action interface enables creating new questions with Berger moves, transforming open <-> closed, and linking questions via HTMX without full page reload.
 QGRAPH-06  Orphan questions and connected question chains are clearly distinguished in the visual graph layout.
 QGRAPH-07  The Question Graph generates a Mermaid visual DAG diagram with view mode switching (Visual Graph, Split View, and Composer & Cards).
 QGRAPH-08  Blank slate / custom questions omit move labels in visual diagram rendering.
 QGRAPH-09  The visual Question Graph supports interactive viewport zoom (in/out/reset) and drag-to-pan navigation.
+QGRAPH-10  Question cards provide an inline editor to update the question text, modify open vs closed form, and adjust importance styling.
+QGRAPH-11  Question relationships display an interactive editor to change the edge relation type (`decomposes`, `explores`, `broadens`, `narrows`, `reframes`, `presupposes`, `challenges`, `tests`, `depends_on`, `sibling`) or disconnect the link.
 

@@ -16,38 +16,166 @@
         {{ q.title }}
     </div>
 
-    <!-- Edge Links (QGRAPH-04) -->
-    {% if q.out_edges %}
-    <div style="display: flex; flex-direction: column; gap: 0.25rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem;">
+    <!-- Edge Links & Connection Tool (QGRAPH-04, QGRAPH-11) -->
+    <div style="border-top: 1px solid var(--border-color); padding-top: 0.4rem; display: flex; flex-direction: column; gap: 0.35rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">
+                Connections ({% if q.total_connections is defined %}{{ q.total_connections }}{% elif q.out_edges %}{{ q.out_edges|length }}{% else %}0{% endif %})
+            </span>
+            <details class="question-link-details" style="font-size: 0.75rem;">
+                <summary style="cursor: pointer; color: var(--accent); font-weight: 600; user-select: none;">
+                    🔗 + Connect
+                </summary>
+                <form method="POST" action="/question-graph/link" style="margin-top: 0.4rem; background: rgba(22, 27, 34, 0.95); padding: 0.6rem; border: 1px solid var(--accent); border-radius: 6px; display: flex; flex-direction: column; gap: 0.4rem; min-width: 240px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="hidden" name="from_id" value="{{ q.id }}">
+                    
+                    <div style="font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase;">
+                        Connect {{ q.id }} &rarr; Target:
+                    </div>
+
+                    <select name="to_id" required style="width: 100%; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.45rem; font-size: 0.75rem;">
+                        <option value="">-- Select Target Question --</option>
+                        {% for oq in all_questions %}
+                            {% if oq.id != q.id %}
+                            <option value="{{ oq.id }}">&rarr; {{ oq.id }}: {{ oq.title }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+
+                    <div style="display: flex; gap: 0.35rem; align-items: center;">
+                        <select name="relation" style="flex: 1; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.45rem; font-size: 0.75rem;">
+                            {% for r in relations %}
+                            <option value="{{ r }}" {% if r == 'decomposes' %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.3rem 0.6rem;">Connect</button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open')" class="btn" style="font-size: 0.75rem; padding: 0.3rem 0.5rem;" title="Close">✕</button>
+                    </div>
+                </form>
+            </details>
+        </div>
+
+        {% if q.out_edges or q.in_edges %}
         {% for edge in q.out_edges %}
-        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.35rem;">
-            <span class="mono" style="color: var(--accent);">&rarr; [{{ edge.relation }}]</span>
-            <a href="/node/{{ edge.to_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none;">{{ edge.to_id }}</a>
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: flex-start; justify-content: space-between; gap: 0.35rem; background: rgba(0,0,0,0.2); padding: 0.35rem 0.45rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.06);">
+            <div style="display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0;">
+                <form method="POST" action="/question-graph/relation/update" style="display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; flex-wrap: wrap;">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="hidden" name="from_id" value="{{ q.id }}">
+                    <input type="hidden" name="to_id" value="{{ edge.to_id }}">
+                    <span style="color: var(--accent); font-weight: 700;">&rarr;</span>
+                    <select name="relation" onchange="this.form.submit()" title="Change relation type" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--border-color); border-radius: 3px; padding: 0.15rem 0.3rem; font-size: 0.75rem; font-family: monospace;">
+                        {% for r in relations %}
+                        <option value="{{ r }}" {% if edge.relation == r %}selected{% endif %}>[{{ r }}]</option>
+                        {% endfor %}
+                    </select>
+                    <a href="/node/{{ edge.to_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ edge.to_id }}</a>
+                </form>
+                <div style="color: var(--text-main); font-size: 0.8rem; line-height: 1.35; padding-left: 1rem;">
+                    {{ edge.to_title }}
+                </div>
+            </div>
+            <form method="POST" action="/question-graph/relation/delete" style="display: inline; margin: 0; align-self: flex-start;">
+                <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                <input type="hidden" name="from_id" value="{{ q.id }}">
+                <input type="hidden" name="to_id" value="{{ edge.to_id }}">
+                <button type="submit" class="btn" title="Remove relation" style="padding: 0.1rem 0.35rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1; border: 1px solid transparent; background: transparent; cursor: pointer;">✕</button>
+            </form>
         </div>
         {% endfor %}
-    </div>
-    {% endif %}
 
-    <!-- Actions Row: Branch Follow-up and Transform Form (QGRAPH-05) -->
+        {% for edge in q.in_edges %}
+        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: flex-start; justify-content: space-between; gap: 0.35rem; background: rgba(0,0,0,0.15); padding: 0.35rem 0.45rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.04);">
+            <div style="display: flex; flex-direction: column; gap: 0.2rem; flex: 1; min-width: 0;">
+                <form method="POST" action="/question-graph/relation/update" style="display: inline-flex; align-items: center; gap: 0.3rem; margin: 0; flex-wrap: wrap;">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="hidden" name="from_id" value="{{ edge.from_id }}">
+                    <input type="hidden" name="to_id" value="{{ q.id }}">
+                    <span style="color: #3fb950; font-weight: 700;">&larr;</span>
+                    <select name="relation" onchange="this.form.submit()" title="Change relation type" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--border-color); border-radius: 3px; padding: 0.15rem 0.3rem; font-size: 0.75rem; font-family: monospace;">
+                        {% for r in relations %}
+                        <option value="{{ r }}" {% if edge.relation == r %}selected{% endif %}>[{{ r }}]</option>
+                        {% endfor %}
+                    </select>
+                    <a href="/node/{{ edge.from_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ edge.from_id }}</a>
+                </form>
+                <div style="color: var(--text-main); font-size: 0.8rem; line-height: 1.35; padding-left: 1rem;">
+                    {{ edge.from_title }}
+                </div>
+            </div>
+            <form method="POST" action="/question-graph/relation/delete" style="display: inline; margin: 0; align-self: flex-start;">
+                <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                <input type="hidden" name="from_id" value="{{ edge.from_id }}">
+                <input type="hidden" name="to_id" value="{{ q.id }}">
+                <button type="submit" class="btn" title="Remove relation" style="padding: 0.1rem 0.35rem; font-size: 0.75rem; color: var(--text-muted); line-height: 1; border: 1px solid transparent; background: transparent; cursor: pointer;">✕</button>
+            </form>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="font-size: 0.7rem; color: var(--text-muted); font-style: italic;">
+            Not connected to any questions yet. Click <strong>🔗 + Connect</strong> above to link.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions Row: Branch Follow-up, Edit Question (QGRAPH-10), and Transform Form (QGRAPH-05) -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.25rem; font-size: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
         <button type="button" onclick="branchFrom('{{ q.id }}', '{{ q.title|replace('\'', '\\\'') }}')" class="btn" style="padding: 0.2rem 0.5rem; font-size: 0.75rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">
             ➕ Branch Follow-up
         </button>
 
-        <details style="font-size: 0.75rem;">
-            <summary style="cursor: pointer; color: var(--text-muted); font-weight: 500;">
-                {% if q.form == 'open' %}&#8644; Transform to Closed{% else %}&#8644; Transform to Open{% endif %}
-            </summary>
-            <form method="POST" action="/question-graph/transform" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
-                <input type="hidden" name="question_id" value="{{ q.id }}">
-                <input type="hidden" name="subject_id" value="{{ subject.id }}">
-                <input type="text" name="new_text" required placeholder="Type opposite form question..." 
-                       style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
-                <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem; align-self: flex-start;">
-                    Save Transformation
-                </button>
-            </form>
-        </details>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <details class="question-edit-details" id="edit-details-{{ q.id }}" style="font-size: 0.75rem;">
+                <summary style="cursor: pointer; color: var(--accent); font-weight: 500; user-select: none;">
+                    ✏️ Edit
+                </summary>
+                <form method="POST" action="/question-graph/edit" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem; min-width: 230px;">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <textarea name="text" rows="2" required style="width: 100%; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem; font-family: inherit; resize: vertical;">{{ q.title }}</textarea>
+                    <div style="display: flex; gap: 0.35rem;">
+                        <select name="form" style="flex: 1; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.4rem; font-size: 0.75rem;">
+                            <option value="open" {% if q.form == 'open' %}selected{% endif %}>Open</option>
+                            <option value="closed" {% if q.form == 'closed' %}selected{% endif %}>Closed</option>
+                        </select>
+                        <select name="importance" style="flex: 1; background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.25rem 0.4rem; font-size: 0.75rem;">
+                            <option value="high" {% if q.importance == 'high' %}selected{% endif %}>High ⚡</option>
+                            <option value="medium" {% if q.importance == 'medium' %}selected{% endif %}>Med</option>
+                            <option value="low" {% if q.importance == 'low' %}selected{% endif %}>Low</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 0.35rem; align-items: center; margin-top: 0.15rem;">
+                        <button type="submit" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            Save Question
+                        </button>
+                        <button type="button" onclick="cancelQuestionEdit(this)" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </details>
+
+            <details class="question-transform-details" style="font-size: 0.75rem;">
+                <summary style="cursor: pointer; color: var(--text-muted); font-weight: 500; user-select: none;">
+                    {% if q.form == 'open' %}&#8644; Transform to Closed{% else %}&#8644; Transform to Open{% endif %}
+                </summary>
+                <form method="POST" action="/question-graph/transform" style="margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                    <input type="hidden" name="question_id" value="{{ q.id }}">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="text" name="new_text" required placeholder="Type opposite form question..." 
+                           style="background: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.35rem 0.5rem; font-size: 0.8rem;">
+                    <div style="display: flex; gap: 0.35rem; align-items: center;">
+                        <button type="submit" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            Save Transformation
+                        </button>
+                        <button type="button" onclick="this.closest('details').removeAttribute('open')" class="btn" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </details>
+        </div>
     </div>
 
 </div>

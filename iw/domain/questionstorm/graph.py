@@ -4,14 +4,22 @@ Layer 2 Domain module. Depends only on iw.contracts.models and stdlib.
 Governed by Vision §12 and QGRAPH-01.
 """
 
+import textwrap
 from iw.contracts.models import Node
 
 
-def _sanitize(text: str, max_len: int = 40) -> str:
-    cleaned = text.replace('"', "'").replace("\n", " ").replace("<", "&lt;").replace(">", "&gt;").strip()
-    if len(cleaned) > max_len:
-        return cleaned[:max_len] + "..."
-    return cleaned
+def _format_mermaid_text(text: str, max_line_width: int = 36) -> str:
+    """Format node text for Mermaid: sanitize quotes and word-wrap without truncation."""
+    cleaned = text.replace('"', "'").replace("<", "&lt;").replace(">", "&gt;").strip()
+    paragraphs = cleaned.splitlines()
+    wrapped_lines: list[str] = []
+    for p in paragraphs:
+        p_clean = p.strip()
+        if not p_clean:
+            continue
+        wrapped = textwrap.wrap(p_clean, width=max_line_width, break_long_words=True)
+        wrapped_lines.extend(wrapped)
+    return "<br/>".join(wrapped_lines) if wrapped_lines else cleaned
 
 
 def _format_move_label(move: str | None) -> str:
@@ -34,7 +42,7 @@ def _render_question_nodes(questions: list[Node]) -> tuple[list[str], set[str]]:
         move_label = _format_move_label(q.attrs.get("move"))
         move_suffix = f" ({move_label})" if move_label else ""
         icon = "🌌" if form == "open" else "🎯"
-        q_title = _sanitize(q.title, 35)
+        q_title = _format_mermaid_text(q.title, 36)
         node_id = q.id.replace("-", "_")
         css_class = "closedNode" if form == "closed" else "openNode"
         if q.attrs.get("importance") == "high":
@@ -53,7 +61,8 @@ def _render_question_nodes(questions: list[Node]) -> tuple[list[str], set[str]]:
 
 def generate_mermaid_graph(subject: Node, questions: list[Node]) -> str:
     """Generate Mermaid flowchart diagram representing the question DAG."""
-    lines = ["graph TD", f'  SUB["💡 <b>{subject.id}</b><br/>{_sanitize(subject.title, 45)}"]:::subjectNode']
+    sub_title = _format_mermaid_text(subject.title, 36)
+    lines = ["graph TD", f'  SUB["💡 <b>{subject.id}</b><br/>{sub_title}"]:::subjectNode']
     if not questions:
         lines.extend(['  EMPTY["No questions in graph yet"]:::emptyNode', "  SUB -.-> EMPTY"])
     else:

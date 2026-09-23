@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Edge, Node
 from iw.contracts.store import StoreProtocol
+from iw.web.document_helpers import resolve_attached_documents
 from iw.web.helpers import (
     resolve_adjacent_nodes,
     resolve_back_target,
@@ -40,9 +41,11 @@ def _node_context(request: Request, node: Node, all_nodes: list[Node], store: St
     kw_list = raw_kw if isinstance(raw_kw, list) else [raw_kw] if raw_kw else []
     return {
         "request": request, "node": node, "inbound_edges": inbound, "outbound_edges": outbound,
-        "artifacts": artifacts, "available_targets": [n for n in all_nodes if n.id != node.id],
+        "artifacts": artifacts, "attached_documents": resolve_attached_documents(node, store, artifacts),
+        "available_targets": [n for n in all_nodes if n.id != node.id],
         "question_count": _count_questions(all_nodes, node.id),
         "inbox_count": len(store.list_inbox()), "drop_count": len(store.list_dropped_files()),
+        "dropped_files": [p.name for p in store.list_dropped_files()],
         "back_url": back_url, "back_label": back_label, "prev_node": prev_node, "next_node": next_node,
         "keywords_list": kw_list, "keywords_display": ", ".join(str(k) for k in kw_list),
         "tags_display": ", ".join(node.tags),
@@ -59,6 +62,18 @@ async def node_detail_view(request: Request, templates: Jinja2Templates) -> Resp
 
     ctx = _node_context(request, node, store.list_nodes(), store)
     return templates.TemplateResponse(request=request, name="node.html", context=ctx)
+
+
+def _apply_type_attrs(node: Node, form: Any) -> None:
+    """Apply type-specific custom attributes from edit form."""
+    if node.type == "idea":
+        w_me, w_others = str(form.get("worth_to_me", "")).strip(), str(form.get("worth_to_others", "")).strip()
+        if w_me: node.attrs["worth_to_me"] = w_me
+        if w_others: node.attrs["worth_to_others"] = w_others
+    elif node.type == "question":
+        q_f, q_i = str(form.get("form", "")).strip().lower(), str(form.get("importance", "")).strip().lower()
+        if q_f in ("open", "closed"): node.attrs["form"] = q_f
+        if q_i in ("high", "medium", "low"): node.attrs["importance"] = q_i
 
 
 async def node_edit_action(request: Request) -> Response:
@@ -83,12 +98,7 @@ async def node_edit_action(request: Request) -> Response:
     elif "keywords" in node.attrs:
         del node.attrs["keywords"]
 
-    if node.type == "idea":
-        w_me = str(form.get("worth_to_me", "")).strip()
-        w_others = str(form.get("worth_to_others", "")).strip()
-        if w_me: node.attrs["worth_to_me"] = w_me
-        if w_others: node.attrs["worth_to_others"] = w_others
-
+    _apply_type_attrs(node, form)
     node.last_touched = datetime.now(timezone.utc)
     author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
     store.write_node(node, author=author)

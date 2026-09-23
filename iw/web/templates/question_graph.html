@@ -44,17 +44,22 @@
         </p>
     </div>
 
-    <!-- View Mode Switcher -->
-    <div style="display: flex; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.25rem; gap: 0.25rem;">
-        <button type="button" id="tab-btn-graph" onclick="switchGraphMode('graph')" class="btn view-tab-btn active" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-            🌳 Visual Graph
-        </button>
-        <button type="button" id="tab-btn-split" onclick="switchGraphMode('split')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-            🔲 Split View
-        </button>
-        <button type="button" id="tab-btn-composer" onclick="switchGraphMode('composer')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
-            ⚡ Composer & Cards
-        </button>
+    <!-- View Mode Switcher & Quick Actions -->
+    <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.25rem; gap: 0.25rem;">
+            <button type="button" id="tab-btn-graph" onclick="switchGraphMode('graph')" class="btn view-tab-btn active" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                🌳 Visual Graph
+            </button>
+            <button type="button" id="tab-btn-split" onclick="switchGraphMode('split')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                🔲 Split View
+            </button>
+            <button type="button" id="tab-btn-composer" onclick="switchGraphMode('composer')" class="btn view-tab-btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem;">
+                ⚡ Composer & Cards
+            </button>
+        </div>
+        <a href="#section-edge-linker" class="btn" style="font-size: 0.8rem; padding: 0.45rem 0.75rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.35rem; color: var(--accent); border-color: rgba(88,166,255,0.3);">
+            🔗 Connect Questions
+        </a>
     </div>
 </div>
 
@@ -186,21 +191,19 @@
                     <select id="question-parent-select" name="parent_id" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem; max-width: 240px;">
                         <option value="">Branch From: Root (Subject)</option>
                         {% for q in open_questions %}
-                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title[:30] }}...</option>
+                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title }}</option>
                         {% endfor %}
                         {% for q in closed_questions %}
-                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title[:30] }}...</option>
+                        <option value="{{ q.id }}">&rarr; {{ q.id }}: {{ q.title }}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
                     <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
-                        <option value="reframes">Relation: reframes</option>
-                        <option value="narrows">Relation: narrows</option>
-                        <option value="broadens">Relation: broadens</option>
-                        <option value="presupposes">Relation: presupposes</option>
-                        <option value="sibling">Relation: sibling</option>
+                        {% for r in relations %}
+                        <option value="{{ r }}" {% if r == 'decomposes' %}selected{% endif %}>Relation: {{ r }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 {% endif %}
@@ -265,39 +268,81 @@
 
 </div>
 
-<!-- 4. Quick Link Tool Section -->
+<!-- 4. Quick Link Tool & Relations Manager Section -->
 <div id="section-edge-linker" class="card" style="padding: 1.25rem;">
     <h3 style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted); margin-bottom: 0.75rem;">
-        🔗 Connect Questions (Edge Linker)
+        🔗 Connect Questions & Manage Relations (QGRAPH-04, QGRAPH-11)
     </h3>
-    <form method="POST" action="/question-graph/link" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+    <form method="POST" action="/question-graph/link" style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; margin-bottom: {% if question_edges %}1rem{% else %}0{% endif %};">
         <input type="hidden" name="subject_id" value="{{ subject.id }}">
 
-        <input type="text" name="from_id" list="all-questions-list" placeholder="From Question (QUE-xxx)" required class="mono"
-               style="width: 220px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
-
-        <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
-            {% for r in relations %}
-            <option value="{{ r }}">&rarr; {{ r }}</option>
+        <select name="from_id" required style="min-width: 220px; max-width: 320px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+            <option value="">-- From Question --</option>
+            {% for q in all_questions %}
+            <option value="{{ q.id }}">{{ q.id }}: {{ q.title }}</option>
             {% endfor %}
         </select>
 
-        <input type="text" name="to_id" list="all-questions-list" placeholder="To Question (QUE-xxx)" required class="mono"
-               style="width: 220px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
-
-        <datalist id="all-questions-list">
-            {% for q in open_questions %}
-            <option value="{{ q.id }}">{{ q.id }} — {{ q.title }}</option>
+        <select name="relation" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+            {% for r in relations %}
+            <option value="{{ r }}" {% if r == 'decomposes' %}selected{% endif %}>&rarr; {{ r }}</option>
             {% endfor %}
-            {% for q in closed_questions %}
-            <option value="{{ q.id }}">{{ q.id }} — {{ q.title }}</option>
-            {% endfor %}
-        </datalist>
+        </select>
 
-        <button type="submit" class="btn" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
-            Connect Link
+        <select name="to_id" required style="min-width: 220px; max-width: 320px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.45rem 0.6rem; font-size: 0.85rem;">
+            <option value="">-- To Target Question --</option>
+            {% for q in all_questions %}
+            <option value="{{ q.id }}">{{ q.id }}: {{ q.title }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="btn btn-primary" style="font-size: 0.85rem; padding: 0.45rem 1rem;">
+            🔗 Connect Questions
         </button>
     </form>
+
+    {% if question_edges %}
+    <div style="border-top: 1px solid var(--border-color); padding-top: 0.75rem;">
+        <h4 style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; margin: 0 0 0.5rem 0;">
+            Active Question Relations ({{ question_edges|length }})
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {% for edge in question_edges %}
+            <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; background: var(--bg-color); padding: 0.5rem 0.75rem; border-radius: 4px; border: 1px solid var(--border-color); font-size: 0.8rem;">
+                <form method="POST" action="/question-graph/relation/update" style="display: flex; flex-direction: column; gap: 0.35rem; margin: 0; flex: 1;">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="hidden" name="from_id" value="{{ edge.from_id }}">
+                    <input type="hidden" name="to_id" value="{{ edge.to_id }}">
+                    
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                        <a href="/node/{{ edge.from_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ edge.from_id }}</a>
+                        <span style="color: var(--text-muted);">&rarr;</span>
+                        <select name="relation" onchange="this.form.submit()" title="Change relation type" style="background: var(--card-bg); color: var(--accent); border: 1px solid var(--border-color); border-radius: 3px; padding: 0.2rem 0.4rem; font-size: 0.8rem; font-family: monospace;">
+                            {% for r in relations %}
+                            <option value="{{ r }}" {% if edge.relation == r %}selected{% endif %}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
+                        <span style="color: var(--text-muted);">&rarr;</span>
+                        <a href="/node/{{ edge.to_id }}{% if subject %}?from={{ subject.id }}{% endif %}" class="mono" style="color: var(--accent); text-decoration: none; font-weight: 700;">{{ edge.to_id }}</a>
+                        <noscript><button type="submit" class="btn" style="padding: 0.15rem 0.4rem; font-size: 0.75rem;">Update</button></noscript>
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted); padding-left: 0.25rem;">
+                        <div style="flex: 1;"><strong style="color: var(--text-muted);">From:</strong> <span style="color: var(--text-main);">{{ edge.from_title }}</span></div>
+                        <div style="flex: 1;"><strong style="color: var(--text-muted);">To:</strong> <span style="color: var(--text-main);">{{ edge.to_title }}</span></div>
+                    </div>
+                </form>
+                <form method="POST" action="/question-graph/relation/delete" style="margin: 0; align-self: flex-start;">
+                    <input type="hidden" name="subject_id" value="{{ subject.id }}">
+                    <input type="hidden" name="from_id" value="{{ edge.from_id }}">
+                    <input type="hidden" name="to_id" value="{{ edge.to_id }}">
+                    <button type="submit" class="btn" title="Remove relation" style="padding: 0.2rem 0.45rem; font-size: 0.75rem; color: var(--text-muted);">✕ Disconnect</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <script>
@@ -466,6 +511,39 @@ document.getElementById('question-text')?.addEventListener('keydown', function(e
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         document.getElementById('question-form-el')?.submit();
+    }
+});
+
+// --- Question Card Edit / Link Details Helpers ---
+function cancelQuestionEdit(btn) {
+    const form = btn.closest('form');
+    if (form) {
+        form.reset();
+    }
+    const details = btn.closest('details');
+    if (details) {
+        details.removeAttribute('open');
+    }
+}
+
+function closeAllDetailsPanels() {
+    document.querySelectorAll('details.question-edit-details, details.question-link-details, details.question-transform-details').forEach(d => {
+        d.removeAttribute('open');
+    });
+}
+
+// Close all details panels on fresh page load or back-forward cache restore
+window.addEventListener('DOMContentLoaded', closeAllDetailsPanels);
+window.addEventListener('pageshow', closeAllDetailsPanels);
+
+// Esc key closes any open details and resets its form
+window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('details[open].question-edit-details, details[open].question-link-details, details[open].question-transform-details').forEach(d => {
+            const form = d.querySelector('form');
+            if (form) form.reset();
+            d.removeAttribute('open');
+        });
     }
 });
 </script>

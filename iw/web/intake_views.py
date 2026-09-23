@@ -19,6 +19,7 @@ async def intake_view(request: Request, templates: Jinja2Templates) -> Response:
     store.sync_refresh()
     dropped = store.list_dropped_files()
     nodes = store.list_nodes()
+    vault_name = store.vault_dir.name if hasattr(store, "vault_dir") else "vault"
     return templates.TemplateResponse(
         request=request,
         name="intake.html",
@@ -27,6 +28,7 @@ async def intake_view(request: Request, templates: Jinja2Templates) -> Response:
             "dropped_files": dropped,
             "all_nodes": nodes,
             "drop_count": len(dropped),
+            "drop_folder_display": f"{vault_name}/drop/",
             "inbox_count": len(store.list_inbox()),
         },
     )

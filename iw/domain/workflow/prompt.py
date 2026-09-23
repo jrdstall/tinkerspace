@@ -7,6 +7,13 @@ from pathlib import Path
 from typing import Any
 
 from iw.contracts.models import Node, UnitOfWork
+from iw.contracts.store import StoreProtocol
+from iw.domain.workflow.context import (
+    format_attachments_markdown,
+    format_linked_notes_markdown,
+    resolve_subject_attachments,
+    resolve_subject_linked_notes,
+)
 
 
 def get_default_templates_dir() -> Path:
@@ -57,21 +64,42 @@ def build_deliverable_header_template(unit_id: str) -> str:
     )
 
 
-def _format_subject_context(subject_node: Node | None) -> str:
-    """Format subject concept context section."""
+def _format_subject_context(
+    subject_node: Node | None,
+    store: StoreProtocol | None = None,
+    vault_dir: Path | None = None,
+) -> str:
+    """Format subject concept context section (Vision §14.8, WORKFLOW-07)."""
     if not subject_node:
         return ""
     tags_str = ", ".join(subject_node.tags) if subject_node.tags else "None"
     body_text = subject_node.body.strip() if subject_node.body else "No description provided."
-    return (
+    graphic_line = (
+        f"- **Concept Graphic**: `{subject_node.attrs['concept_graphic']}`\n"
+        if subject_node.attrs.get("concept_graphic")
+        else ""
+    )
+    base = (
         "## 2. Subject Concept Context\n"
         f"- **ID**: {subject_node.id}\n"
         f"- **Title**: {subject_node.title}\n"
         f"- **Domain**: {subject_node.domain}\n"
         f"- **Tags**: {tags_str}\n"
+        f"{graphic_line}"
         "- **Description**:\n"
         f"{body_text}\n\n"
     )
+
+    if store is not None:
+        attachments = resolve_subject_attachments(subject_node, store, vault_dir=vault_dir)
+        att_md = format_attachments_markdown(attachments)
+        linked_notes = resolve_subject_linked_notes(subject_node, store)
+        notes_md = format_linked_notes_markdown(linked_notes)
+        if att_md:
+            base += att_md
+        if notes_md:
+            base += notes_md
+    return base
 
 
 def _format_custom_notes(custom_notes: str | None, task_instructions: str) -> str:
@@ -90,13 +118,15 @@ def compose_full_prompt(
     subject_node: Node | None = None,
     custom_notes: str | None = None,
     templates_dir: Path | None = None,
+    store: StoreProtocol | None = None,
+    vault_dir: Path | None = None,
 ) -> str:
-    """Compose the master prompt by replacing placeholders in master-prompt.md."""
+    """Compose the master prompt by replacing placeholders in master-prompt.md (WORKFLOW-07)."""
     if "Operating Posture" in task_instructions or "# MISSION:" in task_instructions:
         return task_instructions
 
     template_str = load_master_prompt_template(templates_dir)
-    clean_subj = _format_subject_context(subject_node)
+    clean_subj = _format_subject_context(subject_node, store=store, vault_dir=vault_dir)
     clean_notes = _format_custom_notes(custom_notes, task_instructions)
     clean_task = task_instructions.strip() if task_instructions else "Execute assigned research."
 
@@ -109,3 +139,21 @@ def compose_full_prompt(
         .replace("{{ custom_notes }}", clean_notes)
     )
     return rendered.strip()
+
+
+def attach_full_prompts_to_units(
+    units: list[UnitOfWork],
+    store: StoreProtocol,
+    vault_dir: Path | None = None,
+) -> None:
+    """Precompute full composed prompts on unit objects for web surfaces (WORKFLOW-07)."""
+    for u in units:
+        subj = store.get_node(u.subject_ids[0]) if u.subject_ids else None
+        setattr(u, "full_prompt", compose_full_prompt(
+            unit_id=u.id,
+            unit_title=u.title,
+            task_instructions=u.action_guide,
+            subject_node=subj,
+            store=store,
+            vault_dir=vault_dir,
+        ))

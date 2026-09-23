@@ -20,10 +20,15 @@ class QuestionImportance(str, Enum):
 
 
 QUESTION_RELATIONS = (
+    "decomposes",
+    "explores",
     "broadens",
     "narrows",
-    "presupposes",
     "reframes",
+    "presupposes",
+    "challenges",
+    "tests",
+    "depends_on",
     "sibling",
     "questions",
 )

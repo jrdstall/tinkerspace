@@ -20,6 +20,7 @@ def validate_safe_filename(filename: str) -> str:
     return clean
 
 
+from iw.domain.workflow.context import stage_subject_files_to_unit
 from iw.domain.workflow.prompt import compose_full_prompt
 
 
@@ -36,6 +37,17 @@ def _get_subject_context(store: StoreProtocol, subject_ids: list[str]) -> tuple[
     return data, primary
 
 
+def _resolve_input_files(folder: Path, unit: UnitOfWork, store: StoreProtocol, vault_dir: Path) -> list[str]:
+    """Stage attached files and discover files in unit workspace."""
+    sub_nodes: list[Node] = []
+    for sid in unit.subject_ids:
+        sn = store.get_node(sid)
+        if sn is not None:
+            sub_nodes.append(sn)
+    stage_subject_files_to_unit(unit.id, sub_nodes, store, vault_dir)
+    return [p.name for p in folder.iterdir() if p.is_file() and p.name not in ("unit.yaml", "deliverable.md")]
+
+
 def read_unit_tool(store: StoreProtocol, unit_id: str) -> dict[str, Any]:
     """Fetch unit of work record, Action Guide, and subject node context for an agent (MCP-01)."""
     clean_id = unit_id.strip().upper()
@@ -45,28 +57,18 @@ def read_unit_tool(store: StoreProtocol, unit_id: str) -> dict[str, Any]:
 
     vault_dir = getattr(store, "vault_dir", Path("."))
     folder = vault_dir / "work" / clean_id
-    input_files = (
-        [p.name for p in folder.iterdir() if p.is_file() and p.name not in ("unit.yaml", "deliverable.md")]
-        if folder.exists()
-        else []
-    )
+    folder.mkdir(parents=True, exist_ok=True)
 
+    input_files = _resolve_input_files(folder, unit, store, vault_dir)
     subject_data, primary_subject = _get_subject_context(store, unit.subject_ids)
     full_prompt = compose_full_prompt(
-        unit_id=unit.id,
-        unit_title=unit.title,
-        task_instructions=unit.action_guide,
-        subject_node=primary_subject,
+        unit_id=unit.id, unit_title=unit.title, task_instructions=unit.action_guide,
+        subject_node=primary_subject, store=store, vault_dir=vault_dir,
     )
-
     return {
-        "id": unit.id,
-        "title": unit.title,
-        "activity": unit.activity,
-        "state": unit.state.value,
-        "action_guide": full_prompt,
-        "prompt": full_prompt,
-        "subject_nodes": subject_data,
+        "id": unit.id, "title": unit.title, "activity": unit.activity,
+        "state": unit.state.value, "action_guide": full_prompt,
+        "prompt": full_prompt, "subject_nodes": subject_data,
         "input_files": input_files,
     }
 

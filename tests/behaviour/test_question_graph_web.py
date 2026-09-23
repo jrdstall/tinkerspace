@@ -103,7 +103,7 @@ def test_qgraph_03_importance_styling_rendered(tmp_path: Path):
 
 
 def test_qgraph_04_directed_relationship_edges_rendered(tmp_path: Path):
-    """QGRAPH-04: Directed edge relations (e.g. narrows) render on connected cards."""
+    """QGRAPH-04: Directed edge relations render on connected cards with full question titles."""
     store, _, subject_id = _setup_graph_fixture(tmp_path)
     app = create_app(store=store)
     client = TestClient(app)
@@ -112,6 +112,9 @@ def test_qgraph_04_directed_relationship_edges_rendered(tmp_path: Path):
     assert response.status_code == 200
     assert "[narrows]" in response.text
     assert "QUE-A01" in response.text
+    # Proves card connections show the target and source question text
+    assert "Why does cold temperature deplete battery voltage?" in response.text
+    assert "Can internal self-heating circuitry prevent freeze cutoff?" in response.text
 
 
 def test_qgraph_05_quick_action_creates_transforms_and_links(tmp_path: Path):
@@ -182,7 +185,7 @@ def test_qgraph_06_orphan_and_connected_questions_visible(tmp_path: Path):
 
 
 def test_qgraph_07_mermaid_visual_graph_rendering(tmp_path: Path):
-    """QGRAPH-07: Mermaid visual DAG diagram is generated with color-coded nodes and edge links."""
+    """QGRAPH-07: Mermaid visual DAG diagram is generated with color-coded nodes and full question titles."""
     store, _, subject_id = _setup_graph_fixture(tmp_path)
     app = create_app(store=store)
     client = TestClient(app)
@@ -195,6 +198,9 @@ def test_qgraph_07_mermaid_visual_graph_rendering(tmp_path: Path):
     assert "QUE_A01" in response.text
     assert "QUE_A02" in response.text
     assert "narrows" in response.text
+    # Proves Mermaid node label includes full question text wrapped with <br/> without truncation
+    assert "Why does cold temperature deplete<br/>battery voltage?" in response.text
+    assert "Can internal self-heating circuitry<br/>prevent freeze cutoff?" in response.text
 
 
 def test_qgraph_08_blank_slate_custom_question_omits_move_label(tmp_path: Path):

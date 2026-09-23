@@ -305,7 +305,7 @@ Process your raw inbox efficiently without taking your hands off the keyboard:
 - **Searchable Edge Linker**: Search existing nodes by title or pick from dropdowns to link related nodes immediately.
 
 ### C. Intake & File Drop (`/intake`)
-- **Drop Folder**: Drop PDF datasheets, tablet sketches, images, or Markdown files into `vault/inbox/drop/`.
+- **Drop Folder**: Drop PDF datasheets, tablet sketches, images, or Markdown files into `vault/drop/`.
 - **Intake Flow**: Review dropped files on `/intake`, extract readable text automatically with pluggable extractors, and attach them as assets, observations, or idea concept art.
 
 ### D. Idea Maturity Board (`/maturity`)

@@ -6,3 +6,4 @@ WORKFLOW-03  `compute_ready_set` evaluates all unblocked units whose predecessor
 WORKFLOW-04  Accepting or skipping a predecessor unblocks downstream successors upon subsequent ready-set evaluation.
 WORKFLOW-05  Workflow DAG validation detects and rejects cyclic dependencies with a descriptive error.
 WORKFLOW-06  Workflow writes and state unblocking require explicit author attribution and emit audit event log records.
+WORKFLOW-07  Maturation prompt composition resolves subject concept attachments and linked context notes, embedding readable file contents and referencing media assets into the action prompt.

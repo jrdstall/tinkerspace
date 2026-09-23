@@ -9,6 +9,7 @@ from typing import Any
 from iw.contracts.models import Author, Node
 
 IMAGE_EXTENSIONS = {".png", ".svg", ".jpg", ".jpeg", ".gif", ".webp"}
+TEXT_EXTENSIONS = {".md", ".txt", ".csv", ".json", ".yaml", ".yml", ".py", ".log"}
 TYPE_PREFIXES: dict[str, str] = {
     "artifact": "ART",
     "source": "SRC",
@@ -28,10 +29,26 @@ class IntakeManager:
         self.drop_dir = drop_dir
         self.store = store
 
+    def _cleanup_legacy_inbox_drop(self) -> None:
+        """Migrate any files in legacy inbox/drop into drop/ and remove the folder."""
+        inbox_drop = self.drop_dir.parent / "inbox" / "drop"
+        if inbox_drop.exists() and inbox_drop.is_dir() and inbox_drop != self.drop_dir:
+            self.drop_dir.mkdir(parents=True, exist_ok=True)
+            for p in sorted(inbox_drop.iterdir()):
+                if p.is_file() and not p.name.startswith("."):
+                    target = self.drop_dir / p.name
+                    if not target.exists():
+                        p.rename(target)
+            try:
+                if not any(inbox_drop.iterdir()):
+                    inbox_drop.rmdir()
+            except OSError:
+                pass
+
     def list_dropped_files(self) -> list[Path]:
         """Scan and return all media or document files in the drop directory."""
-        if not self.drop_dir.exists():
-            return []
+        self._cleanup_legacy_inbox_drop()
+        self.drop_dir.mkdir(parents=True, exist_ok=True)
         return [
             p for p in sorted(self.drop_dir.iterdir())
             if p.is_file() and not p.name.startswith(".")
@@ -89,8 +106,17 @@ class IntakeManager:
         return self.store.write_node(updated, author)
 
     def _default_embed(self, file_name: str, title: str, rel_path: str) -> str:
-        """Generate markdown embed or link for the dropped file."""
+        """Generate markdown embed, imported text, or link for the dropped file."""
         ext = Path(file_name).suffix.lower()
         if ext in IMAGE_EXTENSIONS:
             return f"![{title}]({rel_path})\n\nExported sketch / visual capture."
+        if ext in TEXT_EXTENSIONS:
+            drop_path = self.drop_dir / file_name
+            if drop_path.exists() and drop_path.is_file():
+                try:
+                    content = drop_path.read_text(encoding="utf-8", errors="replace").strip()
+                    if content:
+                        return f"{content}\n\n---\n*Reference file: [{file_name}]({rel_path})*"
+                except Exception:
+                    pass
         return f"[{file_name}]({rel_path})\n\nAttached reference document / datasheet."

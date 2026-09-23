@@ -66,7 +66,7 @@ def scan_vault_markdown_files(vault_dir: Path) -> list[Path]:
     """Find all entity .md files in the vault, excluding non-entity directories (work, inbox, cas, etc.)."""
     if not vault_dir.exists():
         return []
-    excluded_dirs = {"inbox", "work", "cas", "meta", ".obsidian", ".git", ".trash"}
+    excluded_dirs = {"inbox", "drop", "attachments", "work", "cas", "meta", ".obsidian", ".git", ".trash"}
     results: list[Path] = []
     for p in vault_dir.rglob("*.md"):
         if not p.is_file():

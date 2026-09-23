@@ -14,6 +14,7 @@ from iw.domain.workflow.collection import (
     collect_unit_results,
     generate_human_starter_template,
 )
+from iw.domain.workflow.prompt import attach_full_prompts_to_units
 from iw.domain.workflow.runtime import WorkflowRuntime
 from iw.domain.workflow.state import transition_unit_state
 
@@ -49,7 +50,9 @@ async def board_view(request: Request, templates: Jinja2Templates) -> Response:
         for wfl in runtime.list_workflows():
             runtime.refresh_workflow_states(wfl.id, author=author)
 
-    b = _group_units_by_state(store.list_units())
+    all_units = store.list_units()
+    attach_full_prompts_to_units(all_units, store=store, vault_dir=vault_dir)
+    b = _group_units_by_state(all_units)
     total_active = len(b["ready"]) + len(b["dispatched"]) + len(b["returned"])
 
     return templates.TemplateResponse(

@@ -95,7 +95,7 @@
     <div class="card" style="text-align: center; padding: 2.5rem 1.5rem; margin-bottom: 2rem;">
         <h3 style="font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--text-main);">Drop Folder is Empty</h3>
         <p style="color: var(--text-muted); font-size: 0.875rem; max-width: 520px; margin: 0 auto 1.5rem auto;">
-            Files placed in <code class="mono" style="color: var(--accent);">iw-vault/drop/</code> appear here automatically on refresh.
+            Files placed in <code class="mono" style="color: var(--accent);">{{ drop_folder_display or 'drop/' }}</code> appear here automatically on refresh.
         </p>
         <a href="/intake" class="btn btn-primary">Refresh Drop Folder</a>
     </div>

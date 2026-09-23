@@ -138,3 +138,66 @@ def test_intake_04_web_intake_flow_and_empty_state(tmp_path: Path):
     assert create_res.status_code == 200
     assert "ART-A01" in create_res.text
     assert "Trail Camera Wiring Diagram" in create_res.text
+
+
+def test_intake_05_legacy_inbox_drop_migration_and_auto_mkdir(tmp_path: Path):
+    """INTAKE-01: Auto-creates drop/ and cleans up legacy inbox/drop/ on scan."""
+    inbox_drop = tmp_path / "inbox" / "drop"
+    inbox_drop.mkdir(parents=True, exist_ok=True)
+    stray_file = inbox_drop / "cognitive-c2-network.md"
+    stray_file.write_text("# Cognitive C2 Network\nNotes on mesh topology.")
+
+    store = MarkdownStore(vault_dir=tmp_path)
+    dropped = store.list_dropped_files()
+    assert (tmp_path / "drop").is_dir()
+    assert len(dropped) == 1
+    assert dropped[0].name == "cognitive-c2-network.md"
+    assert (tmp_path / "drop" / "cognitive-c2-network.md").exists()
+    assert not inbox_drop.exists()
+
+
+def test_intake_06_markdown_dropped_file_populates_body(tmp_path: Path):
+    """INTAKE-02: Dropped markdown file imports full text into stub node body."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    drop_dir = tmp_path / "drop"
+    drop_dir.mkdir(parents=True, exist_ok=True)
+    doc = drop_dir / "sensor-mesh.md"
+    doc.write_text("# Sensor Mesh Architecture\nDistributed sensor fabric for field telemetry.")
+
+    author = Author(kind=AuthorKind.HUMAN, courier="intake-surface")
+    draft = Node(
+        id="", type="idea", title="Sensor Mesh", created=datetime.now(timezone.utc),
+        domain="sensing", tags=["mesh", "telemetry"], state="active",
+    )
+    saved = store.intake_file(file_name="sensor-mesh.md", node=draft, author=author)
+    assert saved.attrs.get("rendered_file") == "drop/sensor-mesh.md"
+    assert "Distributed sensor fabric for field telemetry." in saved.body
+    assert "[sensor-mesh.md](drop/sensor-mesh.md)" in saved.body
+
+
+def test_intake_07_node_detail_renders_attached_document_reader(tmp_path: Path):
+    """INTAKE-04: Node detail view renders attached document reader card for readable files."""
+    store = MarkdownStore(vault_dir=tmp_path)
+    drop_dir = tmp_path / "drop"
+    drop_dir.mkdir(parents=True, exist_ok=True)
+    doc = drop_dir / "notes.txt"
+    doc.write_text("Crucial telemetry calibration details line 1\nline 2")
+
+    author = Author(kind=AuthorKind.HUMAN, courier="test")
+    node = Node(
+        id="IDEA-A01", type="idea", title="Test Idea", created=datetime.now(timezone.utc),
+        domain="general", tags=[], state="active", body="Some body text.",
+        attrs={"rendered_file": "drop/notes.txt"},
+    )
+    store.write_node(node, author=author)
+
+    app = create_app(store=store)
+    client = TestClient(app)
+    res = client.get("/node/IDEA-A01")
+    assert res.status_code == 200
+    assert "Attached Reference Documents" in res.text
+    assert "notes.txt" in res.text
+    assert "Crucial telemetry calibration details line 1" in res.text
+    assert "/vault-file/drop/notes.txt" in res.text
+
+

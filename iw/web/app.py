@@ -18,7 +18,7 @@ from iw.domain.assessor.cml import get_cml_description
 from iw.domain.scout.service import ScoutService
 from iw.web.helpers import extract_facets, resolve_inbound_edges
 from iw.web import (
-    association_views, board_views, exercise_views, intake_views, maturity_views,
+    association_views, attachment_views, board_views, exercise_views, intake_views, maturity_views,
     node_views, planner_views, question_views, scout_views, search_views, triage_views, workflow_views,
 )
 
@@ -111,6 +111,8 @@ def _get_core_routes() -> list[Route]:
         Route("/node/{node_id}/edit", endpoint=node_views.node_edit_action, methods=["POST"]),
         Route("/node/{node_id}/link", endpoint=node_views.node_link_action, methods=["POST"]),
         Route("/node/{node_id}/unlink", endpoint=node_views.node_unlink_action, methods=["POST"]),
+        Route("/node/{node_id}/attach_file", endpoint=attachment_views.node_attach_file_action, methods=["POST"]),
+        Route("/node/{node_id}/capture_linked", endpoint=attachment_views.node_capture_linked_action, methods=["POST"]),
         Route("/node/{node_id}/return_to_triage", endpoint=triage_views.node_return_to_triage_view, methods=["POST"]),
         Route("/vault-file/{filepath:path}", endpoint=vault_file_view, methods=["GET"]),
         Route("/capture", endpoint=capture_view, methods=["POST"]),
@@ -143,6 +145,9 @@ def _get_feature_routes() -> list[Route]:
         Route("/question-graph/create", endpoint=question_views.question_create_action, methods=["POST"]),
         Route("/question-graph/transform", endpoint=question_views.question_transform_action, methods=["POST"]),
         Route("/question-graph/link", endpoint=question_views.question_link_action, methods=["POST"]),
+        Route("/question-graph/edit", endpoint=question_views.question_edit_action, methods=["POST"]),
+        Route("/question-graph/relation/update", endpoint=question_views.question_relation_update_action, methods=["POST"]),
+        Route("/question-graph/relation/delete", endpoint=question_views.question_unlink_action, methods=["POST"]),
         Route("/board/dispatch", endpoint=board_views.board_dispatch_view, methods=["POST"]),
         Route("/board/collect", endpoint=board_views.board_collect_view, methods=["POST"]),
         Route("/board/park", endpoint=board_views.board_park_view, methods=["POST"]),

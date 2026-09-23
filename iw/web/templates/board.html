@@ -81,6 +81,7 @@
 
                     <!-- Hidden prompt template for modal & copy -->
                     <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+                    <template id="prompt-full-{{ u.id }}">{{ u.full_prompt or u.action_guide or '' }}</template>
 
                     <!-- Bottom Controls: Park, Skip, Dispatch -->
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
@@ -154,6 +155,7 @@
 
                     <!-- Hidden prompt template for modal & copy -->
                     <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+                    <template id="prompt-full-{{ u.id }}">{{ u.full_prompt or u.action_guide or '' }}</template>
 
                     <!-- Bottom Controls: Park, Cancel, Attach Result -->
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
@@ -219,6 +221,7 @@
 
                     <!-- Hidden prompt template for modal & copy -->
                     <template id="prompt-data-{{ u.id }}">{{ u.action_guide or 'No specific action guide defined.' }}</template>
+                    <template id="prompt-full-{{ u.id }}">{{ u.full_prompt or u.action_guide or '' }}</template>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 0.4rem; border-top: 1px solid var(--border-color); margin-top: 0.25rem;">
                         <form action="/board/reset" method="POST" style="display: inline;">
@@ -293,9 +296,12 @@
                 </h2>
             </div>
 
-            <div style="display: flex; gap: 0.5rem; align-items: center;">
-                <button type="button" id="modal-copy-btn" onclick="copyModalPrompt(this)" class="btn" style="font-size: 0.8rem; padding: 0.35rem 0.75rem; display: flex; align-items: center; gap: 0.3rem;">
-                    <span>📋 Copy Prompt</span>
+            <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                <button type="button" id="modal-copy-full-btn" onclick="copyModalFullPrompt(this)" class="btn btn-primary" style="font-size: 0.75rem; padding: 0.35rem 0.65rem; display: flex; align-items: center; gap: 0.3rem;" title="Copy complete master prompt with embedded files, directives, and deliverable format for Claude / external chat">
+                    <span>📋 Copy Full Agent Prompt</span>
+                </button>
+                <button type="button" id="modal-copy-btn" onclick="copyModalPrompt(this)" class="btn" style="font-size: 0.75rem; padding: 0.35rem 0.65rem; display: flex; align-items: center; gap: 0.3rem;" title="Copy raw instructions from textarea">
+                    <span>📋 Copy Instructions</span>
                 </button>
                 <button type="button" onclick="closePromptModal()" class="btn" style="padding: 0.3rem 0.6rem; font-size: 1.1rem; line-height: 1; color: var(--text-muted);" title="Close (Esc)">&times;</button>
             </div>
@@ -368,14 +374,28 @@ function copyModalPrompt(btn) {
     if (textarea) {
         navigator.clipboard.writeText(textarea.value).then(() => {
             const original = btn.innerHTML;
-            btn.innerHTML = '<span>✓ Copied!</span>';
+            btn.innerHTML = '<span>✓ Copied Instructions!</span>';
+            setTimeout(() => { btn.innerHTML = original; }, 1800);
+        });
+    }
+}
+
+function copyModalFullPrompt(btn) {
+    const unitId = document.getElementById('modal-unit-id-input')?.value;
+    const fullTemplate = document.getElementById('prompt-full-' + unitId);
+    const textToCopy = (fullTemplate && fullTemplate.innerHTML.trim()) ? fullTemplate.innerHTML.trim() : document.getElementById('modal-prompt-textarea')?.value;
+    if (textToCopy) {
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const original = btn.innerHTML;
+            btn.innerHTML = '<span>✓ Copied Full Prompt!</span>';
             setTimeout(() => { btn.innerHTML = original; }, 1800);
         });
     }
 }
 
 function copyPromptText(unitId, btn) {
-    const template = document.getElementById('prompt-data-' + unitId);
+    const fullTemplate = document.getElementById('prompt-full-' + unitId);
+    const template = (fullTemplate && fullTemplate.innerHTML.trim()) ? fullTemplate : document.getElementById('prompt-data-' + unitId);
     if (template) {
         navigator.clipboard.writeText(template.innerHTML.trim()).then(() => {
             const original = btn.innerHTML;
