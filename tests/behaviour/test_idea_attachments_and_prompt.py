@@ -74,6 +74,8 @@ def test_intake_05_direct_file_upload_and_drop_attachment(tmp_path: Path) -> Non
         follow_redirects=False,
     )
     assert resp2.status_code == 303
+    assert not (drop_dir / "notes.txt").exists()
+    assert (tmp_path / "attachments" / "IDEA-A01" / "notes.txt").exists()
     reloaded2 = store.get_node("IDEA-A01")
     assert reloaded2 is not None
     assert len(reloaded2.edges) == 2

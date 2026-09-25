@@ -4,6 +4,7 @@ Layer 4 Web surface component.
 """
 
 from datetime import datetime, timezone
+from pathlib import Path
 from starlette.requests import Request
 from starlette.responses import RedirectResponse, Response
 from starlette.templating import Jinja2Templates
@@ -76,4 +77,19 @@ async def intake_external_view(request: Request) -> Response:
     if raw_text:
         saved = ingest_external_node(store, raw_text, source_vault, author)
         return RedirectResponse(url=f"/node/{saved.id}", status_code=303)
+    return RedirectResponse(url="/intake", status_code=303)
+
+
+async def intake_discard_view(request: Request) -> Response:
+    """Discard and delete a stray file from the drop folder (INTAKE-04)."""
+    store: StoreProtocol = request.app.state.store
+    form = await request.form()
+    file_name = str(form.get("file_name", "")).strip()
+    safe_name = Path(file_name).name
+    if safe_name:
+        vault_dir = getattr(store, "vault_dir", None)
+        if vault_dir:
+            target = (vault_dir / "drop" / safe_name).resolve()
+            if target.is_file() and str(target).startswith(str(vault_dir.resolve())):
+                target.unlink()
     return RedirectResponse(url="/intake", status_code=303)

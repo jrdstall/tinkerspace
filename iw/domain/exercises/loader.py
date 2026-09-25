@@ -82,3 +82,47 @@ def reset_vault_seeds(
             shutil.copy2(item, dest)
             copied.append(item.name)
     return copied
+
+
+def load_done_exercises(vault_dir: Path | None) -> set[str]:
+    """Load set of completed/retired exercise prompt texts (EXERCISE-09)."""
+    if vault_dir is None:
+        return set()
+    target_path = vault_dir / "exercises" / "done.yaml"
+    if not target_path.exists():
+        return set()
+    try:
+        content = target_path.read_text(encoding="utf-8")
+        parsed = yaml.safe_load(content)
+        if isinstance(parsed, dict) and "done" in parsed:
+            return {str(item).strip() for item in parsed["done"] if str(item).strip()}
+        if isinstance(parsed, list):
+            return {str(item).strip() for item in parsed if str(item).strip()}
+    except Exception:
+        pass
+    return set()
+
+
+def save_done_exercise(vault_dir: Path, prompt_text: str) -> None:
+    """Append a prompt text to vault exercises done.yaml atomically (EXERCISE-09)."""
+    clean = prompt_text.strip()
+    if not clean:
+        return
+    existing = load_done_exercises(vault_dir)
+    existing.add(clean)
+    target_dir = vault_dir / "exercises"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target_file = target_dir / "done.yaml"
+    data = {"done": sorted(existing)}
+    raw_yaml = yaml.dump(data, sort_keys=False, allow_unicode=True)
+    with tempfile.NamedTemporaryFile("w", dir=target_dir, delete=False, encoding="utf-8") as tf:
+        tf.write(raw_yaml)
+        temp_path = Path(tf.name)
+    temp_path.replace(target_file)
+
+
+def clear_done_exercises(vault_dir: Path) -> None:
+    """Clear all completed exercises from vault done.yaml (EXERCISE-09)."""
+    target_file = vault_dir / "exercises" / "done.yaml"
+    if target_file.exists():
+        target_file.unlink()

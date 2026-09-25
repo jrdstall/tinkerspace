@@ -35,3 +35,15 @@ class ExerciseEngineProtocol(Protocol):
     def reload(self) -> None:
         """Reload seed banks from disk."""
         ...
+
+    def mark_done(self, prompt_text: str, title: str = "") -> None:
+        """Mark an exercise prompt as completed so it is excluded from future sampling (EXERCISE-09)."""
+        ...
+
+    def list_done(self) -> list[str]:
+        """Return list of completed exercise prompt texts (EXERCISE-09)."""
+        ...
+
+    def reset_done(self) -> None:
+        """Reset completed exercises pool back to empty (EXERCISE-09)."""
+        ...

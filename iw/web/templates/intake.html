@@ -22,7 +22,13 @@
                     <span class="badge badge-green" style="font-weight: 700;">DROPPED FILE</span>
                     <span class="mono" style="font-size: 1.1rem; font-weight: 600; color: var(--accent);">{{ f.name }}</span>
                 </div>
-                <span class="mono" style="font-size: 0.8rem; color: var(--text-muted);">{{ f.stat().st_size }} bytes</span>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <span class="mono" style="font-size: 0.8rem; color: var(--text-muted);">{{ f.stat().st_size }} bytes</span>
+                    <form action="/intake/discard" method="POST" style="margin: 0;" onsubmit="return confirm('Permanently discard and delete {{ f.name }} from drop?');">
+                        <input type="hidden" name="file_name" value="{{ f.name }}">
+                        <button type="submit" class="btn" style="padding: 0.25rem 0.6rem; font-size: 0.75rem; color: #f85149; border-color: rgba(248, 81, 73, 0.4);" title="Delete file from drop folder">✕ Discard</button>
+                    </form>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">

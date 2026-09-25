@@ -115,9 +115,19 @@
             <span class="badge" style="font-size: 0.75rem;">#{{ cat }}</span>
             {% endfor %}
         </div>
-        <a href="/exercises?type={{ current_type }}" class="btn btn-primary" id="next-prompt-btn">
-            🎲 Next Prompt <span class="mono" style="opacity: 0.8; font-size: 0.75rem;">[Space]</span>
-        </a>
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <form action="/exercises/done" method="POST" style="margin: 0;">
+                <input type="hidden" name="exercise_type" value="{{ current_type }}">
+                <input type="hidden" name="prompt_title" value="{{ prompt.title }}">
+                <input type="hidden" name="prompt_text" value="{{ prompt.prompt_text }}">
+                <button type="submit" class="btn" id="mark-done-btn" style="background-color: rgba(63, 185, 80, 0.2); color: #3fb950; border-color: rgba(63, 185, 80, 0.4); font-weight: 600;" title="Mark this exercise as done so it will not pop up again">
+                    ✓ Done
+                </button>
+            </form>
+            <a href="/exercises?type={{ current_type }}" class="btn btn-primary" id="next-prompt-btn">
+                🎲 Next Prompt <span class="mono" style="opacity: 0.8; font-size: 0.75rem;">[Space]</span>
+            </a>
+        </div>
     </div>
 
     <div class="prompt-text">{{ prompt.prompt_text }}</div>
@@ -144,13 +154,14 @@
             required
         ></textarea>
 
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
             <span style="font-size: 0.8rem; color: var(--text-muted);">
                 Press <span class="mono badge">Ctrl+Enter</span> to capture directly into Inbox.
             </span>
             <div style="display: flex; gap: 0.5rem;">
                 <button type="button" class="btn" onclick="document.getElementById('exercise-scratchpad').value=''">Clear</button>
-                <button type="submit" class="btn btn-primary">📥 Capture to Inbox</button>
+                <button type="submit" name="mark_done" value="false" class="btn btn-primary">📥 Capture to Inbox</button>
+                <button type="submit" name="mark_done" value="true" class="btn" style="color: #3fb950; border-color: rgba(63, 185, 80, 0.4);" title="Capture idea to inbox and mark exercise done">📥 Capture & Mark Done</button>
             </div>
         </div>
     </form>
@@ -203,6 +214,18 @@
                 <form action="/exercises/seeds/reset" method="POST" onsubmit="return confirm('Reset all exercise seeds to defaults?');">
                     <button type="submit" class="btn" style="color: #f85149; border-color: rgba(248,81,73,0.4);">
                         Reset All Seeds to Factory Defaults
+                    </button>
+                </form>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; margin-top: 1.25rem;">
+                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem;">Completed Exercises ({{ done_count }})</h3>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+                    Exercises marked with "✓ Done" are permanently retired from future random sampling. Resetting clears the done list and returns them to circulation.
+                </p>
+                <form action="/exercises/done/reset" method="POST" onsubmit="return confirm('Reset all completed exercises and return them to active circulation?');">
+                    <button type="submit" class="btn" style="font-size: 0.85rem;" {% if done_count == 0 %}disabled{% endif %}>
+                        Reset Completed Exercises ({{ done_count }})
                     </button>
                 </form>
             </div>

@@ -4,6 +4,7 @@ Layer 1 Core component for scanning dropped media/documents and creating stub no
 """
 
 from pathlib import Path
+import shutil
 from typing import Any
 
 from iw.contracts.models import Author, Node
@@ -55,16 +56,28 @@ class IntakeManager:
         ]
 
     def intake_file(self, file_name: str, node: Node, author: Author) -> Node:
-        """Convert a dropped file into a stub node with attached media/document."""
+        """Convert a dropped file into a stub node, moving it to attachments/{node_id}/."""
         node_type = node.type.lower()
         prefix = TYPE_PREFIXES.get(node_type, "ART")
         node_id = node.id.strip().upper() if node.id and node.id.strip() else self.store.allocate_id(prefix)
 
-        rel_drop = f"drop/{file_name}"
-        attrs = dict(node.attrs)
-        attrs["rendered_file"] = rel_drop
+        vault_dir = getattr(self.store, "vault_dir", None) or self.drop_dir.parent
+        target_folder = vault_dir / "attachments" / node_id
+        target_folder.mkdir(parents=True, exist_ok=True)
 
-        body = node.body.strip() if node.body else self._default_embed(file_name, node.title, rel_drop)
+        safe_name = Path(file_name).name
+        src_file = self.drop_dir / safe_name
+        target_file = target_folder / safe_name
+        rel_path = f"attachments/{node_id}/{safe_name}"
+
+        body = node.body.strip() if node.body else self._default_embed(safe_name, node.title, rel_path, src_file)
+
+        if src_file.exists() and src_file.is_file():
+            shutil.move(str(src_file), str(target_file))
+
+        attrs = dict(node.attrs)
+        attrs["rendered_file"] = rel_path
+        attrs["file_name"] = safe_name
 
         node_to_save = Node(
             id=node_id,
@@ -82,14 +95,31 @@ class IntakeManager:
         return self.store.write_node(node_to_save, author)
 
     def attach_file_to_node(self, file_name: str, target_node_id: str, author: Author) -> Node | None:
-        """Attach a dropped file to an existing mature node."""
-        target = self.store.get_node(target_node_id)
+        """Attach a dropped file to an existing node, moving it to attachments/{node_id}/."""
+        clean_id = target_node_id.strip().upper()
+        target = self.store.get_node(clean_id)
         if target is None:
             return None
 
-        rel_drop = f"drop/{file_name}"
-        embed = self._default_embed(file_name, file_name, rel_drop)
+        vault_dir = getattr(self.store, "vault_dir", None) or self.drop_dir.parent
+        target_folder = vault_dir / "attachments" / clean_id
+        target_folder.mkdir(parents=True, exist_ok=True)
+
+        safe_name = Path(file_name).name
+        src_file = self.drop_dir / safe_name
+        target_file = target_folder / safe_name
+        rel_path = f"attachments/{clean_id}/{safe_name}"
+
+        embed = self._default_embed(safe_name, safe_name, rel_path, src_file)
+
+        if src_file.exists() and src_file.is_file():
+            shutil.move(str(src_file), str(target_file))
+
         updated_body = f"{target.body}\n\n{embed}".strip() if target.body else embed
+
+        attrs = dict(target.attrs)
+        if "rendered_file" not in attrs:
+            attrs["rendered_file"] = rel_path
 
         updated = Node(
             id=target.id,
@@ -101,20 +131,22 @@ class IntakeManager:
             state=target.state,
             edges=target.edges,
             body=updated_body,
-            attrs=target.attrs,
+            attrs=attrs,
         )
         return self.store.write_node(updated, author)
 
-    def _default_embed(self, file_name: str, title: str, rel_path: str) -> str:
+    def _default_embed(
+        self, file_name: str, title: str, rel_path: str, source_path: Path | None = None,
+    ) -> str:
         """Generate markdown embed, imported text, or link for the dropped file."""
         ext = Path(file_name).suffix.lower()
         if ext in IMAGE_EXTENSIONS:
             return f"![{title}]({rel_path})\n\nExported sketch / visual capture."
         if ext in TEXT_EXTENSIONS:
-            drop_path = self.drop_dir / file_name
-            if drop_path.exists() and drop_path.is_file():
+            p = source_path if source_path is not None else (self.drop_dir / file_name)
+            if p.exists() and p.is_file():
                 try:
-                    content = drop_path.read_text(encoding="utf-8", errors="replace").strip()
+                    content = p.read_text(encoding="utf-8", errors="replace").strip()
                     if content:
                         return f"{content}\n\n---\n*Reference file: [{file_name}]({rel_path})*"
                 except Exception:

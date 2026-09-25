@@ -16,3 +16,4 @@ EXERCISE-05  The Biomimicry and Assumption Inversion generators provide structur
 EXERCISE-06  The Vault Cross-Pollination generator samples active ideas or frictions from the vault corpus and pairs them with creative seeds.
 EXERCISE-07  The Seed Manager generates pre-formatted LLM generation prompts and supports YAML import with both flush-and-replace and merge modes, as well as one-click reset to factory defaults.
 EXERCISE-08  The Capture action accepts scratchpad reflections, formats them with exercise prompt provenance metadata, and appends them to the triage inbox via the `creative-exercises` inlet.
+EXERCISE-09  Marking an exercise prompt as done persists its identifier to vault state and permanently excludes it from future sampling until explicitly reset.

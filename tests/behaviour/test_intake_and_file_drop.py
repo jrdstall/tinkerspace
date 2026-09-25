@@ -17,25 +17,20 @@ def test_intake_01_dropped_file_in_vault_drop_is_discovered_on_request(tmp_path:
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
-
-    # 1. Initially drop is empty
     assert store.list_dropped_files() == []
 
-    # 2. File arrives via tablet sync
     sketch_file = drop_dir / "2026-08-29-puck-schematic.png"
     sketch_file.write_bytes(b"\x89PNG\r\n\x1a\nfake-image-bytes")
-
     pdf_file = drop_dir / "nrf52840-datasheet.pdf"
     pdf_file.write_text("PDF content placeholder")
 
-    # 3. Discovered on read without watchers
     dropped = store.list_dropped_files()
     assert len(dropped) == 2
     assert [p.name for p in dropped] == ["2026-08-29-puck-schematic.png", "nrf52840-datasheet.pdf"]
 
 
 def test_intake_02_creates_stub_node_with_attached_file_and_embed(tmp_path: Path):
-    """INTAKE-02: Creating a stub node attaches the dropped file and sets markdown embed."""
+    """INTAKE-02: Creating a stub node moves dropped file to attachments/{node_id}/ and sets embed."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
@@ -45,44 +40,37 @@ def test_intake_02_creates_stub_node_with_attached_file_and_embed(tmp_path: Path
 
     author = Author(kind=AuthorKind.HUMAN, courier="intake-surface")
     draft = Node(
-        id="",
-        type="artifact",
-        title="Handlebar Puck Block Diagram",
-        created=datetime.now(timezone.utc),
-        domain="hardware",
-        tags=["tablet", "sketch", "ble"],
-        state="active",
+        id="", type="artifact", title="Handlebar Puck Block Diagram",
+        created=datetime.now(timezone.utc), domain="hardware",
+        tags=["tablet", "sketch", "ble"], state="active",
     )
 
     saved = store.intake_file(file_name="handlebar-sketch.png", node=draft, author=author)
+    expected_rel = f"attachments/{saved.id}/handlebar-sketch.png"
     assert saved.id == "ART-A01"
     assert saved.type == "artifact"
-    assert saved.attrs.get("rendered_file") == "drop/handlebar-sketch.png"
-    assert "![Handlebar Puck Block Diagram](drop/handlebar-sketch.png)" in saved.body
+    assert saved.attrs.get("rendered_file") == expected_rel
+    assert f"![Handlebar Puck Block Diagram]({expected_rel})" in saved.body
 
-    # Verify written to disk and readable
+    # Verify moved from drop to attachments and readable on reload
+    assert not sketch_file.exists()
+    assert (tmp_path / expected_rel).exists()
     reloaded = store.get_node("ART-A01")
     assert reloaded is not None
-    assert reloaded.id == "ART-A01"
-    assert reloaded.attrs.get("rendered_file") == "drop/handlebar-sketch.png"
+    assert reloaded.attrs.get("rendered_file") == expected_rel
 
 
 def test_intake_03_attaches_dropped_file_to_existing_node(tmp_path: Path):
-    """INTAKE-03: Attaching dropped file to existing mature node updates its markdown body."""
+    """INTAKE-03: Attaching dropped file moves file to attachments/{node_id}/ and updates body."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
 
     author = Author(kind=AuthorKind.HUMAN, courier="web-ui")
     node = Node(
-        id="IDEA-A01",
-        type="idea",
-        title="BLE Display Puck",
-        created=datetime.now(timezone.utc),
-        domain="cycling",
-        tags=["hardware"],
-        state="active",
-        body="Initial concept notes for display puck.",
+        id="IDEA-A01", type="idea", title="BLE Display Puck",
+        created=datetime.now(timezone.utc), domain="cycling",
+        tags=["hardware"], state="active", body="Initial concept notes for display puck.",
     )
     store.write_node(node, author=author)
 
@@ -91,14 +79,15 @@ def test_intake_03_attaches_dropped_file_to_existing_node(tmp_path: Path):
 
     intake_author = Author(kind=AuthorKind.HUMAN, courier="intake-surface")
     updated = store.intake_manager.attach_file_to_node(
-        file_name="display-datasheet.pdf",
-        target_node_id="IDEA-A01",
-        author=intake_author,
+        file_name="display-datasheet.pdf", target_node_id="IDEA-A01", author=intake_author,
     )
+    expected_rel = "attachments/IDEA-A01/display-datasheet.pdf"
     assert updated is not None
     assert "display-datasheet.pdf" in updated.body
-    assert "[display-datasheet.pdf](drop/display-datasheet.pdf)" in updated.body
+    assert f"[display-datasheet.pdf]({expected_rel})" in updated.body
     assert "Initial concept notes for display puck." in updated.body
+    assert not pdf_file.exists()
+    assert (tmp_path / expected_rel).exists()
 
 
 def test_intake_04_web_intake_flow_and_empty_state(tmp_path: Path):
@@ -110,34 +99,31 @@ def test_intake_04_web_intake_flow_and_empty_state(tmp_path: Path):
     app = create_app(store=store)
     client = TestClient(app)
 
-    # 1. Empty state
     res_empty = client.get("/intake")
     assert res_empty.status_code == 200
     assert "Drop Folder is Empty" in res_empty.text
 
-    # 2. Add dropped file
     (drop_dir / "trail-cam-diagram.svg").write_text("<svg>diagram</svg>")
-
     res_item = client.get("/intake")
     assert res_item.status_code == 200
     assert "trail-cam-diagram.svg" in res_item.text
 
-    # 3. Create stub node via POST /intake/create
     create_res = client.post(
         "/intake/create",
-        data={
-            "file_name": "trail-cam-diagram.svg",
-            "node_type": "artifact",
-            "title": "Trail Camera Wiring Diagram",
-            "domain": "auto",
-            "tags": "jeep, video",
-            "body": "",
-        },
+        data={"file_name": "trail-cam-diagram.svg", "node_type": "artifact", "title": "Trail Camera Wiring Diagram", "domain": "auto", "tags": "jeep", "body": ""},
         follow_redirects=True,
     )
     assert create_res.status_code == 200
     assert "ART-A01" in create_res.text
-    assert "Trail Camera Wiring Diagram" in create_res.text
+    assert not (drop_dir / "trail-cam-diagram.svg").exists()
+    assert (tmp_path / "attachments" / "ART-A01" / "trail-cam-diagram.svg").exists()
+    assert "Drop Folder is Empty" in client.get("/intake").text
+
+    (drop_dir / "stray.txt").write_text("delete me")
+    discard_res = client.post("/intake/discard", data={"file_name": "stray.txt"}, follow_redirects=True)
+    assert discard_res.status_code == 200
+    assert not (drop_dir / "stray.txt").exists()
+    assert "Drop Folder is Empty" in discard_res.text
 
 
 def test_intake_05_legacy_inbox_drop_migration_and_auto_mkdir(tmp_path: Path):
@@ -157,7 +143,7 @@ def test_intake_05_legacy_inbox_drop_migration_and_auto_mkdir(tmp_path: Path):
 
 
 def test_intake_06_markdown_dropped_file_populates_body(tmp_path: Path):
-    """INTAKE-02: Dropped markdown file imports full text into stub node body."""
+    """INTAKE-02: Dropped markdown file imports text and moves to attachments/{node_id}/."""
     store = MarkdownStore(vault_dir=tmp_path)
     drop_dir = tmp_path / "drop"
     drop_dir.mkdir(parents=True, exist_ok=True)
@@ -170,9 +156,12 @@ def test_intake_06_markdown_dropped_file_populates_body(tmp_path: Path):
         domain="sensing", tags=["mesh", "telemetry"], state="active",
     )
     saved = store.intake_file(file_name="sensor-mesh.md", node=draft, author=author)
-    assert saved.attrs.get("rendered_file") == "drop/sensor-mesh.md"
+    expected_rel = f"attachments/{saved.id}/sensor-mesh.md"
+    assert saved.attrs.get("rendered_file") == expected_rel
     assert "Distributed sensor fabric for field telemetry." in saved.body
-    assert "[sensor-mesh.md](drop/sensor-mesh.md)" in saved.body
+    assert f"[sensor-mesh.md]({expected_rel})" in saved.body
+    assert not doc.exists()
+    assert (tmp_path / expected_rel).exists()
 
 
 def test_intake_07_node_detail_renders_attached_document_reader(tmp_path: Path):

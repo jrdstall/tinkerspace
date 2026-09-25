@@ -55,6 +55,7 @@ async def exercise_view(request: Request, templates: Jinja2Templates) -> Respons
             "ai_prompt_template": ai_prompt,
             "inbox_count": len(store.list_inbox()),
             "drop_count": len(store.list_dropped_files()),
+            "done_count": len(engine.list_done()),
         },
     )
 
@@ -67,6 +68,11 @@ async def exercise_capture_action(request: Request) -> Response:
     exercise_type = str(form.get("exercise_type", "surprise")).strip()
     prompt_title = str(form.get("prompt_title", "")).strip()
     prompt_text = str(form.get("prompt_text", "")).strip()
+    mark_done = str(form.get("mark_done", "")).strip().lower() == "true"
+
+    if mark_done and prompt_text:
+        engine = ExerciseEngine(vault_dir=store.vault_dir, store=store)
+        engine.mark_done(prompt_text, prompt_title)
 
     if raw_text:
         full_note = f"[Creative Exercise: {prompt_title} — {prompt_text}]\n{raw_text}"
@@ -98,4 +104,28 @@ async def exercise_reset_action(request: Request) -> Response:
     store: StoreProtocol = request.app.state.store
     reset_seeds_to_defaults(store.vault_dir)
     notice = quote_plus("All seed banks reset to factory defaults")
+    return RedirectResponse(url=f"/exercises?notice={notice}", status_code=303)
+
+
+async def exercise_done_action(request: Request) -> Response:
+    """Mark an exercise as done and retired from future sampling (EXERCISE-09)."""
+    store: StoreProtocol = request.app.state.store
+    form = await request.form()
+    exercise_type = str(form.get("exercise_type", "surprise")).strip()
+    prompt_title = str(form.get("prompt_title", "")).strip()
+    prompt_text = str(form.get("prompt_text", "")).strip()
+    if prompt_text:
+        engine = ExerciseEngine(vault_dir=store.vault_dir, store=store)
+        engine.mark_done(prompt_text, prompt_title)
+        notice = quote_plus("✓ Exercise marked as done and retired from future use.")
+        return RedirectResponse(url=f"/exercises?type={exercise_type}&notice={notice}", status_code=303)
+    return RedirectResponse(url=f"/exercises?type={exercise_type}", status_code=303)
+
+
+async def exercise_reset_done_action(request: Request) -> Response:
+    """Reset completed exercises pool back into active circulation (EXERCISE-09)."""
+    store: StoreProtocol = request.app.state.store
+    engine = ExerciseEngine(vault_dir=store.vault_dir, store=store)
+    engine.reset_done()
+    notice = quote_plus("Completed exercises have been reset back into circulation.")
     return RedirectResponse(url=f"/exercises?notice={notice}", status_code=303)

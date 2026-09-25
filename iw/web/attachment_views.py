@@ -46,7 +46,7 @@ async def _save_attachment_file(form: Any, node_id: str, vault_dir: Path) -> tup
         src = vault_dir / "drop" / safe_name
         if src.exists() and src.is_file():
             target_path = target_folder / safe_name
-            shutil.copy2(src, target_path)
+            shutil.move(str(src), str(target_path))
             return safe_name, f"attachments/{node_id}/{safe_name}"
 
     return None

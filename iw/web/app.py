@@ -123,6 +123,8 @@ def _get_core_routes() -> list[Route]:
         Route("/associations/generate", endpoint=association_views.association_generate_action, methods=["POST"]),
         Route("/exercises", endpoint=_view_exercises, methods=["GET"]),
         Route("/exercises/capture", endpoint=exercise_views.exercise_capture_action, methods=["POST"]),
+        Route("/exercises/done", endpoint=exercise_views.exercise_done_action, methods=["POST"]),
+        Route("/exercises/done/reset", endpoint=exercise_views.exercise_reset_done_action, methods=["POST"]),
         Route("/exercises/seeds/import", endpoint=exercise_views.exercise_import_action, methods=["POST"]),
         Route("/exercises/seeds/reset", endpoint=exercise_views.exercise_reset_action, methods=["POST"]),
         Route("/api/nodes/search", endpoint=search_views.api_node_search_view, methods=["GET"]),
@@ -162,6 +164,7 @@ def _get_feature_routes() -> list[Route]:
         Route("/intake", endpoint=_view_intake, methods=["GET"]),
         Route("/intake/create", endpoint=intake_views.intake_create_view, methods=["POST"]),
         Route("/intake/attach", endpoint=intake_views.intake_attach_view, methods=["POST"]),
+        Route("/intake/discard", endpoint=intake_views.intake_discard_view, methods=["POST"]),
         Route("/intake/external", endpoint=intake_views.intake_external_view, methods=["POST"]),
         Route("/health", endpoint=lambda r: JSONResponse({"status": "ok", "app": "tinkerspace"}), methods=["GET"]),
     ]
