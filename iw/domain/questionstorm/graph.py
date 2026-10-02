@@ -44,9 +44,11 @@ def _render_question_nodes(questions: list[Node]) -> tuple[list[str], set[str]]:
         icon = "🌌" if form == "open" else "🎯"
         q_title = _format_mermaid_text(q.title, 36)
         node_id = q.id.replace("-", "_")
-        css_class = "closedNode" if form == "closed" else "openNode"
-        if q.attrs.get("importance") == "high":
-            css_class += " highImp"
+        is_high = q.attrs.get("importance") == "high"
+        if form == "closed":
+            css_class = "closedNodeHigh" if is_high else "closedNode"
+        else:
+            css_class = "openNodeHigh" if is_high else "openNode"
         lines.append(f'  {node_id}["{icon} <b>{q.id}</b>{move_suffix}<br/>{q_title}"]:::{css_class}')
 
     for q in questions:
@@ -75,8 +77,9 @@ def generate_mermaid_graph(subject: Node, questions: list[Node]) -> str:
     lines.extend([
         "  classDef subjectNode fill:#1f293d,stroke:#58a6ff,stroke-width:2px,color:#e6edf3;",
         "  classDef openNode fill:#16243b,stroke:#388bfd,stroke-width:1.5px,color:#e6edf3;",
+        "  classDef openNodeHigh fill:#16243b,stroke:#f0883e,stroke-width:2.5px,color:#e6edf3;",
         "  classDef closedNode fill:#1b2f24,stroke:#3fb950,stroke-width:1.5px,color:#e6edf3;",
-        "  classDef highImp stroke:#f0883e,stroke-width:2.5px;",
+        "  classDef closedNodeHigh fill:#1b2f24,stroke:#f0883e,stroke-width:2.5px,color:#e6edf3;",
         "  classDef emptyNode fill:#161b22,stroke:#30363d,stroke-dasharray: 5 5,color:#8b949e;",
     ])
     return "\n".join(lines)

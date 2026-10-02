@@ -100,6 +100,8 @@ def test_qgraph_03_importance_styling_rendered(tmp_path: Path):
     assert response.status_code == 200
     assert "HIGH" in response.text
     assert "MED" in response.text
+    assert "openNodeHigh" in response.text
+    assert "highImp" not in response.text
 
 
 def test_qgraph_04_directed_relationship_edges_rendered(tmp_path: Path):
