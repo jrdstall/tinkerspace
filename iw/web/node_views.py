@@ -11,6 +11,7 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Edge, Node
 from iw.contracts.store import StoreProtocol
+from iw.core.triage import CANONICAL_DOMAINS, sanitize_tags
 from iw.web.document_helpers import resolve_attached_documents
 from iw.web.helpers import (
     resolve_adjacent_nodes,
@@ -49,6 +50,8 @@ def _node_context(request: Request, node: Node, all_nodes: list[Node], store: St
         "back_url": back_url, "back_label": back_label, "prev_node": prev_node, "next_node": next_node,
         "keywords_list": kw_list, "keywords_display": ", ".join(str(k) for k in kw_list),
         "tags_display": ", ".join(node.tags),
+        "canonical_domains": CANONICAL_DOMAINS,
+        "existing_tags": sorted(list(set(t for n in all_nodes for t in n.tags if t))),
     }
 
 
@@ -88,7 +91,7 @@ async def node_edit_action(request: Request) -> Response:
     title = str(form.get("title", "")).strip() or node.title
     domain = str(form.get("domain", "")).strip() or node.domain
     state = str(form.get("state", "")).strip() or node.state
-    tags = [t.strip().lstrip("#").strip() for t in str(form.get("tags", "")).split(",") if t.strip().lstrip("#").strip()]
+    tags = sanitize_tags(str(form.get("tags", "")), domain=domain, node_type=node.type)
     keywords = [k.strip().lstrip("#").strip() for k in str(form.get("keywords", "")).split(",") if k.strip().lstrip("#").strip()]
     body = str(form.get("body", "")).replace("\r\n", "\n").replace("\r", "\n")
 

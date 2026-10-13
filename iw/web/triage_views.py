@@ -11,7 +11,7 @@ from starlette.templating import Jinja2Templates
 
 from iw.contracts.models import Author, AuthorKind, Edge, Node
 from iw.contracts.store import StoreProtocol
-from iw.core.triage import TriageService
+from iw.core.triage import CANONICAL_DOMAINS, DOMAIN_SUGGESTED_TAGS, TriageService, sanitize_tags
 
 
 async def triage_view(request: Request, templates: Jinja2Templates) -> Response:
@@ -22,6 +22,7 @@ async def triage_view(request: Request, templates: Jinja2Templates) -> Response:
     skip = int(request.query_params.get("skip", 0))
     current_index = min(skip, max(0, len(inbox_items) - 1)) if inbox_items else 0
     active_item = inbox_items[current_index] if inbox_items else None
+    existing_tags = sorted(list(set(t for n in existing_nodes for t in n.tags if t)))
     return templates.TemplateResponse(
         request=request,
         name="triage.html",
@@ -33,6 +34,9 @@ async def triage_view(request: Request, templates: Jinja2Templates) -> Response:
             "inbox_count": len(inbox_items),
             "drop_count": len(store.list_dropped_files()),
             "existing_nodes": existing_nodes,
+            "canonical_domains": CANONICAL_DOMAINS,
+            "suggested_tags": DOMAIN_SUGGESTED_TAGS,
+            "existing_tags": existing_tags,
         },
     )
 
@@ -46,7 +50,7 @@ async def triage_accept_view(request: Request) -> Response:
     body = str(form.get("body", "")).replace("\r\n", "\n").replace("\r", "\n").strip()
     title = str(form.get("title", "")).strip() or body[:80]
     domain = str(form.get("domain", "general")).strip()
-    tags = [t.strip().lstrip("#").strip() for t in str(form.get("tags", "")).split(",") if t.strip().lstrip("#").strip()]
+    tags = sanitize_tags(str(form.get("tags", "")), domain=domain, node_type=node_type)
     keywords = [k.strip().lstrip("#").strip() for k in str(form.get("keywords", "")).split(",") if k.strip().lstrip("#").strip()]
     raw_target = str(form.get("edge_target", "")).strip()
     edge_target = raw_target.split()[0].upper() if raw_target else ""

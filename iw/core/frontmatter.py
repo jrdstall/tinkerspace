@@ -167,9 +167,11 @@ def merge_frontmatter(
     out["last_touched"] = node.last_touched.isoformat() if node.last_touched else now.isoformat()
     out["author"] = serialize_author(author)
 
-    if node.attrs:
-        for k, v in node.attrs.items():
-            out[k] = v
+    for k in list(out.keys()):
+        if k not in RESERVED_KEYS and k not in node.attrs:
+            del out[k]
+    for k, v in node.attrs.items():
+        out[k] = v
 
     # Derive CML for ideas if scores are present (DA-03 §03)
     if node.type == "idea" and "scores" in out and isinstance(out["scores"], dict):

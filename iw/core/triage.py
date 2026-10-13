@@ -19,6 +19,58 @@ TYPE_PREFIXES: dict[str, str] = {
     "source": "SRC",
 }
 
+CANONICAL_DOMAINS: list[str] = [
+    "Computing & Architecture",
+    "Space Systems",
+    "Defense & C2",
+    "Mobility & Transportation",
+    "Creativity & Expression",
+    "Enterprise & Organization",
+    "Health & Performance",
+    "Living & Preparedness",
+    "Learning & Education",
+    "Tools & Prototyping",
+]
+
+DOMAIN_SUGGESTED_TAGS: dict[str, list[str]] = {
+    "Computing & Architecture": ["ambient-computing", "contextual-profiles", "smart-data", "app-silos", "e-ink", "ai-agents"],
+    "Space Systems": ["smallsat", "satellite-constellations", "mission-orchestration", "tactical-space", "real-time-c2"],
+    "Defense & C2": ["tactical-c2", "isr", "sensor-networks", "cognitive-c2", "multi-int", "warfighter"],
+    "Mobility & Transportation": ["cycling", "safety", "automotive", "lighting", "wearables", "camera-systems"],
+    "Creativity & Expression": ["workspace-design", "craftsmanship", "apparel", "analog-art", "creative-exercises"],
+    "Enterprise & Organization": ["rowe", "workplace-culture", "defense-contracting", "consulting", "team-dynamics"],
+    "Health & Performance": ["nutrition", "calorie-tracking", "assistive-devices", "fitness-equipment", "wearables"],
+    "Living & Preparedness": ["kitchen-tech", "hvac", "disaster-prep", "emergency-shelter", "retail", "personal-gear"],
+    "Learning & Education": ["experiential-learning", "higher-ed", "assembly-line-learning", "pedagogy"],
+    "Tools & Prototyping": ["3d-printing", "fdm", "electronics", "soldering", "fabrication"],
+}
+
+
+def sanitize_tags(raw_tags: list[str] | str, domain: str = "", node_type: str = "") -> list[str]:
+    """Sanitize and normalize tags: strip hashes, split space-separated terms, drop type/domain echoes."""
+    items: list[str] = []
+    if isinstance(raw_tags, str):
+        if "," in raw_tags:
+            items = [t.strip() for t in raw_tags.split(",") if t.strip()]
+        else:
+            items = [t.strip() for t in raw_tags.split() if t.strip()]
+    elif isinstance(raw_tags, list):
+        for entry in raw_tags:
+            entry_str = str(entry).strip()
+            if "," in entry_str:
+                items.extend([t.strip() for t in entry_str.split(",") if t.strip()])
+            else:
+                items.append(entry_str)
+
+    drop_words = {node_type.strip().lower(), domain.strip().lower()}
+    cleaned: list[str] = []
+    for item in items:
+        tok = item.lstrip("#").strip().lower().replace("_", "-")
+        if tok and tok not in drop_words and tok not in cleaned:
+            cleaned.append(tok)
+    return cleaned
+
+
 
 class TriageService(TriageProtocol):
     """Service orchestrating rapid keyboard triage passes over inbox items."""
@@ -55,7 +107,7 @@ class TriageService(TriageProtocol):
             title=node.title.strip(),
             created=node.created,
             domain=node.domain.strip() if node.domain else "general",
-            tags=[t.strip().lstrip("#").strip() for t in node.tags if t.strip().lstrip("#").strip()],
+            tags=sanitize_tags(node.tags, domain=node.domain, node_type=node_type),
             state=node.state if node.state else "active",
             edges=edges,
             body=node.body,

@@ -90,23 +90,34 @@
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 2fr 1fr 1.5fr 1.5fr; gap: 0.75rem; margin-bottom: 1.25rem;">
+        <div style="display: grid; grid-template-columns: 2.2fr 1.3fr 2.5fr; gap: 0.75rem; margin-bottom: 0.75rem;">
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Title</label>
                 <input type="text" id="triage-title" name="title" value="" placeholder="Short, memorable title (e.g. Kitchen eInk Display)..." style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;" required>
             </div>
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Domain</label>
-                <input type="text" name="domain" value="general" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <input type="text" id="triage-domain" name="domain" value="general" list="canonical-domains" oninput="updateSuggestedTags(this.value)" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <datalist id="canonical-domains">
+                    {% for d in canonical_domains %}
+                    <option value="{{ d }}">{{ d }}</option>
+                    {% endfor %}
+                </datalist>
             </div>
             <div>
                 <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
-                <input type="text" name="tags" placeholder="hardware, triage" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <input type="text" id="triage-tags" name="tags" list="vault-tags" placeholder="e.g. ambient-computing, e-ink" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <datalist id="vault-tags">
+                    {% for t in existing_tags %}
+                    <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </datalist>
             </div>
-            <div>
-                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Keywords (comma-separated)</label>
-                <input type="text" name="keywords" placeholder="eink, low-power" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-            </div>
+        </div>
+
+        <div id="suggested-tags-container" style="display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-bottom: 1.25rem;">
+            <span style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Suggested:</span>
+            <div id="suggested-tags-pills" style="display: flex; gap: 0.35rem; flex-wrap: wrap;"></div>
         </div>
 
         <div style="margin-bottom: 1.25rem;">
@@ -128,7 +139,7 @@
                 </div>
                 <div class="node-picker-wrapper">
                     <input type="hidden" name="edge_target" id="edge-target-hidden" value="">
-                    <input type="text" id="edge-target-search" placeholder="🔍 Search node (title, tag, keyword, body, ID)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <input type="text" id="edge-target-search" placeholder="🔍 Search node (title, tag, body, ID)..." autocomplete="off" style="width: 100%; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
                     <div class="node-picker-dropdown" id="edge-target-dropdown"></div>
                 </div>
                 <div>
@@ -230,6 +241,47 @@
         hiddenId: 'edge-target-hidden',
         dropdownId: 'edge-target-dropdown',
     });
+
+    const domainTags = {{ suggested_tags|tojson }};
+    function updateSuggestedTags(domain) {
+        const container = document.getElementById('suggested-tags-pills');
+        if (!container) return;
+        container.innerHTML = '';
+        const tags = domainTags[domain] || [];
+        if (tags.length === 0) {
+            container.innerHTML = '<span style="font-size: 0.72rem; color: var(--text-muted); font-style: italic;">Select or type a domain to view suggested tags</span>';
+            return;
+        }
+        tags.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'badge';
+            btn.style.cursor = 'pointer';
+            btn.style.background = 'var(--card-bg)';
+            btn.style.border = '1px solid var(--border-color)';
+            btn.style.color = 'var(--text-main)';
+            btn.style.fontSize = '0.75rem';
+            btn.style.padding = '0.15rem 0.45rem';
+            btn.textContent = '+ ' + t;
+            btn.onclick = () => toggleTag(t);
+            container.appendChild(btn);
+        });
+    }
+    function toggleTag(tag) {
+        const input = document.getElementById('triage-tags');
+        if (!input) return;
+        let current = input.value.split(',').map(s => s.trim().replace(/^#/, '')).filter(Boolean);
+        if (current.includes(tag)) {
+            current = current.filter(s => s !== tag);
+        } else {
+            current.push(tag);
+        }
+        input.value = current.join(', ');
+    }
+    const domInput = document.getElementById('triage-domain');
+    if (domInput) {
+        updateSuggestedTags(domInput.value);
+    }
 </script>
 <style>
     .type-btn:has(input:checked), .type-btn.active {

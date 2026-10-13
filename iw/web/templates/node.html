@@ -68,7 +68,12 @@
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Domain</label>
-                    <input type="text" name="domain" value="{{ node.domain }}" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <input type="text" name="domain" value="{{ node.domain }}" list="canonical-domains" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                    <datalist id="canonical-domains">
+                        {% for d in canonical_domains %}
+                        <option value="{{ d }}">{{ d }}</option>
+                        {% endfor %}
+                    </datalist>
                 </div>
                 <div>
                     <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">State</label>
@@ -83,15 +88,14 @@
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div>
-                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
-                    <input type="text" name="tags" value="{{ tags_display }}" placeholder="e.g. hardware, display, ble" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-                </div>
-                <div>
-                    <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Keywords (comma-separated)</label>
-                    <input type="text" name="keywords" value="{{ keywords_display }}" placeholder="e.g. eink, sunlight, low-power" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
-                </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.25rem;">Tags (comma-separated)</label>
+                <input type="text" name="tags" value="{{ tags_display }}" list="vault-tags" placeholder="e.g. ambient-computing, e-ink, smart-data" style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.5rem; color: var(--text-main); font-family: inherit;">
+                <datalist id="vault-tags">
+                    {% for t in existing_tags %}
+                    <option value="{{ t }}">{{ t }}</option>
+                    {% endfor %}
+                </datalist>
             </div>
 
             {% if node.type == 'idea' %}
@@ -545,7 +549,7 @@
                 </div>
                 <div class="node-picker-wrapper">
                     <input type="hidden" name="target_id" id="node-target-hidden" required>
-                    <input type="text" id="node-target-search" placeholder="🔍 Search target node (title, tag, keyword, body, ID)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
+                    <input type="text" id="node-target-search" placeholder="🔍 Search target node (title, tag, body, ID)..." autocomplete="off" required style="width: 100%; background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 4px; padding: 0.4rem 0.6rem; color: var(--text-main); font-size: 0.85rem; font-family: inherit;">
                     <div class="node-picker-dropdown" id="node-target-dropdown"></div>
                 </div>
                 <div>
