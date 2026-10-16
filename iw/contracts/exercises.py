@@ -20,6 +20,26 @@ class ExercisePrompt:
     metadata: dict[str, str] = field(default_factory=dict)
 
 
+@dataclass
+class CustomExerciseInput:
+    """Structured user-supplied input for building a custom one-off exercise prompt (EXERCISE-10)."""
+
+    exercise_type: str = "triad"
+    word_1: str = ""
+    word_2: str = ""
+    word_3: str = ""
+    entity: str = ""
+    system: str = ""
+    node_id: str = ""
+    wildcard: str = ""
+    organism: str = ""
+    standard_assumption: str = ""
+    inversion: str = ""
+    custom_text: str = ""
+    custom_title: str = ""
+
+
+
 @runtime_checkable
 class ExerciseEngineProtocol(Protocol):
     """Protocol for generating creative exercise prompts and managing seed banks."""

@@ -8,7 +8,7 @@
         display: flex;
         gap: 0.5rem;
         flex-wrap: wrap;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.25rem;
     }
     .exercise-tab {
         padding: 0.4rem 0.8rem;
@@ -53,6 +53,23 @@
         font-size: 1rem;
         line-height: 1.5;
         margin-bottom: 1.25rem;
+    }
+    .custom-builder-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+    }
+    .custom-input {
+        background-color: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        color: var(--text-main);
+        padding: 0.55rem 0.75rem;
+        font-size: 0.9rem;
+        font-family: inherit;
+        width: 100%;
     }
     .toast-banner {
         padding: 0.75rem 1rem;
@@ -107,6 +124,104 @@
     {% endfor %}
 </div>
 
+<details class="custom-builder-card" id="custom-exercise-builder" {% if is_custom %}open{% endif %}>
+    <summary style="cursor: pointer; font-weight: 600; color: var(--accent); outline: none; display: flex; justify-content: space-between; align-items: center;">
+        <span>✏️ Create Your Own Starting Point (Custom Prompt)</span>
+        <span style="font-size: 0.8rem; font-weight: 400; color: var(--text-muted);">Use pre-made prompts below or enter your own inputs to run a custom exercise</span>
+    </summary>
+    <form action="/exercises/custom" method="POST" id="custom-exercise-form" style="margin-top: 1rem;">
+        <input type="hidden" name="exercise_type" value="{{ current_type }}">
+
+        {% if current_type in ('triad', 'surprise') %}
+        <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">
+                Enter Your Own 3 Words (3-Word Triad)
+            </label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.65rem;">
+                <input type="text" name="word_1" class="custom-input" placeholder="Word 1 (e.g. barnacle)" value="{{ custom_input.word_1 if custom_input else '' }}">
+                <input type="text" name="word_2" class="custom-input" placeholder="Word 2 (e.g. lidar)" value="{{ custom_input.word_2 if custom_input else '' }}">
+                <input type="text" name="word_3" class="custom-input" placeholder="Word 3 (e.g. bellows)" value="{{ custom_input.word_3 if custom_input else '' }}">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_type == 'what_if' %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Entity / Organization ("What if...")</label>
+                <input type="text" name="entity" class="custom-input" placeholder="e.g. Formula 1 Pit Crew" value="{{ custom_input.entity if custom_input else '' }}">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">System / Institution ("...ran...")</label>
+                <input type="text" name="system" class="custom-input" placeholder="e.g. a suburban dentist office" value="{{ custom_input.system if custom_input else '' }}">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_type == 'vault_hybrid' %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Active Vault Node</label>
+                <select name="node_id" class="custom-input">
+                    <option value="">-- Select Vault Node (or type custom below) --</option>
+                    {% for n in active_nodes %}
+                    <option value="{{ n.id }}" {% if custom_input and custom_input.node_id == n.id %}selected{% endif %}>{{ n.id }} — {{ n.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Wildcard Seed Noun</label>
+                <input type="text" name="wildcard" class="custom-input" placeholder="e.g. ferrofluid" value="{{ custom_input.wildcard if custom_input else '' }}">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_type == 'biomimicry' %}
+        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.65rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Organism / Natural Source</label>
+                <input type="text" name="organism" class="custom-input" placeholder="e.g. Mantis Shrimp" value="{{ custom_input.organism if custom_input else '' }}">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Biological Mechanism / Adaptation</label>
+                <input type="text" name="custom_text" class="custom-input" placeholder="e.g. Cavitation shockwave from spring-loaded saddle shell" value="{{ custom_input.custom_text if custom_input else '' }}">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_type == 'assumption' %}
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 0.75rem;">
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Standard Assumption</label>
+                <input type="text" name="standard_assumption" class="custom-input" placeholder="e.g. Power tools spin a blade to cut material" value="{{ custom_input.standard_assumption if custom_input else '' }}">
+            </div>
+            <div>
+                <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">Orthogonal Inversion</label>
+                <input type="text" name="inversion" class="custom-input" placeholder="e.g. The material vibrates against a stationary wire" value="{{ custom_input.inversion if custom_input else '' }}">
+            </div>
+        </div>
+        {% endif %}
+
+        {% if current_type != 'biomimicry' %}
+        <div style="margin-bottom: 0.75rem;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.35rem;">
+                {% if current_type == 'paradox' %}Custom Paradoxical Constraint{% else %}Or Freeform Custom Starting Prompt{% endif %}
+            </label>
+            <input type="text" name="custom_text" class="custom-input" placeholder="{% if current_type == 'paradox' %}e.g. A soldering iron that never gets hot{% else %}Or enter any custom prompt, constraint, or starting question...{% endif %}" value="{{ custom_input.custom_text if custom_input else '' }}">
+        </div>
+        {% endif %}
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+            {% if is_custom %}
+            <a href="/exercises?type={{ current_type }}" class="btn" style="font-size: 0.85rem;">🎲 Back to Pre-Made Prompts</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary" id="start-custom-exercise-btn" style="font-size: 0.85rem;">
+                ⚡ Load Custom Prompt & Start Ideation
+            </button>
+        </div>
+    </form>
+</details>
+
 <div class="prompt-hero">
     <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;">
         <div style="display: flex; gap: 0.5rem; align-items: center;">
@@ -116,6 +231,10 @@
             {% endfor %}
         </div>
         <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" class="btn" id="copy-ideation-prompt-btn" onclick="copyIdeationPrompt()" title="Copy an AI brainstorming prompt for this active exercise">
+                🤖 Copy AI Ideation Prompt
+            </button>
+            {% if not is_custom %}
             <form action="/exercises/done" method="POST" style="margin: 0;">
                 <input type="hidden" name="exercise_type" value="{{ current_type }}">
                 <input type="hidden" name="prompt_title" value="{{ prompt.title }}">
@@ -124,8 +243,9 @@
                     ✓ Done
                 </button>
             </form>
+            {% endif %}
             <a href="/exercises?type={{ current_type }}" class="btn btn-primary" id="next-prompt-btn">
-                🎲 Next Prompt <span class="mono" style="opacity: 0.8; font-size: 0.75rem;">[Space]</span>
+                🎲 Next Pre-Made <span class="mono" style="opacity: 0.8; font-size: 0.75rem;">[Space]</span>
             </a>
         </div>
     </div>
@@ -135,6 +255,13 @@
     {% if prompt.sub_text %}
     <div class="prompt-subtext">{{ prompt.sub_text }}</div>
     {% endif %}
+
+    <details style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem;">
+        <summary style="cursor: pointer; font-size: 0.82rem; color: var(--text-muted); outline: none;">
+            🤖 View AI Idea Generation Prompt for "{{ prompt.prompt_text }}"
+        </summary>
+        <textarea id="ideation-llm-prompt-box" readonly rows="6" style="width: 100%; margin-top: 0.5rem; background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-muted); padding: 0.65rem; font-size: 0.82rem; font-family: monospace; resize: vertical;">{{ ideation_llm_prompt }}</textarea>
+    </details>
 </div>
 
 <div class="card">
@@ -161,7 +288,9 @@
             <div style="display: flex; gap: 0.5rem;">
                 <button type="button" class="btn" onclick="document.getElementById('exercise-scratchpad').value=''">Clear</button>
                 <button type="submit" name="mark_done" value="false" class="btn btn-primary">📥 Capture to Inbox</button>
+                {% if not is_custom %}
                 <button type="submit" name="mark_done" value="true" class="btn" style="color: #3fb950; border-color: rgba(63, 185, 80, 0.4);" title="Capture idea to inbox and mark exercise done">📥 Capture & Mark Done</button>
+                {% endif %}
             </div>
         </div>
     </form>
@@ -238,7 +367,16 @@
         const box = document.getElementById('ai-prompt-box');
         box.select();
         navigator.clipboard.writeText(box.value);
-        alert('AI Prompt copied to clipboard!');
+        alert('AI Seed Prompt copied to clipboard!');
+    }
+
+    function copyIdeationPrompt() {
+        const box = document.getElementById('ideation-llm-prompt-box');
+        navigator.clipboard.writeText(box.value);
+        const btn = document.getElementById('copy-ideation-prompt-btn');
+        const orig = btn.innerText;
+        btn.innerText = '✓ Ideation Prompt Copied!';
+        setTimeout(() => { btn.innerText = orig; }, 2000);
     }
 
     const scratchpad = document.getElementById('exercise-scratchpad');

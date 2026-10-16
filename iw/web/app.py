@@ -122,6 +122,7 @@ def _get_core_routes() -> list[Route]:
         Route("/associations/discard", endpoint=association_views.association_discard_action, methods=["POST"]),
         Route("/associations/generate", endpoint=association_views.association_generate_action, methods=["POST"]),
         Route("/exercises", endpoint=_view_exercises, methods=["GET"]),
+        Route("/exercises/custom", endpoint=exercise_views.exercise_custom_action, methods=["POST"]),
         Route("/exercises/capture", endpoint=exercise_views.exercise_capture_action, methods=["POST"]),
         Route("/exercises/done", endpoint=exercise_views.exercise_done_action, methods=["POST"]),
         Route("/exercises/done/reset", endpoint=exercise_views.exercise_reset_done_action, methods=["POST"]),

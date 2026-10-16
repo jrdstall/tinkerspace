@@ -17,3 +17,6 @@ EXERCISE-06  The Vault Cross-Pollination generator samples active ideas or frict
 EXERCISE-07  The Seed Manager generates pre-formatted LLM generation prompts and supports YAML import with both flush-and-replace and merge modes, as well as one-click reset to factory defaults.
 EXERCISE-08  The Capture action accepts scratchpad reflections, formats them with exercise prompt provenance metadata, and appends them to the triage inbox via the `creative-exercises` inlet.
 EXERCISE-09  Marking an exercise prompt as done persists its identifier to vault state and permanently excludes it from future sampling until explicitly reset.
+EXERCISE-10  Users may construct one-off custom exercise prompts per exercise type (e.g., 3 custom words for Triad, Entity + System for Cross-Domain "What If?", Vault Node + Wildcard for Vault Hybrid, custom text for Paradox/Biomimicry/Assumption, or freeform prompt) and load them into the active exercise session without persisting them to the reusable seed banks.
+EXERCISE-11  For any active exercise prompt (pre-made or custom), the system generates a tailored, ready-to-copy LLM ideation prompt instructing an AI assistant to brainstorm concrete concepts from that specific starting point.
+
